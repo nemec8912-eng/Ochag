@@ -37,7 +37,8 @@ object OchagThemeController {
         }.getOrDefault(OchagFontStyle.WARM)
     }
 
-    fun updateDarkTheme(enabled: Boolean) {
+    @JvmName("applyDarkTheme")
+    fun setDarkTheme(enabled: Boolean) {
         isDarkTheme = enabled
         appContext
             ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -46,7 +47,8 @@ object OchagThemeController {
             ?.apply()
     }
 
-    fun updateFontStyle(style: OchagFontStyle) {
+    @JvmName("applyFontStyle")
+    fun setFontStyle(style: OchagFontStyle) {
         fontStyle = style
         appContext
             ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -56,6 +58,6 @@ object OchagThemeController {
     }
 
     fun toggle() {
-        updateDarkTheme(!isDarkTheme)
+        setDarkTheme(!isDarkTheme)
     }
 }
