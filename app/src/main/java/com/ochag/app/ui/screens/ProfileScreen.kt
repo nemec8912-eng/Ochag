@@ -7,13 +7,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerAccountApi
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.ui.components.OchagAvatar
+import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagPrimaryButton
 import com.ochag.app.ui.components.OchagSectionHeader
@@ -53,18 +53,30 @@ fun ProfileScreen(
         ServerRealtime.ConnectionState.OFFLINE -> "Не в сети"
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
-    ) {
+    Scaffold(
+        containerColor = CreamBackground,
+        bottomBar = {
+            OchagBottomBar(
+                items = listOf("Чаты", "Файлы", "Профиль"),
+                selectedIndex = 2,
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+            ) { index ->
+                when (index) {
+                    0 -> onChatsClick()
+                    1 -> onFilesClick()
+                }
+            }
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
             OchagSectionHeader(
                 title = "Профиль",
-                subtitle = "Личное пространство внутри семьи"
+                subtitle = "Личное пространство в «Очаге»"
             )
 
             Spacer(Modifier.height(18.dp))
@@ -107,6 +119,22 @@ fun ProfileScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = if (online) OnlineGreen else BrownTextSecondary
                         )
+                    }
+
+                    if (user?.isOwner == true) {
+                        Spacer(Modifier.height(10.dp))
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = TerracottaSoft
+                        ) {
+                            Text(
+                                text = "Владелец «Очага»",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = TerracottaDark,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }
@@ -159,15 +187,8 @@ fun ProfileScreen(
                             phone = phone
                         ) { result ->
                             saving = false
-                            saveStatus = if (result.success) {
-                                "Номер сохранён"
-                            } else {
-                                result.error
-                            }
-
-                            if (result.success) {
-                                ServerRealtime.requestServerUsers()
-                            }
+                            saveStatus = if (result.success) "Номер сохранён" else result.error
+                            if (result.success) ServerRealtime.requestServerUsers()
                         }
                     }
 
@@ -182,11 +203,9 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(12.dp))
 
-            ProfileAction("Чаты", "Переписка с близкими", onChatsClick)
-            ProfileAction("Семья", "Участники и роли", onFamilyClick)
-            ProfileAction("Файлы", "Фото и документы семьи", onFilesClick)
+            ProfileAction("Семья", "Участники, роли и доступ", onFamilyClick)
             ProfileAction("Пригласить близких", "Добавить нового участника", onInviteClick)
 
             Spacer(Modifier.weight(1f))
@@ -197,14 +216,9 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(54.dp),
                 shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = TerracottaDark
-                )
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
             ) {
-                Text(
-                    text = "Выйти",
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Выйти", fontWeight = FontWeight.SemiBold)
             }
         }
     }
