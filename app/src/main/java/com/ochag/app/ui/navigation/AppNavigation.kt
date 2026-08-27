@@ -17,6 +17,7 @@ import com.ochag.app.ui.screens.home.HomeScreen
 import com.ochag.app.ui.screens.profile.ProfileScreen
 import com.ochag.app.ui.screens.login.LoginScreen
 import com.ochag.app.ui.screens.registration.InviteRegistrationScreen
+import com.ochag.app.ui.screens.files.FilesMediaScreen
 
 import com.ochag.app.ui.screens.chats.ChatListScreen
 import com.ochag.app.ui.screens.chats.ChatRoomScreen
@@ -35,6 +36,7 @@ sealed class Screen(val route: String) {
     object Family : Screen("family")
     object MemberProfile : Screen("profile/{name}")
     object MyProfile : Screen("my_profile")
+    object Files : Screen("files")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
 }
@@ -67,13 +69,29 @@ fun AppNavigation() {
             ProfileScreen(
                 onChatsClick = { navController.navigate(Screen.Chats.route) },
                 onFamilyClick = { navController.navigate(Screen.Family.route) },
-                onFilesClick = { },
+                onFilesClick = { navController.navigate(Screen.Files.route) },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
                     ServerRealtime.disconnect()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Files.route) {
+            FilesMediaScreen(
+                onBackClick = { navController.popBackStack() },
+                onChatsClick = {
+                    navController.navigate(Screen.Chats.route) {
+                        launchSingleTop = true
+                    }
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.MyProfile.route) {
+                        launchSingleTop = true
                     }
                 }
             )
