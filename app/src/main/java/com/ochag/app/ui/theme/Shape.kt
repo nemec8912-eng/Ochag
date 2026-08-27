@@ -5,7 +5,9 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 val OchagShapes = Shapes(
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(32.dp) // Большие скругления для карточек
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(34.dp)
 )
