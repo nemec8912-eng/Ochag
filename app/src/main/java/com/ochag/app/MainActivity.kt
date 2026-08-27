@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.ochag.app.data.DataStoreManager
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
+import com.ochag.app.data.StickerStore
 import com.ochag.app.ui.navigation.AppNavigation
 import com.ochag.app.ui.theme.OchagTheme
 import com.ochag.app.ui.theme.OchagThemeController
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
 
         OchagAppState.init(this)
         OchagThemeController.init(this)
+        StickerStore.init(this)
 
         lifecycleScope.launch {
             val dataStore = DataStoreManager(this@MainActivity)
