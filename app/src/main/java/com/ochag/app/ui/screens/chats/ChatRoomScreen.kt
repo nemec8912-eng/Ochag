@@ -338,6 +338,9 @@ fun ChatRoomScreen(
                             activeVideoRecording = null
 
                             if (canSend) {
+                                mediaButtonMode = MediaButtonMode.AUDIO
+                                videoCapture = null
+
                                 coroutineScope.launch {
                                     ChatRepository.sendVideoCircleMessage(
                                         context = appContext,
