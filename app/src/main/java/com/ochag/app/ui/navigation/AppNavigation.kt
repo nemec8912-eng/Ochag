@@ -1,6 +1,7 @@
 package com.ochag.app.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -142,6 +143,23 @@ fun AppNavigation() {
             val chatId = backStackEntry.arguments?.getString("chatId")?.toLongOrNull() ?: 0L
             val chat = ChatRepository.findChat(chatId)
             val title = chat?.title ?: "Чат"
+
+            LaunchedEffect(chatId) {
+                if (chatId > 0L) {
+                    ChatRepository.markChatOpened(
+                        context = context,
+                        chatId = chatId
+                    )
+                }
+            }
+
+            DisposableEffect(chatId) {
+                onDispose {
+                    if (chatId > 0L) {
+                        ChatRepository.markChatClosed(chatId)
+                    }
+                }
+            }
 
             ChatRoomScreen(
                 chatId = chatId,
