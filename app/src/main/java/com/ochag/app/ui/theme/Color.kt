@@ -2,17 +2,45 @@ package com.ochag.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Основные цвета интерфейса
-val CreamBackground = Color(0xFFF9F5F0) // Тёплый кремово-бежевый фон
-val CardWhite = Color(0xFFFFFBF6)       // Цвет карточек
-val BrownTextPrimary = Color(0xFF3E2C22) // Тёмно-коричневый текст (заголовки)
-val BrownTextSecondary = Color(0xFF8A7563) // Приглушённый текст (подсказки)
+// =====================================================
+// OCHAG UI v3.0
+// Тёплая семейная палитра по референсам
+// =====================================================
 
-// Акценты
-val TerracottaPrimary = Color(0xFFD17B5C) // Терракотово-оранжевый (кнопки)
-val TerracottaDark = Color(0xFFB85F3E)    // Тёмная терракота (нажатие кнопки)
-val TerracottaLight = Color(0xFFF2D5C7)   // Светлая теракота (фоны иконок)
+// Фон и поверхности
+val CreamBackground = Color(0xFFF7F1E8)
+val CreamBackgroundDeep = Color(0xFFF1E7DA)
+val CardWhite = Color(0xFFFFFCF8)
+val CardCream = Color(0xFFF9F3EB)
 
-// Вспомогательные
-val SoftGreen = Color(0xFF88A89A)         // Пастельный зелёный (растительные элементы)
-val BorderSoft = Color(0xFFE8DED3)        // Тонкие рамки
+// Текст
+val BrownTextPrimary = Color(0xFF3B2B24)
+val BrownTextSecondary = Color(0xFF8D7869)
+val BrownTextMuted = Color(0xFFB5A396)
+
+// Главный терракотовый акцент
+val TerracottaPrimary = Color(0xFFC9785D)
+val TerracottaDark = Color(0xFFAE624A)
+val TerracottaSoft = Color(0xFFF0D3C7)
+val TerracottaLight = Color(0xFFF6E4DC)
+
+// Зелёные акценты
+val SoftGreen = Color(0xFF93A998)
+val SoftGreenLight = Color(0xFFDDE7DE)
+val OnlineGreen = Color(0xFF6E9B76)
+
+// Нейтральные
+val BorderSoft = Color(0xFFE6D9CD)
+val DividerSoft = Color(0xFFEEE4DB)
+val ShadowWarm = Color(0x1F6E4B3B)
+
+// Чат
+val IncomingBubble = Color(0xFFFFFCF8)
+val OutgoingBubble = Color(0xFFC9785D)
+val OutgoingText = Color(0xFFFFFAF6)
+
+// Пастельные аватары
+val AvatarPeach = Color(0xFFF3D1C2)
+val AvatarSage = Color(0xFFD8E3D7)
+val AvatarSand = Color(0xFFE8DDC9)
+val AvatarRose = Color(0xFFEFD8D6)
