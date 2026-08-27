@@ -16,6 +16,7 @@ import com.ochag.app.data.ServerRealtime
 import com.ochag.app.ui.screens.home.HomeScreen
 import com.ochag.app.ui.screens.profile.ProfileScreen
 import com.ochag.app.ui.screens.login.LoginScreen
+import com.ochag.app.ui.screens.registration.InviteRegistrationScreen
 
 import com.ochag.app.ui.screens.chats.ChatListScreen
 import com.ochag.app.ui.screens.chats.ChatRoomScreen
@@ -26,50 +27,23 @@ import com.ochag.app.ui.screens.family.MemberProfileScreen
 
 import kotlinx.coroutines.launch
 
-
-sealed class Screen(
-    val route: String
-) {
-
-    object Home :
-        Screen("home")
-
-    object Chats :
-        Screen("chats")
-
-    object NewChat :
-        Screen("new_chat")
-
-    object ChatRoom :
-        Screen("chat/{chatId}")
-
-    object Family :
-        Screen("family")
-
-    object MemberProfile :
-        Screen("profile/{name}")
-
-    object MyProfile :
-        Screen("my_profile")
-
-    object Login :
-        Screen("login")
+sealed class Screen(val route: String) {
+    object Home : Screen("home")
+    object Chats : Screen("chats")
+    object NewChat : Screen("new_chat")
+    object ChatRoom : Screen("chat/{chatId}")
+    object Family : Screen("family")
+    object MemberProfile : Screen("profile/{name}")
+    object MyProfile : Screen("my_profile")
+    object Login : Screen("login")
+    object InviteRegistration : Screen("invite_registration")
 }
-
 
 @Composable
 fun AppNavigation() {
-
-    val navController =
-        rememberNavController()
-
-    val context =
-        LocalContext
-            .current
-            .applicationContext
-
-    val coroutineScope =
-        rememberCoroutineScope()
+    val navController = rememberNavController()
+    val context = LocalContext.current.applicationContext
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         ChatRepository.initialize(context)
@@ -79,197 +53,110 @@ fun AppNavigation() {
         navController = navController,
         startDestination = Screen.Home.route
     ) {
-
-        // =====================================================
-        // ГЛАВНАЯ
-        // =====================================================
-
         composable(Screen.Home.route) {
-
             HomeScreen(
-                onChatClick = { chatId ->
-                    navController.navigate("chat/$chatId")
-                },
-                onChatsClick = {
-                    navController.navigate(Screen.Chats.route)
-                },
-                onNewChatClick = {
-                    navController.navigate(Screen.NewChat.route)
-                },
-                onFamilyClick = {
-                    navController.navigate(Screen.Family.route)
-                },
-                onProfileClick = {
-                    navController.navigate(Screen.MyProfile.route)
-                }
+                onChatClick = { chatId -> navController.navigate("chat/$chatId") },
+                onChatsClick = { navController.navigate(Screen.Chats.route) },
+                onNewChatClick = { navController.navigate(Screen.NewChat.route) },
+                onFamilyClick = { navController.navigate(Screen.Family.route) },
+                onProfileClick = { navController.navigate(Screen.MyProfile.route) }
             )
         }
 
-        // =====================================================
-        // НАСТОЯЩИЙ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ
-        // =====================================================
-
         composable(Screen.MyProfile.route) {
-
             ProfileScreen(
-                onChatsClick = {
-                    navController.navigate(Screen.Chats.route)
-                },
-                onFamilyClick = {
-                    navController.navigate(Screen.Family.route)
-                },
-                onFilesClick = {
-                    // Отдельный маршрут файлов подключим следующим пакетом.
-                },
-                onInviteClick = {
-                    // Приглашения уже доступны из других экранов.
-                },
+                onChatsClick = { navController.navigate(Screen.Chats.route) },
+                onFamilyClick = { navController.navigate(Screen.Family.route) },
+                onFilesClick = { },
+                onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
                     ServerRealtime.disconnect()
-
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        // =====================================================
-        // ВХОД
-        // =====================================================
-
         composable(Screen.Login.route) {
-
             LoginScreen(
                 onLoginSuccess = {
-                    val user =
-                        OchagAppState.currentUser
-
+                    val user = OchagAppState.currentUser
                     if (user != null) {
                         ServerRealtime.connect(
                             context = context,
                             userName = user.name
                         )
                     }
-
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
+                },
+                onInviteRegistrationClick = {
+                    navController.navigate(Screen.InviteRegistration.route)
                 }
             )
         }
 
-        // =====================================================
-        // НОВЫЙ ЧАТ
-        // =====================================================
-
-        composable(Screen.NewChat.route) {
-
-            NewChatScreen(
+        composable(Screen.InviteRegistration.route) {
+            InviteRegistrationScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
+                onRequestSent = { }
+            )
+        }
+
+        composable(Screen.NewChat.route) {
+            NewChatScreen(
+                onBackClick = { navController.popBackStack() },
                 onChatCreated = { chat ->
                     navController.navigate("chat/${chat.id}") {
-                        popUpTo(Screen.NewChat.route) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.NewChat.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        // =====================================================
-        // СПИСОК ЧАТОВ
-        // =====================================================
-
         composable(Screen.Chats.route) {
-
             ChatListScreen(
-                onProfileClick = {
-                    navController.navigate(Screen.MyProfile.route)
-                },
-                onChatClick = { id, _ ->
-                    navController.navigate("chat/$id")
-                }
+                onProfileClick = { navController.navigate(Screen.MyProfile.route) },
+                onChatClick = { id, _ -> navController.navigate("chat/$id") }
             )
         }
 
-        // =====================================================
-        // КОМНАТА ЧАТА
-        // =====================================================
-
         composable(Screen.ChatRoom.route) { backStackEntry ->
-
-            val chatId =
-                backStackEntry
-                    .arguments
-                    ?.getString("chatId")
-                    ?.toLongOrNull()
-                    ?: 0L
-
-            val chat =
-                ChatRepository.findChat(chatId)
-
-            val title =
-                chat?.title
-                    ?: "Чат"
+            val chatId = backStackEntry.arguments?.getString("chatId")?.toLongOrNull() ?: 0L
+            val chat = ChatRepository.findChat(chatId)
+            val title = chat?.title ?: "Чат"
 
             ChatRoomScreen(
                 chatId = chatId,
                 chatTitle = title,
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onBackClick = { navController.popBackStack() }
             )
         }
-
-        // =====================================================
-        // СЕМЬЯ
-        // =====================================================
 
         composable(Screen.Family.route) {
-
             FamilyManagementScreen(
-                onMemberClick = { name ->
-                    navController.navigate("profile/$name")
-                }
+                onMemberClick = { name -> navController.navigate("profile/$name") }
             )
         }
 
-        // =====================================================
-        // КАРТОЧКА УЧАСТНИКА СЕМЬИ
-        // =====================================================
-
         composable(Screen.MemberProfile.route) { backStackEntry ->
-
-            val name =
-                backStackEntry
-                    .arguments
-                    ?.getString("name")
-                    ?: ""
+            val name = backStackEntry.arguments?.getString("name") ?: ""
 
             MemberProfileScreen(
                 name = name,
                 status = "Участник семьи",
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
                 onMessageClick = {
                     coroutineScope.launch {
-
-                        val chat =
-                            ChatRepository
-                                .createPrivateChat(
-                                    context = context,
-                                    memberName = name
-                                )
-
+                        val chat = ChatRepository.createPrivateChat(
+                            context = context,
+                            memberName = name
+                        )
                         navController.navigate("chat/${chat.id}")
                     }
                 }
