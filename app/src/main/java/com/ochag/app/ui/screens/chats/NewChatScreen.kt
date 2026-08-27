@@ -2,32 +2,23 @@ package com.ochag.app.ui.screens.chats
 
 import android.Manifest
 import android.content.pm.PackageManager
-
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.*
-
 import androidx.compose.runtime.*
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-
 import androidx.core.content.ContextCompat
-
 import com.ochag.app.data.Chat
 import com.ochag.app.data.ChatRepository
 import com.ochag.app.data.ChatType
@@ -36,997 +27,370 @@ import com.ochag.app.data.PhoneContact
 import com.ochag.app.data.PhoneContactsRepository
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.ServerUserProfile
-
+import com.ochag.app.ui.components.OchagAvatar
+import com.ochag.app.ui.components.OchagCard
+import com.ochag.app.ui.components.OchagPrimaryButton
+import com.ochag.app.ui.components.OchagSectionHeader
+import com.ochag.app.ui.components.OchagTextField
+import com.ochag.app.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 private enum class MemberSource {
     OCHAG,
     PHONE
 }
 
+private fun splitGluedParticipantName(value: String): List<String> {
+    val clean = value.trim()
+    if (clean.isBlank()) return emptyList()
 
-private fun splitGluedParticipantName(
-    value: String
-): List<String> {
+    val result = mutableListOf<String>()
+    val current = StringBuilder()
 
-    val clean =
-        value.trim()
+    clean.forEachIndexed { index, char ->
+        val previous = if (index > 0) clean[index - 1] else null
+        val shouldSplit = char.isUpperCase() && previous != null &&
+                (previous.isLowerCase() || previous.isDigit())
 
-    if (
-        clean.isBlank()
-    ) {
-        return emptyList()
-    }
-
-    val result =
-        mutableListOf<String>()
-
-    val current =
-        StringBuilder()
-
-    clean.forEachIndexed {
-            index,
-            char ->
-
-        val previous =
-            if (
-                index > 0
-            ) {
-                clean[index - 1]
-            } else {
-                null
-            }
-
-        val shouldSplit =
-            char.isUpperCase() &&
-                    previous != null &&
-                    (
-                            previous.isLowerCase() ||
-                                    previous.isDigit()
-                            )
-
-        if (
-            shouldSplit &&
-            current.isNotEmpty()
-        ) {
-
-            result.add(
-                current
-                    .toString()
-                    .trim()
-            )
-
+        if (shouldSplit && current.isNotEmpty()) {
+            result.add(current.toString().trim())
             current.clear()
         }
-
-        current.append(
-            char
-        )
+        current.append(char)
     }
 
-    if (
-        current.isNotEmpty()
-    ) {
+    if (current.isNotEmpty()) result.add(current.toString().trim())
 
-        result.add(
-            current
-                .toString()
-                .trim()
-        )
-    }
+    val cleaned = result
+        .map { it.trim(' ', ',', ';', '|', '/', '\\') }
+        .filter { it.isNotBlank() }
 
-    val cleaned =
-        result
-            .map {
-                it.trim(
-                    ' ',
-                    ',',
-                    ';',
-                    '|',
-                    '/',
-                    '\\'
-                )
-            }
-            .filter {
-                it.isNotBlank()
-            }
-
-    return if (
-        cleaned.size > 1
-    ) {
-        cleaned
-    } else {
-        listOf(
-            clean
-        )
-    }
+    return if (cleaned.size > 1) cleaned else listOf(clean)
 }
-
 
 @Composable
 fun NewChatScreen(
     onBackClick: () -> Unit,
     onChatCreated: (Chat) -> Unit
 ) {
+    val uiContext = LocalContext.current
+    val context = uiContext.applicationContext
+    val coroutineScope = rememberCoroutineScope()
 
-    val uiContext =
-        LocalContext.current
+    val currentUserName = OchagAppState.currentUser?.name?.trim().orEmpty().ifBlank { "Михаил" }
+    val serverUsers by ServerRealtime.serverUsers.collectAsState()
+    val serverProfiles by ServerRealtime.serverUserProfiles.collectAsState()
+    val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
 
-    val context =
-        uiContext.applicationContext
-
-    val coroutineScope =
-        rememberCoroutineScope()
-
-    val currentUserName =
-        OchagAppState
-            .currentUser
-            ?.name
-            ?.trim()
-            .orEmpty()
-            .ifBlank {
-                "Михаил"
-            }
-
-    val serverUsers by
-    ServerRealtime
-        .serverUsers
-        .collectAsState()
-
-    val serverProfiles by
-    ServerRealtime
-        .serverUserProfiles
-        .collectAsState()
-
-    val onlineUsers by
-    ServerRealtime
-        .onlineUsers
-        .collectAsState()
-
-    var selectedType by remember {
-        mutableStateOf(
-            ChatType.PRIVATE
-        )
-    }
-
-    var selectedSource by remember {
-        mutableStateOf(
-            MemberSource.OCHAG
-        )
-    }
-
-    var title by remember {
-        mutableStateOf("")
-    }
-
-    var searchText by remember {
-        mutableStateOf("")
-    }
-
-    var errorText by remember {
-        mutableStateOf("")
-    }
+    var selectedType by remember { mutableStateOf(ChatType.PRIVATE) }
+    var selectedSource by remember { mutableStateOf(MemberSource.OCHAG) }
+    var title by remember { mutableStateOf("") }
+    var searchText by remember { mutableStateOf("") }
+    var errorText by remember { mutableStateOf("") }
 
     var contactsGranted by remember {
-
         mutableStateOf(
-            ContextCompat
-                .checkSelfPermission(
-                    uiContext,
-                    Manifest.permission.READ_CONTACTS
-                ) ==
+            ContextCompat.checkSelfPermission(uiContext, Manifest.permission.READ_CONTACTS) ==
                     PackageManager.PERMISSION_GRANTED
         )
     }
 
-    var phoneContacts by remember {
-        mutableStateOf<List<PhoneContact>>(
-            emptyList()
-        )
-    }
+    var phoneContacts by remember { mutableStateOf<List<PhoneContact>>(emptyList()) }
+    val selectedMembers = remember { mutableStateListOf<String>() }
 
-    val selectedMembers =
-        remember {
-            mutableStateListOf<String>()
-        }
-
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts
-                .RequestPermission()
-        ) {
-                granted ->
-
-            contactsGranted =
-                granted
-
-            if (
-                granted
-            ) {
-
-                coroutineScope.launch {
-
-                    phoneContacts =
-                        withContext(
-                            Dispatchers.IO
-                        ) {
-                            PhoneContactsRepository
-                                .loadContacts(
-                                    context
-                                )
-                        }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        contactsGranted = granted
+        if (granted) {
+            coroutineScope.launch {
+                phoneContacts = withContext(Dispatchers.IO) {
+                    PhoneContactsRepository.loadContacts(context)
                 }
             }
         }
-
-
-    LaunchedEffect(
-        Unit
-    ) {
-
-        ServerRealtime
-            .requestServerUsers()
-
-        if (
-            contactsGranted
-        ) {
-
-            phoneContacts =
-                withContext(
-                    Dispatchers.IO
-                ) {
-                    PhoneContactsRepository
-                        .loadContacts(
-                            context
-                        )
-                }
-        }
     }
 
-
-    val availableMembers =
-        remember(
-            serverUsers,
-            onlineUsers,
-            ChatRepository.chats.size,
-            currentUserName,
-            searchText
-        ) {
-
-            val familyMembers =
-                ChatRepository
-                    .findChat(
-                        1L
-                    )
-                    ?.members
-                    ?.flatMap {
-                        splitGluedParticipantName(
-                            it
-                        )
-                    }
-                    ?: emptyList()
-
-            (
-                    serverUsers
-                        .flatMap {
-                            splitGluedParticipantName(
-                                it
-                            )
-                        } +
-                            familyMembers
-                    )
-                .map {
-                    it.trim()
-                }
-                .filter {
-                    it.isNotBlank() &&
-                            !it.equals(
-                                currentUserName,
-                                ignoreCase = true
-                            )
-                }
-                .distinctBy {
-                    it.lowercase()
-                }
-                .filter {
-                    searchText.isBlank() ||
-                            it.contains(
-                                searchText.trim(),
-                                ignoreCase = true
-                            )
-                }
-                .sortedWith(
-                    compareByDescending<String> {
-                            member ->
-
-                        onlineUsers.any {
-                            it.equals(
-                                member,
-                                ignoreCase = true
-                            )
-                        }
-                    }
-                        .thenBy {
-                            it.lowercase()
-                        }
-                )
-        }
-
-
-    val filteredPhoneContacts =
-        remember(
-            phoneContacts,
-            searchText
-        ) {
-
-            phoneContacts
-                .filter {
-                    searchText.isBlank() ||
-                            it.name.contains(
-                                searchText.trim(),
-                                ignoreCase = true
-                            ) ||
-                            it.phone.contains(
-                                searchText.trim()
-                            )
-                }
-        }
-
-
-    fun serverProfileFor(
-        contact: PhoneContact
-    ): ServerUserProfile? {
-
-        return serverProfiles
-            .firstOrNull {
-
-                it.normalizedPhone
-                    .isNotBlank() &&
-                        it.normalizedPhone ==
-                        contact.normalizedPhone
+    LaunchedEffect(Unit) {
+        ServerRealtime.requestServerUsers()
+        if (contactsGranted) {
+            phoneContacts = withContext(Dispatchers.IO) {
+                PhoneContactsRepository.loadContacts(context)
             }
+        }
     }
 
-
-    fun toggleMember(
-        member: String
+    val availableMembers = remember(
+        serverUsers,
+        onlineUsers,
+        ChatRepository.chats.size,
+        currentUserName,
+        searchText
     ) {
+        val familyMembers = ChatRepository.findChat(1L)
+            ?.members
+            ?.flatMap { splitGluedParticipantName(it) }
+            ?: emptyList()
 
-        if (
-            selectedType ==
-            ChatType.PRIVATE
-        ) {
-
-            selectedMembers.clear()
-
-            selectedMembers.add(
-                member
+        (serverUsers.flatMap { splitGluedParticipantName(it) } + familyMembers)
+            .map { it.trim() }
+            .filter { it.isNotBlank() && !it.equals(currentUserName, ignoreCase = true) }
+            .distinctBy { it.lowercase() }
+            .filter {
+                searchText.isBlank() || it.contains(searchText.trim(), ignoreCase = true)
+            }
+            .sortedWith(
+                compareByDescending<String> { member ->
+                    onlineUsers.any { it.equals(member, ignoreCase = true) }
+                }.thenBy { it.lowercase() }
             )
+    }
 
-        } else {
+    val filteredPhoneContacts = remember(phoneContacts, searchText) {
+        phoneContacts.filter {
+            searchText.isBlank() ||
+                    it.name.contains(searchText.trim(), ignoreCase = true) ||
+                    it.phone.contains(searchText.trim())
+        }
+    }
 
-            val exists =
-                selectedMembers.any {
-                    it.equals(
-                        member,
-                        ignoreCase = true
-                    )
-                }
-
-            if (
-                exists
-            ) {
-
-                selectedMembers
-                    .removeAll {
-                        it.equals(
-                            member,
-                            ignoreCase = true
-                        )
-                    }
-
-            } else {
-
-                selectedMembers.add(
-                    member
-                )
-            }
+    fun serverProfileFor(contact: PhoneContact): ServerUserProfile? =
+        serverProfiles.firstOrNull {
+            it.normalizedPhone.isNotBlank() && it.normalizedPhone == contact.normalizedPhone
         }
 
+    fun toggleMember(member: String) {
+        if (selectedType == ChatType.PRIVATE) {
+            selectedMembers.clear()
+            selectedMembers.add(member)
+        } else {
+            val exists = selectedMembers.any { it.equals(member, ignoreCase = true) }
+            if (exists) {
+                selectedMembers.removeAll { it.equals(member, ignoreCase = true) }
+            } else {
+                selectedMembers.add(member)
+            }
+        }
         errorText = ""
     }
 
-
     Surface(
-        modifier =
-            Modifier.fillMaxSize(),
-        color =
-            MaterialTheme
-                .colorScheme
-                .background
+        modifier = Modifier.fillMaxSize(),
+        color = CreamBackground
     ) {
-
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 12.dp
-                    )
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
-
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
-
-                TextButton(
-                    onClick =
-                        onBackClick
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clickable(onClick = onBackClick),
+                    shape = CircleShape,
+                    color = CardWhite,
+                    shadowElevation = 3.dp
                 ) {
-
-                    Text(
-                        "← Назад"
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("←", color = BrownTextPrimary)
+                    }
                 }
 
+                Spacer(Modifier.width(12.dp))
 
-                Spacer(
-                    modifier =
-                        Modifier.width(
-                            6.dp
-                        )
-                )
-
-
-                Column(
-                    modifier =
-                        Modifier.weight(
-                            1f
-                        )
-                ) {
-
-                    Text(
-                        text =
-                            "Новый чат",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .headlineSmall,
-                        fontWeight =
-                            FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text =
-                            if (
-                                selectedType ==
-                                ChatType.PRIVATE
-                            ) {
-                                "Выберите человека"
-                            } else {
-                                "Соберите свой круг"
-                            },
-                        style =
-                            MaterialTheme
-                                .typography
-                                .bodySmall,
-                        color =
-                            MaterialTheme
-                                .colorScheme
-                                .onSurfaceVariant
-                    )
-                }
-            }
-
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        12.dp
-                    )
-            )
-
-
-            Row(
-                horizontalArrangement =
-                    Arrangement.spacedBy(
-                        8.dp
-                    )
-            ) {
-
-                FilterChip(
-                    selected =
-                        selectedType ==
-                                ChatType.PRIVATE,
-                    onClick = {
-                        selectedType =
-                            ChatType.PRIVATE
-                        selectedMembers.clear()
-                        errorText = ""
+                OchagSectionHeader(
+                    title = "Новый чат",
+                    subtitle = if (selectedType == ChatType.PRIVATE) {
+                        "Выбери человека для личного диалога"
+                    } else {
+                        "Собери своё пространство для общения"
                     },
-                    label = {
-                        Text(
-                            "Личный"
-                        )
-                    }
-                )
-
-
-                FilterChip(
-                    selected =
-                        selectedType ==
-                                ChatType.GROUP,
-                    onClick = {
-                        selectedType =
-                            ChatType.GROUP
-                        selectedMembers.clear()
-                        errorText = ""
-                    },
-                    label = {
-                        Text(
-                            "Группа"
-                        )
-                    }
-                )
-
-
-                FilterChip(
-                    selected =
-                        selectedType ==
-                                ChatType.THEME,
-                    onClick = {
-                        selectedType =
-                            ChatType.THEME
-                        selectedMembers.clear()
-                        errorText = ""
-                    },
-                    label = {
-                        Text(
-                            "Тема"
-                        )
-                    }
+                    modifier = Modifier.weight(1f)
                 )
             }
 
+            Spacer(Modifier.height(16.dp))
 
-            if (
-                selectedType !=
-                ChatType.PRIVATE
+            OchagCard(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(12.dp)
             ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TypePill(
+                        modifier = Modifier.weight(1f),
+                        title = "Личный",
+                        selected = selectedType == ChatType.PRIVATE
+                    ) {
+                        selectedType = ChatType.PRIVATE
+                        selectedMembers.clear()
+                        errorText = ""
+                    }
+                    TypePill(
+                        modifier = Modifier.weight(1f),
+                        title = "Группа",
+                        selected = selectedType == ChatType.GROUP
+                    ) {
+                        selectedType = ChatType.GROUP
+                        selectedMembers.clear()
+                        errorText = ""
+                    }
+                    TypePill(
+                        modifier = Modifier.weight(1f),
+                        title = "Тема",
+                        selected = selectedType == ChatType.THEME
+                    ) {
+                        selectedType = ChatType.THEME
+                        selectedMembers.clear()
+                        errorText = ""
+                    }
+                }
+            }
 
-                Spacer(
-                    modifier =
-                        Modifier.height(
-                            10.dp
-                        )
-                )
-
-
-                OutlinedTextField(
-                    value =
-                        title,
+            if (selectedType != ChatType.PRIVATE) {
+                Spacer(Modifier.height(12.dp))
+                OchagTextField(
+                    value = title,
                     onValueChange = {
                         title = it
                         errorText = ""
                     },
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    label = {
-                        Text(
-                            if (
-                                selectedType ==
-                                ChatType.GROUP
-                            ) {
-                                "Название группы"
-                            } else {
-                                "Название темы"
-                            }
-                        )
-                    },
-                    singleLine =
-                        true,
-                    shape =
-                        RoundedCornerShape(
-                            18.dp
-                        )
+                    label = if (selectedType == ChatType.GROUP) "Название группы" else "Название темы",
+                    placeholder = "Например, Поездка летом"
                 )
             }
 
+            Spacer(Modifier.height(12.dp))
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        12.dp
-                    )
-            )
-
-
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(
-                        8.dp
-                    )
-            ) {
-
-                FilterChip(
-                    selected =
-                        selectedSource ==
-                                MemberSource.OCHAG,
-                    onClick = {
-                        selectedSource =
-                            MemberSource.OCHAG
-                    },
-                    label = {
-                        Text(
-                            "В Очаге"
-                        )
-                    }
-                )
-
-
-                FilterChip(
-                    selected =
-                        selectedSource ==
-                                MemberSource.PHONE,
-                    onClick = {
-
-                        selectedSource =
-                            MemberSource.PHONE
-
-                        if (
-                            !contactsGranted
-                        ) {
-
-                            permissionLauncher
-                                .launch(
-                                    Manifest.permission.READ_CONTACTS
-                                )
-
-                        } else {
-
-                            coroutineScope.launch {
-
-                                phoneContacts =
-                                    withContext(
-                                        Dispatchers.IO
-                                    ) {
-                                        PhoneContactsRepository
-                                            .loadContacts(
-                                                context
-                                            )
-                                    }
-                            }
-                        }
-                    },
-                    label = {
-                        Text(
-                            "Контакты телефона"
-                        )
-                    }
-                )
-            }
-
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        10.dp
-                    )
-            )
-
-
-            OutlinedTextField(
-                value =
-                    searchText,
-                onValueChange = {
-                    searchText = it
-                },
-                modifier =
-                    Modifier.fillMaxWidth(),
-                singleLine =
-                    true,
-                shape =
-                    RoundedCornerShape(
-                        18.dp
-                    ),
-                label = {
-                    Text(
-                        if (
-                            selectedSource ==
-                            MemberSource.PHONE
-                        ) {
-                            "Поиск по контактам"
-                        } else {
-                            "Поиск участника"
-                        }
-                    )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SourcePill(
+                    title = "В Очаге",
+                    selected = selectedSource == MemberSource.OCHAG
+                ) {
+                    selectedSource = MemberSource.OCHAG
                 }
+
+                SourcePill(
+                    title = "Контакты",
+                    selected = selectedSource == MemberSource.PHONE
+                ) {
+                    selectedSource = MemberSource.PHONE
+                    if (!contactsGranted) {
+                        permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                    } else {
+                        coroutineScope.launch {
+                            phoneContacts = withContext(Dispatchers.IO) {
+                                PhoneContactsRepository.loadContacts(context)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            OchagTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                label = if (selectedSource == MemberSource.PHONE) "Поиск по контактам" else "Поиск участника",
+                placeholder = "Имя или номер"
             )
 
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        10.dp
-                    )
-            )
-
+            Spacer(Modifier.height(12.dp))
 
             Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                verticalAlignment =
-                    Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = if (selectedMembers.isEmpty()) "Участники" else "Выбрано: ${selectedMembers.size}",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrownTextPrimary
+                )
 
                 Text(
-                    text =
-                        if (
-                            selectedMembers.isEmpty()
-                        ) {
-                            "Участники"
-                        } else {
-                            "Выбрано: ${selectedMembers.size}"
-                        },
-                    modifier =
-                        Modifier.weight(
-                            1f
-                        ),
-                    style =
-                        MaterialTheme
-                            .typography
-                            .titleMedium,
-                    fontWeight =
-                        FontWeight.SemiBold
+                    text = if (selectedSource == MemberSource.PHONE) {
+                        "${filteredPhoneContacts.size} контактов"
+                    } else {
+                        "${availableMembers.size} доступно"
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = BrownTextSecondary
                 )
-
-                if (
-                    selectedSource ==
-                    MemberSource.PHONE
-                ) {
-
-                    Text(
-                        text =
-                            "${filteredPhoneContacts.size} контактов",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .labelMedium,
-                        color =
-                            MaterialTheme
-                                .colorScheme
-                                .onSurfaceVariant
-                    )
-
-                } else {
-
-                    Text(
-                        text =
-                            "${availableMembers.size} доступно",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .labelMedium,
-                        color =
-                            MaterialTheme
-                                .colorScheme
-                                .onSurfaceVariant
-                    )
-                }
             }
 
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        8.dp
-                    )
-            )
-
-
-            if (
-                selectedSource ==
-                MemberSource.OCHAG
-            ) {
-
+            if (selectedSource == MemberSource.OCHAG) {
                 LazyColumn(
-                    modifier =
-                        Modifier.weight(
-                            1f
-                        ),
-                    verticalArrangement =
-                        Arrangement.spacedBy(
-                            8.dp
-                        ),
-                    contentPadding =
-                        PaddingValues(
-                            bottom = 12.dp
-                        )
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 12.dp)
                 ) {
-
-                    items(
-                        items =
-                            availableMembers,
-                        key = {
-                            it.lowercase()
-                        }
-                    ) {
-                            member ->
-
-                        val selected =
-                            selectedMembers.any {
-                                it.equals(
-                                    member,
-                                    ignoreCase = true
-                                )
-                            }
-
-                        val isOnline =
-                            onlineUsers.any {
-                                it.equals(
-                                    member,
-                                    ignoreCase = true
-                                )
-                            }
+                    items(availableMembers, key = { it.lowercase() }) { member ->
+                        val selected = selectedMembers.any { it.equals(member, ignoreCase = true) }
+                        val isOnline = onlineUsers.any { it.equals(member, ignoreCase = true) }
 
                         MemberCard(
-                            name =
-                                member,
-                            subtitle =
-                                if (
-                                    isOnline
-                                ) {
-                                    "● В сети"
-                                } else {
-                                    "○ Не в сети"
-                                },
-                            selected =
-                                selected,
-                            onClick = {
-                                toggleMember(
-                                    member
-                                )
-                            }
+                            name = member,
+                            subtitle = if (isOnline) "В сети" else "Не в сети",
+                            online = isOnline,
+                            selected = selected,
+                            onClick = { toggleMember(member) }
                         )
                     }
                 }
-
             } else {
-
-                if (
-                    !contactsGranted
-                ) {
-
-                    Card(
-                        modifier =
-                            Modifier.fillMaxWidth()
+                if (!contactsGranted) {
+                    OchagCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(18.dp)
                     ) {
-
-                        Column(
-                            modifier =
-                                Modifier.padding(
-                                    16.dp
-                                )
-                        ) {
-
+                        Column {
                             Text(
-                                "Нужен доступ к контактам телефона."
+                                text = "Нужен доступ к контактам телефона",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = BrownTextPrimary
                             )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(
-                                        8.dp
-                                    )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Разреши доступ, чтобы находить близких по номеру телефона.",
+                                color = BrownTextSecondary
                             )
-
-                            Button(
-                                onClick = {
-                                    permissionLauncher
-                                        .launch(
-                                            Manifest.permission.READ_CONTACTS
-                                        )
-                                }
-                            ) {
-
-                                Text(
-                                    "Разрешить доступ"
-                                )
+                            Spacer(Modifier.height(12.dp))
+                            OchagPrimaryButton(text = "Разрешить доступ") {
+                                permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                             }
                         }
                     }
-
-                    Spacer(
-                        modifier =
-                            Modifier.weight(
-                                1f
-                            )
-                    )
-
+                    Spacer(Modifier.weight(1f))
                 } else {
-
                     LazyColumn(
-                        modifier =
-                            Modifier.weight(
-                                1f
-                            ),
-                        verticalArrangement =
-                            Arrangement.spacedBy(
-                                8.dp
-                            ),
-                        contentPadding =
-                            PaddingValues(
-                                bottom = 12.dp
-                            )
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(bottom = 12.dp)
                     ) {
-
-                        items(
-                            items =
-                                filteredPhoneContacts,
-                            key = {
-                                it.normalizedPhone
+                        items(filteredPhoneContacts, key = { it.normalizedPhone }) { contact ->
+                            val profile = serverProfileFor(contact)
+                            val registered = profile != null
+                            val memberName = profile?.name.orEmpty()
+                            val selected = registered && selectedMembers.any {
+                                it.equals(memberName, ignoreCase = true)
                             }
-                        ) {
-                                contact ->
-
-                            val profile =
-                                serverProfileFor(
-                                    contact
-                                )
-
-                            val registered =
-                                profile != null
-
-                            val memberName =
-                                profile
-                                    ?.name
-                                    .orEmpty()
-
-                            val selected =
-                                registered &&
-                                        selectedMembers.any {
-                                            it.equals(
-                                                memberName,
-                                                ignoreCase = true
-                                            )
-                                        }
 
                             PhoneContactCard(
-                                contact =
-                                    contact,
-                                registeredName =
-                                    profile
-                                        ?.name
-                                        .orEmpty(),
-                                selected =
-                                    selected,
+                                contact = contact,
+                                registeredName = memberName,
+                                selected = selected,
                                 onSelect = {
-
-                                    if (
-                                        profile != null
-                                    ) {
-
-                                        toggleMember(
-                                            profile.name
-                                        )
-                                    }
+                                    if (profile != null) toggleMember(profile.name)
                                 },
                                 onInvite = {
-
-                                    PhoneContactsRepository
-                                        .inviteBySms(
-                                            context,
-                                            contact
-                                        )
+                                    PhoneContactsRepository.inviteBySms(context, contact)
                                 }
                             )
                         }
@@ -1034,296 +398,176 @@ fun NewChatScreen(
                 }
             }
 
-
-            if (
-                errorText.isNotBlank()
-            ) {
-
+            if (errorText.isNotBlank()) {
                 Text(
-                    text =
-                        errorText,
-                    modifier =
-                        Modifier.padding(
-                            vertical = 6.dp
-                        ),
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .error
+                    text = errorText,
+                    modifier = Modifier.padding(vertical = 6.dp),
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
-
-            Button(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(
-                            56.dp
-                        ),
-                shape =
-                    RoundedCornerShape(
-                        18.dp
-                    ),
-                onClick = {
-
-                    when (
-                        selectedType
-                    ) {
-
-                        ChatType.PRIVATE -> {
-
-                            if (
-                                selectedMembers
-                                    .isEmpty()
-                            ) {
-
-                                errorText =
-                                    "Выберите пользователя «Очага»"
-
-                                return@Button
-                            }
-
-                            val member =
-                                selectedMembers
-                                    .first()
-
-                            coroutineScope.launch {
-
-                                val chat =
-                                    ChatRepository
-                                        .createPrivateChat(
-                                            context =
-                                                context,
-                                            memberName =
-                                                member
-                                        )
-
-                                onChatCreated(
-                                    chat
-                                )
-                            }
-                        }
-
-
-                        ChatType.GROUP -> {
-
-                            if (
-                                title.isBlank()
-                            ) {
-
-                                errorText =
-                                    "Введите название группы"
-
-                                return@Button
-                            }
-
-                            if (
-                                selectedMembers
-                                    .isEmpty()
-                            ) {
-
-                                errorText =
-                                    "Выберите участников"
-
-                                return@Button
-                            }
-
-                            coroutineScope.launch {
-
-                                val chat =
-                                    ChatRepository
-                                        .createCustomChat(
-                                            context =
-                                                context,
-                                            title =
-                                                title.trim(),
-                                            type =
-                                                ChatType.GROUP,
-                                            selectedMembers =
-                                                selectedMembers
-                                                    .toList()
-                                        )
-
-                                onChatCreated(
-                                    chat
-                                )
-                            }
-                        }
-
-
-                        ChatType.THEME -> {
-
-                            if (
-                                title.isBlank()
-                            ) {
-
-                                errorText =
-                                    "Введите название темы"
-
-                                return@Button
-                            }
-
-                            coroutineScope.launch {
-
-                                val chat =
-                                    ChatRepository
-                                        .createCustomChat(
-                                            context =
-                                                context,
-                                            title =
-                                                title.trim(),
-                                            type =
-                                                ChatType.THEME,
-                                            selectedMembers =
-                                                selectedMembers
-                                                    .toList()
-                                        )
-
-                                onChatCreated(
-                                    chat
-                                )
-                            }
-                        }
-
-
-                        ChatType.FAMILY -> {
-                        }
-                    }
+            OchagPrimaryButton(
+                text = when (selectedType) {
+                    ChatType.PRIVATE -> "Открыть личный чат"
+                    ChatType.GROUP -> "Создать группу"
+                    ChatType.THEME -> "Создать тему"
+                    ChatType.FAMILY -> "Создать чат"
                 }
             ) {
-
-                Text(
-                    text =
-                        when (
-                            selectedType
-                        ) {
-
-                            ChatType.PRIVATE ->
-                                "Открыть личный чат"
-
-                            ChatType.GROUP ->
-                                "Создать группу"
-
-                            ChatType.THEME ->
-                                "Создать тему"
-
-                            ChatType.FAMILY ->
-                                "Создать чат"
+                when (selectedType) {
+                    ChatType.PRIVATE -> {
+                        if (selectedMembers.isEmpty()) {
+                            errorText = "Выберите пользователя «Очага»"
+                            return@OchagPrimaryButton
                         }
-                )
+                        val member = selectedMembers.first()
+                        coroutineScope.launch {
+                            val chat = ChatRepository.createPrivateChat(
+                                context = context,
+                                memberName = member
+                            )
+                            onChatCreated(chat)
+                        }
+                    }
+
+                    ChatType.GROUP -> {
+                        if (title.isBlank()) {
+                            errorText = "Введите название группы"
+                            return@OchagPrimaryButton
+                        }
+                        if (selectedMembers.isEmpty()) {
+                            errorText = "Выберите участников"
+                            return@OchagPrimaryButton
+                        }
+                        coroutineScope.launch {
+                            val chat = ChatRepository.createCustomChat(
+                                context = context,
+                                title = title.trim(),
+                                type = ChatType.GROUP,
+                                selectedMembers = selectedMembers.toList()
+                            )
+                            onChatCreated(chat)
+                        }
+                    }
+
+                    ChatType.THEME -> {
+                        if (title.isBlank()) {
+                            errorText = "Введите название темы"
+                            return@OchagPrimaryButton
+                        }
+                        coroutineScope.launch {
+                            val chat = ChatRepository.createCustomChat(
+                                context = context,
+                                title = title.trim(),
+                                type = ChatType.THEME,
+                                selectedMembers = selectedMembers.toList()
+                            )
+                            onChatCreated(chat)
+                        }
+                    }
+
+                    ChatType.FAMILY -> Unit
+                }
             }
         }
     }
 }
 
+@Composable
+private fun TypePill(
+    modifier: Modifier,
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .height(48.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = if (selected) TerracottaPrimary else CreamBackground
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = title,
+                color = if (selected) Color.White else BrownTextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun SourcePill(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.clickable(onClick = onClick),
+        shape = RoundedCornerShape(18.dp),
+        color = if (selected) TerracottaSoft else CardWhite,
+        shadowElevation = if (selected) 0.dp else 2.dp
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            color = if (selected) TerracottaDark else BrownTextSecondary,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+        )
+    }
+}
 
 @Composable
 private fun MemberCard(
     name: String,
     subtitle: String,
+    online: Boolean,
     selected: Boolean,
     onClick: () -> Unit
 ) {
-
-    Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable {
-                    onClick()
-                },
-        shape =
-            RoundedCornerShape(
-                18.dp
-            ),
-        colors =
-            CardDefaults
-                .cardColors(
-                    containerColor =
-                        if (
-                            selected
-                        ) {
-                            MaterialTheme
-                                .colorScheme
-                                .primaryContainer
-                        } else {
-                            MaterialTheme
-                                .colorScheme
-                                .surfaceVariant
-                        }
-                )
+    OchagCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = if (selected) 2.dp else 4.dp,
+        contentPadding = PaddingValues(14.dp),
+        onClick = onClick
     ) {
-
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        12.dp
-                    ),
-            verticalAlignment =
-                Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            ContactAvatar(
-                name =
-                    name
+            OchagAvatar(
+                name = name,
+                size = 50.dp,
+                online = online,
+                backgroundColor = if (selected) TerracottaSoft else SoftGreenLight
             )
 
+            Spacer(Modifier.width(12.dp))
 
-            Spacer(
-                modifier =
-                    Modifier.width(
-                        12.dp
-                    )
-            )
-
-
-            Column(
-                modifier =
-                    Modifier.weight(
-                        1f
-                    )
-            ) {
-
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text =
-                        name,
-                    maxLines =
-                        1,
-                    overflow =
-                        TextOverflow.Ellipsis,
-                    fontWeight =
-                        FontWeight.Medium
+                    text = name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrownTextPrimary
                 )
-
                 Text(
-                    text =
-                        subtitle,
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodySmall,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .onSurfaceVariant
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (online) OnlineGreen else BrownTextSecondary
                 )
             }
 
-
-            Checkbox(
-                checked =
-                    selected,
-                onCheckedChange = {
-                    onClick()
-                }
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(selectedColor = TerracottaPrimary)
             )
         }
     }
 }
-
 
 @Composable
 private fun PhoneContactCard(
@@ -1333,182 +577,56 @@ private fun PhoneContactCard(
     onSelect: () -> Unit,
     onInvite: () -> Unit
 ) {
+    val registered = registeredName.isNotBlank()
 
-    val registered =
-        registeredName.isNotBlank()
-
-    Card(
-        modifier =
-            Modifier.fillMaxWidth(),
-        shape =
-            RoundedCornerShape(
-                18.dp
-            ),
-        colors =
-            CardDefaults
-                .cardColors(
-                    containerColor =
-                        if (
-                            selected
-                        ) {
-                            MaterialTheme
-                                .colorScheme
-                                .primaryContainer
-                        } else {
-                            MaterialTheme
-                                .colorScheme
-                                .surfaceVariant
-                        }
-                )
+    OchagCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = 4.dp,
+        contentPadding = PaddingValues(14.dp)
     ) {
-
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        12.dp
-                    ),
-            verticalAlignment =
-                Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            ContactAvatar(
-                name =
-                    contact.name
+            OchagAvatar(
+                name = contact.name,
+                size = 50.dp,
+                backgroundColor = SoftGreenLight
             )
 
+            Spacer(Modifier.width(12.dp))
 
-            Spacer(
-                modifier =
-                    Modifier.width(
-                        12.dp
-                    )
-            )
-
-
-            Column(
-                modifier =
-                    Modifier.weight(
-                        1f
-                    )
-            ) {
-
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text =
-                        contact.name,
-                    maxLines =
-                        1,
-                    overflow =
-                        TextOverflow.Ellipsis,
-                    fontWeight =
-                        FontWeight.Medium
+                    text = contact.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrownTextPrimary
                 )
-
                 Text(
-                    text =
-                        contact.phone,
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodySmall,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .onSurfaceVariant
+                    text = contact.phone,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = BrownTextSecondary
                 )
-
                 Text(
-                    text =
-                        if (
-                            registered
-                        ) {
-                            "✓ В Очаге: $registeredName"
-                        } else {
-                            "Ещё не в Очаге"
-                        },
-                    style =
-                        MaterialTheme
-                            .typography
-                            .labelSmall,
-                    color =
-                        if (
-                            registered
-                        ) {
-                            MaterialTheme
-                                .colorScheme
-                                .primary
-                        } else {
-                            MaterialTheme
-                                .colorScheme
-                                .onSurfaceVariant
-                        }
+                    text = if (registered) "В Очаге: $registeredName" else "Ещё не в Очаге",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (registered) OnlineGreen else BrownTextSecondary
                 )
             }
 
-
-            if (
-                registered
-            ) {
-
-                Checkbox(
-                    checked =
-                        selected,
-                    onCheckedChange = {
-                        onSelect()
-                    }
+            if (registered) {
+                RadioButton(
+                    selected = selected,
+                    onClick = onSelect,
+                    colors = RadioButtonDefaults.colors(selectedColor = TerracottaPrimary)
                 )
-
             } else {
-
-                TextButton(
-                    onClick =
-                        onInvite
-                ) {
-
-                    Text(
-                        "Пригласить"
-                    )
+                TextButton(onClick = onInvite) {
+                    Text("Пригласить", color = TerracottaDark)
                 }
             }
         }
-    }
-}
-
-
-@Composable
-private fun ContactAvatar(
-    name: String
-) {
-
-    Box(
-        modifier =
-            Modifier
-                .size(
-                    46.dp
-                )
-                .clip(
-                    CircleShape
-                )
-                .background(
-                    MaterialTheme
-                        .colorScheme
-                        .secondaryContainer
-                ),
-        contentAlignment =
-            Alignment.Center
-    ) {
-
-        Text(
-            text =
-                name
-                    .firstOrNull {
-                        it.isLetterOrDigit()
-                    }
-                    ?.uppercase()
-                    ?: "О",
-            fontWeight =
-                FontWeight.Bold
-        )
     }
 }
