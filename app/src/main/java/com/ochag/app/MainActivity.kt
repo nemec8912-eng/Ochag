@@ -1,6 +1,7 @@
 package com.ochag.app
 
 import android.os.Bundle
+import android.util.Log
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,12 +21,25 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
 
+    companion object {
+
+        private const val TAG =
+            "MainActivity"
+    }
+
+
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
 
         super.onCreate(
             savedInstanceState
+        )
+
+
+        Log.d(
+            TAG,
+            "ON_CREATE"
         )
 
 
@@ -56,6 +70,11 @@ class MainActivity : ComponentActivity() {
                         user != null
                     ) {
 
+                        Log.d(
+                            TAG,
+                            "DataStore user: login=${user.first}, name=${user.second}, owner=${user.third}"
+                        )
+
 
                         OchagAppState.restoreUser(
 
@@ -70,6 +89,12 @@ class MainActivity : ComponentActivity() {
                         )
 
 
+                        Log.d(
+                            TAG,
+                            "CONNECT_FROM_DATASTORE: ${user.second}"
+                        )
+
+
                         ServerRealtime.connect(
 
                             context =
@@ -81,6 +106,11 @@ class MainActivity : ComponentActivity() {
 
 
                     } else {
+
+                        Log.w(
+                            TAG,
+                            "DataStore user = null"
+                        )
 
 
                         ServerRealtime.disconnect()
@@ -110,15 +140,41 @@ class MainActivity : ComponentActivity() {
         super.onStart()
 
 
+        Log.d(
+            TAG,
+            "ON_START: Подключить к WebSocket"
+        )
+
+
         ServerRealtime.ensureConnected(
             applicationContext
         )
     }
 
 
+    override fun onStop() {
+
+        Log.d(
+            TAG,
+            "ON_STOP: WebSocket не отключаем"
+        )
+
+
+        super.onStop()
+    }
+
+
     override fun onDestroy() {
 
-        if (isFinishing) {
+        Log.d(
+            TAG,
+            "ON_DESTROY: isFinishing=$isFinishing"
+        )
+
+
+        if (
+            isFinishing
+        ) {
 
             ServerRealtime.disconnect()
         }
