@@ -11,12 +11,28 @@ import androidx.core.view.WindowCompat
 
 private val OchagColorScheme = lightColorScheme(
     primary = TerracottaPrimary,
-    onPrimary = CardWhite,
+    onPrimary = OutgoingText,
+    primaryContainer = TerracottaLight,
+    onPrimaryContainer = BrownTextPrimary,
+
     secondary = SoftGreen,
+    onSecondary = CardWhite,
+    secondaryContainer = SoftGreenLight,
+    onSecondaryContainer = BrownTextPrimary,
+
     background = CreamBackground,
+    onBackground = BrownTextPrimary,
+
     surface = CardWhite,
     onSurface = BrownTextPrimary,
-    onBackground = BrownTextPrimary
+    surfaceVariant = CardCream,
+    onSurfaceVariant = BrownTextSecondary,
+
+    outline = BorderSoft,
+    outlineVariant = DividerSoft,
+
+    error = TerracottaDark,
+    onError = CardWhite
 )
 
 @Composable
@@ -30,11 +46,15 @@ fun OchagTheme(
             val window = (view.context as Activity).window
 
             window.statusBarColor = CreamBackground.toArgb()
+            window.navigationBarColor = CreamBackground.toArgb()
 
             WindowCompat.getInsetsController(
                 window,
                 view
-            ).isAppearanceLightStatusBars = true
+            ).apply {
+                isAppearanceLightStatusBars = true
+                isAppearanceLightNavigationBars = true
+            }
         }
     }
 
