@@ -1,0 +1,349 @@
+package com.ochag.app.ui.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+import com.ochag.app.data.ChatRepository
+
+import com.ochag.app.ui.screens.home.HomeScreen
+
+import com.ochag.app.ui.screens.chats.ChatListScreen
+import com.ochag.app.ui.screens.chats.ChatRoomScreen
+import com.ochag.app.ui.screens.chats.NewChatScreen
+
+import com.ochag.app.ui.screens.family.FamilyManagementScreen
+import com.ochag.app.ui.screens.family.MemberProfileScreen
+
+import kotlinx.coroutines.launch
+
+
+sealed class Screen(
+    val route: String
+) {
+
+
+    object Home :
+        Screen(
+            "home"
+        )
+
+
+    object Chats :
+        Screen(
+            "chats"
+        )
+
+
+    object NewChat :
+        Screen(
+            "new_chat"
+        )
+
+
+    object ChatRoom :
+        Screen(
+            "chat/{chatId}"
+        )
+
+
+    object Family :
+        Screen(
+            "family"
+        )
+
+
+    object Profile :
+        Screen(
+            "profile/{name}"
+        )
+}
+
+
+@Composable
+fun AppNavigation() {
+
+
+    val navController =
+        rememberNavController()
+
+
+    val context =
+        LocalContext
+            .current
+            .applicationContext
+
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+
+    LaunchedEffect(
+        Unit
+    ) {
+
+        ChatRepository.initialize(
+            context
+        )
+    }
+
+
+    NavHost(
+
+        navController =
+            navController,
+
+        startDestination =
+            Screen.Home.route
+    ) {
+
+
+        // =====================================================
+        // ГЛАВНАЯ
+        // =====================================================
+
+        composable(
+            Screen.Home.route
+        ) {
+
+
+            HomeScreen(
+
+                onChatClick = {
+                        chatId ->
+
+                    navController.navigate(
+                        "chat/$chatId"
+                    )
+                },
+
+                onChatsClick = {
+
+                    navController.navigate(
+                        Screen.Chats.route
+                    )
+                },
+
+                onNewChatClick = {
+
+                    navController.navigate(
+                        Screen.NewChat.route
+                    )
+                },
+
+                onFamilyClick = {
+
+                    navController.navigate(
+                        Screen.Family.route
+                    )
+                },
+
+                onProfileClick = {
+
+                    navController.navigate(
+                        "profile/Михаил"
+                    )
+                }
+            )
+        }
+
+
+        // =====================================================
+        // НОВЫЙ ЧАТ
+        // =====================================================
+
+        composable(
+            Screen.NewChat.route
+        ) {
+
+
+            NewChatScreen(
+
+                onBackClick = {
+
+                    navController
+                        .popBackStack()
+                },
+
+                onChatCreated = {
+                        chat ->
+
+                    navController.navigate(
+                        "chat/${chat.id}"
+                    ) {
+
+                        popUpTo(
+                            Screen.NewChat.route
+                        ) {
+
+                            inclusive =
+                                true
+                        }
+                    }
+                }
+            )
+        }
+
+
+        // =====================================================
+        // СПИСОК ЧАТОВ
+        // =====================================================
+
+        composable(
+            Screen.Chats.route
+        ) {
+
+
+            ChatListScreen(
+
+                onProfileClick = {
+
+                    navController.navigate(
+                        "profile/Михаил"
+                    )
+                },
+
+                onChatClick = {
+                        id,
+                        _ ->
+
+                    navController.navigate(
+                        "chat/$id"
+                    )
+                }
+            )
+        }
+
+
+        // =====================================================
+        // КОМНАТА ЧАТА
+        // =====================================================
+
+        composable(
+            Screen.ChatRoom.route
+        ) { backStackEntry ->
+
+
+            val chatId =
+                backStackEntry
+                    .arguments
+                    ?.getString(
+                        "chatId"
+                    )
+                    ?.toLongOrNull()
+                    ?: 0L
+
+
+            val chat =
+                ChatRepository.findChat(
+                    chatId
+                )
+
+
+            val title =
+                chat?.title
+                    ?: "Чат"
+
+
+            ChatRoomScreen(
+
+                chatId =
+                    chatId,
+
+                chatTitle =
+                    title,
+
+                onBackClick = {
+
+                    navController
+                        .popBackStack()
+                }
+            )
+        }
+
+
+        // =====================================================
+        // СЕМЬЯ
+        // =====================================================
+
+        composable(
+            Screen.Family.route
+        ) {
+
+
+            FamilyManagementScreen(
+
+                onMemberClick = {
+                        name ->
+
+                    navController.navigate(
+                        "profile/$name"
+                    )
+                }
+            )
+        }
+
+
+        // =====================================================
+        // ПРОФИЛЬ
+        // =====================================================
+
+        composable(
+            Screen.Profile.route
+        ) { backStackEntry ->
+
+
+            val name =
+                backStackEntry
+                    .arguments
+                    ?.getString(
+                        "name"
+                    )
+                    ?: ""
+
+
+            MemberProfileScreen(
+
+                name =
+                    name,
+
+                status =
+                    "Участник семьи",
+
+                onBackClick = {
+
+                    navController
+                        .popBackStack()
+                },
+
+                onMessageClick = {
+
+                    coroutineScope.launch {
+
+
+                        val chat =
+                            ChatRepository
+                                .createPrivateChat(
+
+                                    context =
+                                        context,
+
+                                    memberName =
+                                        name
+                                )
+
+
+                        navController.navigate(
+                            "chat/${chat.id}"
+                        )
+                    }
+                }
+            )
+        }
+    }
+}
