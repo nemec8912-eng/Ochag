@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -57,16 +58,10 @@ fun OchagCard(
     Card(
         modifier = clickableModifier,
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = CardWhite
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = elevation
-        )
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
     ) {
-        Box(
-            modifier = Modifier.padding(contentPadding)
-        ) {
+        Box(modifier = Modifier.padding(contentPadding)) {
             content()
         }
     }
@@ -116,15 +111,10 @@ fun OchagTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
-        label = {
-            Text(label)
-        },
+        label = { Text(label) },
         placeholder = {
             if (placeholder.isNotBlank()) {
-                Text(
-                    text = placeholder,
-                    color = BrownTextSecondary
-                )
+                Text(text = placeholder, color = BrownTextSecondary)
             }
         },
         singleLine = singleLine,
@@ -153,9 +143,7 @@ fun OchagAvatar(
     backgroundColor: Color = TerracottaSoft,
     online: Boolean = false
 ) {
-    Box(
-        modifier = modifier.size(size)
-    ) {
+    Box(modifier = modifier.size(size)) {
         Surface(
             modifier = Modifier
                 .size(size)
@@ -163,14 +151,9 @@ fun OchagAvatar(
             shape = CircleShape,
             color = backgroundColor
         ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Text(
-                    text = name
-                        .firstOrNull { it.isLetterOrDigit() }
-                        ?.uppercase()
-                        ?: "О",
+                    text = name.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
                     color = BrownTextPrimary,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
@@ -204,9 +187,7 @@ fun OchagSectionHeader(
     subtitle: String = "",
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineMedium,
@@ -215,10 +196,7 @@ fun OchagSectionHeader(
         )
 
         if (subtitle.isNotBlank()) {
-            Spacer(
-                modifier = Modifier.height(4.dp)
-            )
-
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
@@ -236,53 +214,51 @@ fun OchagBottomBar(
     onSelected: (Int) -> Unit
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(30.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(74.dp),
+        shape = RoundedCornerShape(28.dp),
         color = CardWhite,
-        shadowElevation = 12.dp,
+        shadowElevation = 10.dp,
         tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 9.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, title ->
                 val selected = index == selectedIndex
 
-                Surface(
+                Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable {
-                            onSelected(index)
-                        },
-                    shape = RoundedCornerShape(22.dp),
-                    color = if (selected) TerracottaSoft else Color.Transparent
+                        .clickable { onSelected(index) }
+                        .padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (selected) TerracottaPrimary else BrownTextSecondary,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(7.dp))
+
                     Box(
-                        modifier = Modifier.padding(
-                            horizontal = 8.dp,
-                            vertical = 11.dp
-                        ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selected) {
-                                TerracottaPrimary
-                            } else {
-                                BrownTextSecondary
-                            },
-                            fontWeight = if (selected) {
-                                FontWeight.SemiBold
-                            } else {
-                                FontWeight.Medium
-                            }
-                        )
-                    }
+                        modifier = Modifier
+                            .width(if (selected) 34.dp else 18.dp)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (selected) TerracottaPrimary
+                                else Color.Transparent
+                            )
+                    )
                 }
             }
         }
