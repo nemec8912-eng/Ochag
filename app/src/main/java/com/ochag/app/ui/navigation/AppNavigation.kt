@@ -4,28 +4,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
 import com.ochag.app.data.ChatRepository
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
-
 import com.ochag.app.ui.screens.home.HomeScreen
 import com.ochag.app.ui.screens.profile.ProfileScreen
 import com.ochag.app.ui.screens.login.LoginScreen
 import com.ochag.app.ui.screens.registration.InviteRegistrationScreen
 import com.ochag.app.ui.screens.files.FilesMediaScreen
-
 import com.ochag.app.ui.screens.chats.ChatListScreen
 import com.ochag.app.ui.screens.chats.ChatRoomScreen
 import com.ochag.app.ui.screens.chats.NewChatScreen
-
 import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
-
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -67,9 +61,13 @@ fun AppNavigation() {
 
         composable(Screen.MyProfile.route) {
             ProfileScreen(
-                onChatsClick = { navController.navigate(Screen.Chats.route) },
+                onChatsClick = {
+                    navController.navigate(Screen.Chats.route) { launchSingleTop = true }
+                },
                 onFamilyClick = { navController.navigate(Screen.Family.route) },
-                onFilesClick = { navController.navigate(Screen.Files.route) },
+                onFilesClick = {
+                    navController.navigate(Screen.Files.route) { launchSingleTop = true }
+                },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
@@ -85,14 +83,10 @@ fun AppNavigation() {
             FilesMediaScreen(
                 onBackClick = { navController.popBackStack() },
                 onChatsClick = {
-                    navController.navigate(Screen.Chats.route) {
-                        launchSingleTop = true
-                    }
+                    navController.navigate(Screen.Chats.route) { launchSingleTop = true }
                 },
                 onProfileClick = {
-                    navController.navigate(Screen.MyProfile.route) {
-                        launchSingleTop = true
-                    }
+                    navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
                 }
             )
         }
@@ -102,10 +96,7 @@ fun AppNavigation() {
                 onLoginSuccess = {
                     val user = OchagAppState.currentUser
                     if (user != null) {
-                        ServerRealtime.connect(
-                            context = context,
-                            userName = user.name
-                        )
+                        ServerRealtime.connect(context = context, userName = user.name)
                     }
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
@@ -119,9 +110,7 @@ fun AppNavigation() {
 
         composable(Screen.InviteRegistration.route) {
             InviteRegistrationScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
                 onRequestSent = { }
             )
         }
@@ -139,7 +128,12 @@ fun AppNavigation() {
 
         composable(Screen.Chats.route) {
             ChatListScreen(
-                onProfileClick = { navController.navigate(Screen.MyProfile.route) },
+                onFilesClick = {
+                    navController.navigate(Screen.Files.route) { launchSingleTop = true }
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                },
                 onChatClick = { id, _ -> navController.navigate("chat/$id") }
             )
         }
