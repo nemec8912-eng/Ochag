@@ -34,6 +34,8 @@ import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagPrimaryButton
 import com.ochag.app.ui.components.OchagTextField
+import com.ochag.app.ui.security.AppLockController
+import com.ochag.app.ui.security.AppLockMode
 import com.ochag.app.ui.theme.*
 
 @Composable
@@ -65,6 +67,7 @@ fun ProfileScreen(
     var saving by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showSecurityDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val profilePreferences = remember(userName) {
@@ -193,6 +196,95 @@ fun ProfileScreen(
             dismissButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
                     Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (showSecurityDialog) {
+        var lockMode by remember { mutableStateOf(AppLockController.mode) }
+        var lockSecret by remember { mutableStateOf("") }
+        var lockSecretRepeat by remember { mutableStateOf("") }
+        val validSecret = lockSecret.length >= 4 && lockSecret == lockSecretRepeat
+
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            title = { Text("Блокировка приложения") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (AppLockController.enabled) {
+                        Text("Блокировка включена")
+                        Text(
+                            if (AppLockController.mode == AppLockMode.PIN) {
+                                "Способ: цифровой PIN-код"
+                            } else {
+                                "Способ: пароль"
+                            }
+                        )
+                        OutlinedButton(
+                            onClick = {
+                                AppLockController.disable()
+                                showSecurityDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("Отключить блокировку") }
+                    } else {
+                        Text("Выберите способ защиты", fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = lockMode == AppLockMode.PIN,
+                                onClick = { lockMode = AppLockMode.PIN }
+                            )
+                            Text("PIN-код")
+                            Spacer(Modifier.width(14.dp))
+                            RadioButton(
+                                selected = lockMode == AppLockMode.PASSWORD,
+                                onClick = { lockMode = AppLockMode.PASSWORD }
+                            )
+                            Text("Пароль")
+                        }
+                        OutlinedTextField(
+                            value = lockSecret,
+                            onValueChange = {
+                                lockSecret = if (lockMode == AppLockMode.PIN) {
+                                    it.filter(Char::isDigit).take(12)
+                                } else it
+                            },
+                            label = { Text("Введите код или пароль") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = lockSecretRepeat,
+                            onValueChange = {
+                                lockSecretRepeat = if (lockMode == AppLockMode.PIN) {
+                                    it.filter(Char::isDigit).take(12)
+                                } else it
+                            },
+                            label = { Text("Повторите") },
+                            singleLine = true,
+                            isError = lockSecretRepeat.isNotBlank() &&
+                                lockSecretRepeat != lockSecret,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text("Минимум 4 символа")
+                    }
+                }
+            },
+            confirmButton = {
+                if (!AppLockController.enabled) {
+                    Button(
+                        enabled = validSecret,
+                        onClick = {
+                            AppLockController.enable(lockMode, lockSecret)
+                            showSecurityDialog = false
+                        }
+                    ) { Text("Включить") }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSecurityDialog = false }) {
+                    Text("Закрыть")
                 }
             }
         )
@@ -535,6 +627,17 @@ fun ProfileScreen(
                         }
                     }
                 }
+
+                Spacer(Modifier.height(18.dp))
+
+                SectionTitle("Безопасность", "Защита личных переписок")
+                Spacer(Modifier.height(8.dp))
+                ProfileAction(
+                    "🔒",
+                    "Блокировка приложения",
+                    if (AppLockController.enabled) "Включена" else "Не включена",
+                    AvatarSand
+                ) { showSecurityDialog = true }
 
                 Spacer(Modifier.height(18.dp))
 
