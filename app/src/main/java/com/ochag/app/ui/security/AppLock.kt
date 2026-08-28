@@ -26,6 +26,9 @@ object AppLockController {
     private const val KEY_ENABLED = "enabled"
     private const val KEY_MODE = "mode"
     private const val KEY_SECRET_HASH = "secret_hash"
+    private const val KEY_TIMEOUT = "timeout_ms"
+    private const val KEY_BACKGROUND_AT = "background_at"
+    const val NEVER_TIMEOUT = -1L
 
     private var context: Context? = null
     var enabled by mutableStateOf(false)
@@ -33,6 +36,8 @@ object AppLockController {
     var locked by mutableStateOf(false)
         private set
     var mode by mutableStateOf(AppLockMode.PIN)
+        private set
+    var timeoutMs by mutableLongStateOf(0L)
         private set
 
     fun init(context: Context) {
@@ -42,6 +47,7 @@ object AppLockController {
         mode = runCatching {
             AppLockMode.valueOf(prefs.getString(KEY_MODE, AppLockMode.PIN.name).orEmpty())
         }.getOrDefault(AppLockMode.PIN)
+        timeoutMs = prefs.getLong(KEY_TIMEOUT, 0L)
         locked = enabled
     }
 
@@ -63,6 +69,27 @@ object AppLockController {
         enabled = false
         locked = false
         appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
+    }
+
+    fun setTimeout(timeout: Long) {
+        timeoutMs = timeout
+        context?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            ?.edit()?.putLong(KEY_TIMEOUT, timeout)?.apply()
+    }
+
+    fun onAppBackground() {
+        if (!enabled) return
+        context?.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            ?.edit()?.putLong(KEY_BACKGROUND_AT, System.currentTimeMillis())?.apply()
+    }
+
+    fun onAppForeground() {
+        if (!enabled || timeoutMs == NEVER_TIMEOUT) return
+        val prefs = context?.getSharedPreferences(PREFS, Context.MODE_PRIVATE) ?: return
+        val backgroundAt = prefs.getLong(KEY_BACKGROUND_AT, 0L)
+        if (backgroundAt > 0L && System.currentTimeMillis() - backgroundAt >= timeoutMs) {
+            locked = true
+        }
     }
 
     fun verify(secret: String): Boolean {
