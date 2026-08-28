@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
@@ -61,6 +62,7 @@ import com.ochag.app.data.Message
 import com.ochag.app.data.MessageStatus
 import com.ochag.app.data.MessageType
 import com.ochag.app.data.ServerRealtime
+import com.ochag.app.data.StickerStore
 import com.ochag.app.ui.theme.BorderSoft
 import com.ochag.app.ui.theme.BrownTextPrimary
 import com.ochag.app.ui.theme.BrownTextSecondary
@@ -80,6 +82,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
+
+private const val STICKER_EMOJI_PREFIX = "__STICKER_EMOJI__:"
+private const val STICKER_IMAGE_CAPTION = "__STICKER_IMAGE__"
 
 private enum class MediaButtonMode { AUDIO, VIDEO }
 
@@ -108,6 +113,7 @@ fun ChatRoomScreen(
     val listState = rememberLazyListState()
 
     var showChatSettings by remember { mutableStateOf(false) }
+    var showStickerPicker by remember { mutableStateOf(false) }
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
     val typingUsers by ServerRealtime.typingUsers.collectAsState()
 
@@ -479,6 +485,34 @@ fun ChatRoomScreen(
                 )
             }
 
+            if (showStickerPicker) {
+                StickerPickerPanel(
+                    onEmojiClick = { emoji ->
+                        showStickerPicker = false
+                        coroutineScope.launch {
+                            ChatRepository.sendMessage(
+                                context = appContext,
+                                chatId = chatId,
+                                text = STICKER_EMOJI_PREFIX + emoji
+                            )
+                        }
+                    },
+                    onImageClick = { uri ->
+                        showStickerPicker = false
+                        coroutineScope.launch {
+                            ChatRepository.sendAttachment(
+                                context = appContext,
+                                chatId = chatId,
+                                uri = uri,
+                                fileName = "sticker_${System.currentTimeMillis()}.png",
+                                messageType = MessageType.IMAGE,
+                                caption = STICKER_IMAGE_CAPTION
+                            )
+                        }
+                    }
+                )
+            }
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -498,7 +532,10 @@ fun ChatRoomScreen(
                         Surface(
                             modifier = Modifier
                                 .size(50.dp)
-                                .clickable { showAttachmentMenu = true },
+                                .clickable {
+                                    showStickerPicker = false
+                                    showAttachmentMenu = true
+                                },
                             shape = CircleShape,
                             color = TerracottaLight
                         ) {
@@ -534,7 +571,24 @@ fun ChatRoomScreen(
                         }
                     }
 
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(6.dp))
+
+                    Surface(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clickable {
+                                showAttachmentMenu = false
+                                showStickerPicker = !showStickerPicker
+                            },
+                        shape = CircleShape,
+                        color = if (showStickerPicker) TerracottaSoft else CardCream
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("☺", fontSize = 24.sp, color = TerracottaDark)
+                        }
+                    }
+
+                    Spacer(Modifier.width(6.dp))
 
                     OutlinedTextField(
                         value = messageText,
@@ -560,7 +614,7 @@ fun ChatRoomScreen(
                         )
                     )
 
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(6.dp))
 
                     if (messageText.isNotBlank() || pendingAttachment != null) {
                         Button(
@@ -576,6 +630,7 @@ fun ChatRoomScreen(
                                 val attachment = pendingAttachment
                                 messageText = ""
                                 pendingAttachment = null
+                                showStickerPicker = false
 
                                 coroutineScope.launch {
                                     if (attachment != null) {
@@ -638,6 +693,8 @@ fun ChatRoomScreen(
                                             return@awaitEachGesture
                                         }
 
+                                        showStickerPicker = false
+
                                         val started = when (mediaButtonMode) {
                                             MediaButtonMode.AUDIO -> startAudioRecording()
                                             MediaButtonMode.VIDEO -> startVideoRecording()
@@ -683,6 +740,104 @@ fun ChatRoomScreen(
                                         modifier = Modifier.size(27.dp),
                                         tint = Color.Unspecified
                                     )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StickerPickerPanel(
+    onEmojiClick: (String) -> Unit,
+    onImageClick: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = CardWhite,
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 310.dp)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Стикеры",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = BrownTextPrimary
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(StickerStore.packs, key = { it.id }) { pack ->
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = pack.title,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = BrownTextSecondary
+                        )
+
+                        if (pack.emojiStickers.isNotEmpty()) {
+                            pack.emojiStickers.chunked(6).forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    rowItems.forEach { emoji ->
+                                        Surface(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .aspectRatio(1f)
+                                                .clickable { onEmojiClick(emoji) },
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = CardCream
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(emoji, fontSize = 28.sp)
+                                            }
+                                        }
+                                    }
+                                    repeat(6 - rowItems.size) {
+                                        Spacer(Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
+
+                        if (pack.imageUris.isNotEmpty()) {
+                            pack.imageUris.chunked(4).forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    rowItems.forEach { uri ->
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .aspectRatio(1f)
+                                                .clickable { onImageClick(uri) }
+                                        ) {
+                                            UriImage(
+                                                uri = Uri.parse(uri),
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                        }
+                                    }
+                                    repeat(4 - rowItems.size) {
+                                        Spacer(Modifier.weight(1f))
+                                    }
                                 }
                             }
                         }
@@ -1164,6 +1319,9 @@ fun MessageBubble(message: Message) {
     val isFile = message.messageType == MessageType.FILE.name
     val isAudio = message.messageType == MessageType.AUDIO.name
     val isVideo = message.messageType == MessageType.VIDEO_CIRCLE.name
+    val isEmojiSticker = message.messageType == MessageType.TEXT.name &&
+        message.text.startsWith(STICKER_EMOJI_PREFIX)
+    val isImageSticker = isImage && message.text == STICKER_IMAGE_CAPTION
     val bubbleColor = if (message.isMine) TerracottaPrimary else CardWhite
     val bubbleText = if (message.isMine) Color.White else BrownTextPrimary
 
@@ -1222,14 +1380,22 @@ fun MessageBubble(message: Message) {
                     Spacer(Modifier.height(5.dp))
                 }
 
-                if (isImage) {
+                if (isEmojiSticker) {
+                    Text(
+                        text = message.text.removePrefix(STICKER_EMOJI_PREFIX),
+                        fontSize = 64.sp,
+                        lineHeight = 72.sp
+                    )
+                } else if (isImage) {
                     UriImage(
                         uri = Uri.parse(message.attachmentUri),
-                        modifier = Modifier
-                            .width(240.dp)
-                            .height(180.dp)
+                        modifier = if (isImageSticker) {
+                            Modifier.size(190.dp)
+                        } else {
+                            Modifier.width(240.dp).height(180.dp)
+                        }
                     )
-                    if (message.text.isNotBlank()) {
+                    if (message.text.isNotBlank() && !isImageSticker) {
                         Spacer(Modifier.height(8.dp))
                         Text(message.text, color = bubbleText)
                     }
@@ -1275,7 +1441,7 @@ fun MessageBubble(message: Message) {
                 if (isAudio) VoiceMessagePlayer(message, message.isMine)
                 if (isVideo) VideoCirclePlayer(message)
 
-                if (message.messageType == MessageType.TEXT.name) {
+                if (message.messageType == MessageType.TEXT.name && !isEmojiSticker) {
                     Text(
                         message.text,
                         color = bubbleText,
@@ -1501,7 +1667,7 @@ private fun UriImage(
             bitmap = bitmap!!,
             contentDescription = null,
             modifier = modifier.clip(RoundedCornerShape(18.dp)),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Fit
         )
     } else {
         Surface(
