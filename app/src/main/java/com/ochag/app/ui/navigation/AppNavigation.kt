@@ -22,6 +22,7 @@ import com.ochag.app.ui.screens.chats.NewChatScreen
 import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
 import com.ochag.app.ui.screens.stickers.StickerPacksScreen
+import com.ochag.app.ui.screens.ai.KeeperOfTheHearthScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -36,6 +37,7 @@ sealed class Screen(val route: String) {
     object Stickers : Screen("stickers")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
+    object Keeper : Screen("keeper_of_the_hearth")
 }
 
 @Composable
@@ -173,6 +175,13 @@ fun AppNavigation() {
             ChatRoomWithMessageActions(
                 chatId = chatId,
                 chatTitle = title,
+                onKeeperClick = { navController.navigate(Screen.Keeper.route) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Keeper.route) {
+            KeeperOfTheHearthScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
