@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -1525,7 +1526,9 @@ private fun MessageBubble(
                 color = if (selected) TerracottaPrimary else CardWhite,
                 border = BorderStroke(
                     width = 1.5.dp,
-                    color = if (selected) TerracottaPrimary else BorderSoft
+                    brush = SolidColor(
+                        if (selected) TerracottaPrimary else BorderSoft
+                    )
                 )
             ) {
                 Box(contentAlignment = Alignment.Center) {
