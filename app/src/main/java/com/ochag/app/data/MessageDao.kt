@@ -4,21 +4,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-
 import kotlinx.coroutines.flow.Flow
-
 
 @Dao
 interface MessageDao {
 
-
-    @Insert(
-        onConflict = OnConflictStrategy.REPLACE
-    )
-    suspend fun insertMessage(
-        message: Message
-    )
-
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessage(message: Message)
 
     @Query(
         """
@@ -27,45 +19,26 @@ interface MessageDao {
         ORDER BY createdAt ASC, id ASC
         """
     )
-    fun observeMessages(
-        chatId: Long
-    ): Flow<List<Message>>
-
+    fun observeMessages(chatId: Long): Flow<List<Message>>
 
     @Query(
         """
-        SELECT COUNT(*) FROM messages
-        WHERE id = :messageId
+        SELECT * FROM messages
+        WHERE messageType IN ('IMAGE', 'FILE', 'AUDIO', 'VIDEO_CIRCLE')
+          AND attachmentUri != ''
+        ORDER BY createdAt DESC, id DESC
         """
     )
-    suspend fun messageExists(
-        messageId: Long
-    ): Int
+    fun observeMediaMessages(): Flow<List<Message>>
 
+    @Query("SELECT COUNT(*) FROM messages WHERE id = :messageId")
+    suspend fun messageExists(messageId: Long): Int
 
-    @Query(
-        """
-        SELECT COUNT(*) FROM messages
-        WHERE chatId = :chatId
-        """
-    )
-    suspend fun countMessages(
-        chatId: Long
-    ): Int
+    @Query("SELECT COUNT(*) FROM messages WHERE chatId = :chatId")
+    suspend fun countMessages(chatId: Long): Int
 
-
-    @Query(
-        """
-        UPDATE messages
-        SET status = :status
-        WHERE id = :messageId
-        """
-    )
-    suspend fun updateMessageStatus(
-        messageId: Long,
-        status: String
-    )
-
+    @Query("UPDATE messages SET status = :status WHERE id = :messageId")
+    suspend fun updateMessageStatus(messageId: Long, status: String)
 
     @Query(
         """
@@ -76,11 +49,7 @@ interface MessageDao {
           AND status != :status
         """
     )
-    suspend fun markIncomingMessages(
-        chatId: Long,
-        status: String
-    )
-
+    suspend fun markIncomingMessages(chatId: Long, status: String)
 
     @Query(
         """
@@ -91,10 +60,7 @@ interface MessageDao {
         ORDER BY createdAt ASC, id ASC
         """
     )
-    suspend fun getUnreadIncomingIds(
-        chatId: Long
-    ): List<Long>
-
+    suspend fun getUnreadIncomingIds(chatId: Long): List<Long>
 
     @Query(
         """
@@ -104,18 +70,8 @@ interface MessageDao {
           AND status != 'READ'
         """
     )
-    suspend fun countUnreadIncoming(
-        chatId: Long
-    ): Int
+    suspend fun countUnreadIncoming(chatId: Long): Int
 
-
-    @Query(
-        """
-        DELETE FROM messages
-        WHERE chatId = :chatId
-        """
-    )
-    suspend fun deleteChatMessages(
-        chatId: Long
-    )
+    @Query("DELETE FROM messages WHERE chatId = :chatId")
+    suspend fun deleteChatMessages(chatId: Long)
 }
