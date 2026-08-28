@@ -28,6 +28,8 @@ import com.ochag.app.ui.theme.*
 @Composable
 fun ProfileScreen(
     onChatsClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onFilesClick: () -> Unit = {},
     onFamilyClick: () -> Unit = {},
     onInviteClick: () -> Unit = {},
@@ -64,13 +66,15 @@ fun ProfileScreen(
         containerColor = CreamBackground,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Файлы", "Профиль"),
-                selectedIndex = 2,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                items = listOf("Чаты", "Контакты", "Звонки", "Файлы", "Профиль"),
+                selectedIndex = 4,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
                 when (index) {
                     0 -> onChatsClick()
-                    1 -> onFilesClick()
+                    1 -> onContactsClick()
+                    2 -> onCallsClick()
+                    3 -> onFilesClick()
                 }
             }
         }
