@@ -24,9 +24,11 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -581,7 +583,7 @@ fun ChatRoomScreen(
                                 showStickerPicker = !showStickerPicker
                             },
                         shape = CircleShape,
-                        color = if (showStickerPicker) TerracottaSoft else CardCream
+                        color = if (showStickerPicker) TerracottaLight else CardCream
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("☺", fontSize = 24.sp, color = TerracottaDark)
@@ -1312,6 +1314,7 @@ private fun PendingAttachmentPreview(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(message: Message) {
     val context = LocalContext.current
@@ -1322,7 +1325,13 @@ fun MessageBubble(message: Message) {
     val isEmojiSticker = message.messageType == MessageType.TEXT.name &&
         message.text.startsWith(STICKER_EMOJI_PREFIX)
     val isImageSticker = isImage && message.text == STICKER_IMAGE_CAPTION
-    val bubbleColor = if (message.isMine) TerracottaPrimary else CardWhite
+    val selected = MessageSelectionController.selectedIds.contains(message.id)
+    val bubbleColor = when {
+        selected && message.isMine -> TerracottaDark
+        selected -> TerracottaLight
+        message.isMine -> TerracottaPrimary
+        else -> CardWhite
+    }
     val bubbleText = if (message.isMine) Color.White else BrownTextPrimary
 
     Row(
@@ -1348,7 +1357,22 @@ fun MessageBubble(message: Message) {
         }
 
         Surface(
-            modifier = Modifier.widthIn(min = 82.dp, max = 292.dp),
+            modifier = Modifier
+                .widthIn(min = 82.dp, max = 292.dp)
+                .combinedClickable(
+                    onClick = {
+                        if (MessageSelectionController.isSelecting) {
+                            MessageSelectionController.toggle(message.id)
+                        }
+                    },
+                    onLongClick = {
+                        if (MessageSelectionController.isSelecting) {
+                            MessageSelectionController.toggle(message.id)
+                        } else {
+                            MessageSelectionController.openActions(message)
+                        }
+                    }
+                ),
             shape = if (message.isMine) {
                 RoundedCornerShape(
                     topStart = 24.dp,
@@ -1405,7 +1429,7 @@ fun MessageBubble(message: Message) {
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(enabled = !MessageSelectionController.isSelecting) {
                                 try {
                                     val uri = Uri.parse(message.attachmentUri)
                                     val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -1509,7 +1533,7 @@ private fun VoiceMessagePlayer(
         Surface(
             modifier = Modifier
                 .size(44.dp)
-                .clickable {
+                .clickable(enabled = !MessageSelectionController.isSelecting) {
                     if (isPlaying) {
                         try { player?.stop() } catch (_: Exception) {}
                         try { player?.release() } catch (_: Exception) {}
@@ -1578,7 +1602,7 @@ private fun VideoCirclePlayer(message: Message) {
             modifier = Modifier
                 .size(220.dp)
                 .clip(CircleShape)
-                .clickable {
+                .clickable(enabled = !MessageSelectionController.isSelecting) {
                     val view = videoView
                     if (view != null) {
                         if (view.isPlaying) {
