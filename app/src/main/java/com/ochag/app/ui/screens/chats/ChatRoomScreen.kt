@@ -931,6 +931,26 @@ private fun ChatGroupSettingsDialog(
     onDismiss: () -> Unit,
     onSave: (String, List<String>) -> Unit
 ) {
+    val context = LocalContext.current
+    val avatarPrefs = remember {
+        context.getSharedPreferences("ochag_group_avatars", Context.MODE_PRIVATE)
+    }
+    var avatarUri by remember(chat.id) {
+        mutableStateOf(
+            avatarPrefs.getString("group_avatar_${chat.id}", "").orEmpty()
+        )
+    }
+    val avatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            takeReadPermission(context, uri)
+            avatarUri = uri.toString()
+            avatarPrefs.edit()
+                .putString("group_avatar_${chat.id}", avatarUri)
+                .apply()
+        }
+    }
     var title by remember(chat.id, chat.title) { mutableStateOf(chat.title) }
     var searchText by remember { mutableStateOf("") }
     val selectedMembers = remember(chat.id, chat.members) {
@@ -983,6 +1003,33 @@ private fun ChatGroupSettingsDialog(
                     label = { Text("Название") },
                     shape = RoundedCornerShape(18.dp)
                 )
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (avatarUri.isNotBlank()) {
+                        UriImage(
+                            uri = Uri.parse(avatarUri),
+                            modifier = Modifier.size(56.dp).clip(CircleShape)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    OutlinedButton(
+                        onClick = { avatarLauncher.launch(arrayOf("image/*")) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            if (avatarUri.isBlank()) {
+                                "Добавить аватарку группы"
+                            } else {
+                                "Изменить аватарку группы"
+                            }
+                        )
+                    }
+                }
 
                 Spacer(Modifier.height(12.dp))
 
