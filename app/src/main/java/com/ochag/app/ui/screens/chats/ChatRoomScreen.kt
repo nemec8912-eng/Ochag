@@ -1722,6 +1722,7 @@ private fun MessageBubble(
     fontSize: MessageFontSize
 ) {
     val context = LocalContext.current
+    val bubbleScope = rememberCoroutineScope()
     val isImage = message.messageType == MessageType.IMAGE.name
     val isFile = message.messageType == MessageType.FILE.name
     val isAudio = message.messageType == MessageType.AUDIO.name
@@ -1729,6 +1730,8 @@ private fun MessageBubble(
     val isEmojiSticker = message.messageType == MessageType.TEXT.name &&
         message.text.startsWith(STICKER_EMOJI_PREFIX)
     val isImageSticker = isImage && message.text == STICKER_IMAGE_CAPTION
+    val isPoll = message.messageType == MessageType.TEXT.name &&
+        message.text.startsWith("📊 ОПРОС:")
     val selected = MessageSelectionController.selectedIds.contains(message.id)
     val bubbleColor = when {
         selected && message.isMine -> TerracottaDark
@@ -1913,12 +1916,28 @@ private fun MessageBubble(
                     if (isVideo) VideoCirclePlayer(message)
 
                     if (message.messageType == MessageType.TEXT.name && !isEmojiSticker) {
-                        Text(
-                            message.text,
-                            color = bubbleText,
-                            fontFamily = fontStyle.family,
-                            fontSize = fontSize.sizeSp.sp
-                        )
+                        if (isPoll) {
+                            PollMessageContent(
+                                message = message,
+                                textColor = bubbleText,
+                                onVote = { option ->
+                                    bubbleScope.launch {
+                                        ChatRepository.sendMessage(
+                                            context = context.applicationContext,
+                                            chatId = message.chatId,
+                                            text = "🗳 ${message.sender}: $option"
+                                        )
+                                    }
+                                }
+                            )
+                        } else {
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
+                        }
                     }
 
                     Spacer(Modifier.height(6.dp))
@@ -1960,6 +1979,74 @@ private fun MessageBubble(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PollMessageContent(
+    message: Message,
+    textColor: Color,
+    onVote: (String) -> Unit
+) {
+    val lines = remember(message.text) { message.text.lines() }
+    val question = lines.firstOrNull()
+        ?.removePrefix("📊 ОПРОС:")
+        ?.trim()
+        .orEmpty()
+    val options = remember(message.text) {
+        lines.drop(1)
+            .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
+            .filter { it.isNotBlank() }
+    }
+    var selectedOption by remember(message.id) { mutableStateOf<String?>(null) }
+    var voted by remember(message.id) { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = "📊 $question",
+            color = textColor,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        options.forEach { option ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = !voted) { selectedOption = option },
+                shape = RoundedCornerShape(12.dp),
+                color = if (selectedOption == option) {
+                    TerracottaLight
+                } else {
+                    CardCream.copy(alpha = 0.9f)
+                }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedOption == option,
+                        enabled = !voted,
+                        onClick = { selectedOption = option }
+                    )
+                    Text(option, color = BrownTextPrimary)
+                }
+            }
+        }
+
+        Button(
+            onClick = {
+                selectedOption?.let {
+                    onVote(it)
+                    voted = true
+                }
+            },
+            enabled = selectedOption != null && !voted,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (voted) "Голос отправлен" else "Проголосовать")
         }
     }
 }
