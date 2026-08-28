@@ -38,6 +38,8 @@ private enum class MediaTab {
 fun FilesMediaScreen(
     onBackClick: () -> Unit = {},
     onChatsClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
 
@@ -51,6 +53,8 @@ fun FilesMediaScreen(
         bottomBar = {
             FilesBottomBar(
                 onChatsClick = onChatsClick,
+                onContactsClick = onContactsClick,
+                onCallsClick = onCallsClick,
                 onProfileClick = onProfileClick
             )
         }
@@ -1121,6 +1125,8 @@ private fun QuickAction(
 @Composable
 private fun FilesBottomBar(
     onChatsClick: () -> Unit,
+    onContactsClick: () -> Unit,
+    onCallsClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
 
@@ -1153,6 +1159,20 @@ private fun FilesBottomBar(
                 symbol = "◯",
                 selected = false,
                 onClick = onChatsClick
+            )
+
+            BottomItem(
+                title = "Контакты",
+                symbol = "♧",
+                selected = false,
+                onClick = onContactsClick
+            )
+
+            BottomItem(
+                title = "Звонки",
+                symbol = "☎",
+                selected = false,
+                onClick = onCallsClick
             )
 
             BottomItem(
