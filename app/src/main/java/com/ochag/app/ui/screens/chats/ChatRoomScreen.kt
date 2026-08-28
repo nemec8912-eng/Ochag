@@ -359,6 +359,16 @@ fun ChatRoomScreen(
         }
     }
 
+    val requestedMessageId = MessageSelectionController.scrollToMessageId
+    LaunchedEffect(requestedMessageId, messages) {
+        val targetId = requestedMessageId ?: return@LaunchedEffect
+        val index = messages.indexOfFirst { it.id == targetId }
+        if (index >= 0) {
+            listState.animateScrollToItem(index)
+        }
+        MessageSelectionController.clearScrollRequest()
+    }
+
     fun startAudioRecording(): Boolean {
         if (!microphoneGranted) {
             permissionLauncher.launch(arrayOf(Manifest.permission.RECORD_AUDIO))
@@ -619,6 +629,7 @@ fun ChatRoomScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ChatHeader(
+                chatId = chatId,
                 chatTitle = currentChat?.title ?: chatTitle,
                 statusText = headerStatusText,
                 canOpenSettings = currentChat != null && currentChat.type != ChatType.PRIVATE,
@@ -1375,6 +1386,7 @@ private fun buildChatHeaderPresenceText(
 
 @Composable
 private fun ChatHeader(
+    chatId: Long,
     chatTitle: String,
     statusText: String,
     canOpenSettings: Boolean,
@@ -1382,6 +1394,12 @@ private fun ChatHeader(
     onFontSettingsClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val avatarUri = context.getSharedPreferences(
+        "ochag_group_avatars",
+        Context.MODE_PRIVATE
+    ).getString("group_avatar_$chatId", "").orEmpty()
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp),
@@ -1413,18 +1431,25 @@ private fun ChatHeader(
 
             Spacer(Modifier.width(10.dp))
 
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                color = SoftGreenLight
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
-                        fontWeight = FontWeight.Bold,
-                        color = BrownTextPrimary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+            if (avatarUri.isNotBlank()) {
+                UriImage(
+                    uri = Uri.parse(avatarUri),
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = SoftGreenLight
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
+                            fontWeight = FontWeight.Bold,
+                            color = BrownTextPrimary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
             }
 
