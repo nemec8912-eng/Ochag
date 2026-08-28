@@ -130,6 +130,7 @@ private data class ActiveVideoRecording(
 fun ChatRoomScreen(
     chatId: Long,
     chatTitle: String,
+    onKeeperClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -831,19 +832,10 @@ fun ChatRoomScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("✨  GPT", color = BrownTextPrimary) },
+                                text = { Text("✨  Хранитель Очага", color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
-                                    try {
-                                        context.startActivity(
-                                            Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse("https://chatgpt.com")
-                                            )
-                                        )
-                                    } catch (_: Exception) {
-                                        attachmentStatus = "Не удалось открыть GPT"
-                                    }
+                                    onKeeperClick()
                                 }
                             )
                         }
