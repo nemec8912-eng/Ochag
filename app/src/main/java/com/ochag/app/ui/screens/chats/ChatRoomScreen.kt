@@ -9,6 +9,8 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
+import android.location.LocationManager
+import android.provider.ContactsContract
 import android.provider.OpenableColumns
 import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -198,6 +200,10 @@ fun ChatRoomScreen(
     }
 
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    var showPollDialog by remember { mutableStateOf(false) }
+    var pollQuestion by remember { mutableStateOf("") }
+    var pollOptions by remember { mutableStateOf(listOf("", "")) }
+    var attachmentStatus by remember { mutableStateOf("") }
     var pendingAttachment by remember { mutableStateOf<PendingAttachment?>(null) }
     var mediaButtonMode by remember { mutableStateOf(MediaButtonMode.AUDIO) }
     var isRecording by remember { mutableStateOf(false) }
@@ -216,11 +222,46 @@ fun ChatRoomScreen(
         )
     }
 
+    var locationGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         result[Manifest.permission.RECORD_AUDIO]?.let { microphoneGranted = it }
         result[Manifest.permission.CAMERA]?.let { cameraGranted = it }
+        result[Manifest.permission.ACCESS_FINE_LOCATION]?.let { locationGranted = it }
+    }
+
+    fun sendCurrentLocation() {
+        if (!locationGranted) {
+            permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+            attachmentStatus = "Разрешите геолокацию и нажмите «Локация» ещё раз"
+            return
+        }
+        try {
+            val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val location = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (location == null) {
+                attachmentStatus = "Включите GPS и попробуйте ещё раз"
+                return
+            }
+            coroutineScope.launch {
+                ChatRepository.sendMessage(
+                    context = appContext,
+                    chatId = chatId,
+                    text = "📍 Геолокация\nhttps://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}"
+                )
+            }
+            attachmentStatus = ""
+        } catch (_: SecurityException) {
+            attachmentStatus = "Нет разрешения на геолокацию"
+        }
     }
 
     var audioRecorder by remember { mutableStateOf<MediaRecorder?>(null) }
@@ -273,6 +314,38 @@ fun ChatRoomScreen(
                 fileName = getFileName(context, uri),
                 type = MessageType.FILE
             )
+        }
+    }
+
+    val contactLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val name = cursor.getString(0).orEmpty()
+                    val number = cursor.getString(1).orEmpty()
+                    coroutineScope.launch {
+                        ChatRepository.sendMessage(
+                            context = appContext,
+                            chatId = chatId,
+                            text = "📇 $name\n$number"
+                        )
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            attachmentStatus = "Не удалось открыть контакт"
         }
     }
 
@@ -482,6 +555,63 @@ fun ChatRoomScreen(
         )
     }
 
+    if (showPollDialog) {
+        AlertDialog(
+            onDismissRequest = { showPollDialog = false },
+            title = { Text("Создать опрос") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = pollQuestion,
+                        onValueChange = { pollQuestion = it },
+                        label = { Text("Название опроса") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    pollOptions.forEachIndexed { index, option ->
+                        OutlinedTextField(
+                            value = option,
+                            onValueChange = { value ->
+                                pollOptions = pollOptions.toMutableList().also { it[index] = value }
+                            },
+                            label = { Text("Вариант ${index + 1}") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    if (pollOptions.size < 6) {
+                        TextButton(
+                            onClick = { pollOptions = pollOptions + "" }
+                        ) { Text("＋ Добавить вариант") }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = pollQuestion.isNotBlank() &&
+                        pollOptions.count { it.isNotBlank() } >= 2,
+                    onClick = {
+                        val options = pollOptions.filter { it.isNotBlank() }
+                        val pollText = buildString {
+                            append("📊 ОПРОС: ")
+                            append(pollQuestion.trim())
+                            options.forEachIndexed { index, option ->
+                                append("\n${index + 1}. ${option.trim()}")
+                            }
+                        }
+                        coroutineScope.launch {
+                            ChatRepository.sendMessage(appContext, chatId, pollText)
+                        }
+                        pollQuestion = ""
+                        pollOptions = listOf("", "")
+                        showPollDialog = false
+                    }
+                ) { Text("Создать") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPollDialog = false }) { Text("Отмена") }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -557,6 +687,15 @@ fun ChatRoomScreen(
                 PendingAttachmentPreview(
                     attachment = attachment,
                     onRemove = { pendingAttachment = null }
+                )
+            }
+
+            if (attachmentStatus.isNotBlank()) {
+                Text(
+                    text = attachmentStatus,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -641,6 +780,47 @@ fun ChatRoomScreen(
                                 onClick = {
                                     showAttachmentMenu = false
                                     fileLauncher.launch(arrayOf("*/*"))
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("📊  Опрос", color = BrownTextPrimary) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    showPollDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("📍  Локация", color = BrownTextPrimary) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    sendCurrentLocation()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("📇  Контакт", color = BrownTextPrimary) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    val intent = Intent(
+                                        Intent.ACTION_PICK,
+                                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+                                    )
+                                    contactLauncher.launch(intent)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("✨  GPT", color = BrownTextPrimary) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    try {
+                                        context.startActivity(
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse("https://chatgpt.com")
+                                            )
+                                        )
+                                    } catch (_: Exception) {
+                                        attachmentStatus = "Не удалось открыть GPT"
+                                    }
                                 }
                             )
                         }
