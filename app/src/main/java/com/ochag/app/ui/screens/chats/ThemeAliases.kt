@@ -2,6 +2,8 @@ package com.ochag.app.ui.screens.chats
 
 import androidx.compose.ui.graphics.Color
 
+typealias BorderStroke = androidx.compose.foundation.BorderStroke
+
 /**
  * Локальный алиас для цвета активной кнопки стикеров.
  * Нужен, чтобы ChatRoomScreen мог использовать TerracottaSoft
