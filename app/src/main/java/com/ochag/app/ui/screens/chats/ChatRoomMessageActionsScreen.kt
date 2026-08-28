@@ -21,6 +21,7 @@ import com.ochag.app.data.MessageType
 import com.ochag.app.ui.theme.*
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatRoomWithMessageActions(
     chatId: Long,
