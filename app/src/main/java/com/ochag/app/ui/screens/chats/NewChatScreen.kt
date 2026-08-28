@@ -1,7 +1,9 @@
 package com.ochag.app.ui.screens.chats
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -90,6 +92,21 @@ fun NewChatScreen(
     var title by remember { mutableStateOf("") }
     var searchText by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf("") }
+    var groupAvatarUri by remember { mutableStateOf<Uri?>(null) }
+
+    val groupAvatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                uiContext.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            groupAvatarUri = uri
+        }
+    }
 
     var contactsGranted by remember {
         mutableStateOf(
@@ -261,6 +278,21 @@ fun NewChatScreen(
                     label = if (selectedType == ChatType.GROUP) "Название группы" else "Название темы",
                     placeholder = "Например, Поездка летом"
                 )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { groupAvatarLauncher.launch(arrayOf("image/*")) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (groupAvatarUri == null) {
+                            "Добавить аватарку группы"
+                        } else {
+                            "Изменить аватарку группы ✓"
+                        }
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -447,6 +479,14 @@ fun NewChatScreen(
                                 type = ChatType.GROUP,
                                 selectedMembers = selectedMembers.toList()
                             )
+                            groupAvatarUri?.let { uri ->
+                                context.getSharedPreferences(
+                                    "ochag_group_avatars",
+                                    android.content.Context.MODE_PRIVATE
+                                ).edit()
+                                    .putString("group_avatar_${chat.id}", uri.toString())
+                                    .apply()
+                            }
                             onChatCreated(chat)
                         }
                     }
