@@ -10,6 +10,8 @@ import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
 import com.ochag.app.ui.navigation.AppNavigation
+import com.ochag.app.ui.security.AppLockController
+import com.ochag.app.ui.security.AppLockGate
 import com.ochag.app.ui.theme.OchagTheme
 import com.ochag.app.ui.theme.OchagThemeController
 import kotlinx.coroutines.launch
@@ -27,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
         OchagAppState.init(this)
         OchagThemeController.init(this)
+        AppLockController.init(this)
         StickerStore.init(this)
 
         lifecycleScope.launch {
@@ -60,7 +63,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OchagTheme {
-                AppNavigation()
+                AppLockGate {
+                    AppNavigation()
+                }
             }
         }
     }
