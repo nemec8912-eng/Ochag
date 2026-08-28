@@ -1209,7 +1209,7 @@ private fun BottomItem(
 
     Column(
         modifier = Modifier
-            .width(82.dp)
+            .width(62.dp)
             .clickable {
                 onClick()
             },
@@ -1229,7 +1229,9 @@ private fun BottomItem(
 
         Text(
             text = title,
-            fontSize = 12.sp,
+            fontSize = 10.sp,
+            maxLines = 1,
+            softWrap = false,
             color = color
         )
 
