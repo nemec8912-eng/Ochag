@@ -222,6 +222,27 @@ fun ProfileScreen(
                                 AppLockMode.PATTERN -> "Способ: графический ключ"
                             }
                         )
+                        Text("Автоматическая блокировка", fontWeight = FontWeight.Bold)
+                        listOf(
+                            0L to "Сразу после сворачивания",
+                            60_000L to "Через 1 минуту",
+                            300_000L to "Через 5 минут",
+                            1_800_000L to "Через 30 минут",
+                            AppLockController.NEVER_TIMEOUT to "Только после полного закрытия"
+                        ).forEach { (timeout, title) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { AppLockController.setTimeout(timeout) },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = AppLockController.timeoutMs == timeout,
+                                    onClick = { AppLockController.setTimeout(timeout) }
+                                )
+                                Text(title)
+                            }
+                        }
                         OutlinedButton(
                             onClick = {
                                 AppLockController.disable()
