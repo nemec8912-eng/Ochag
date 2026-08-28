@@ -31,14 +31,45 @@ object MessageActions {
         message: Message
     ): Boolean {
         if (!message.isMine) return false
+        return deleteLocalMessage(context, message)
+    }
 
+    suspend fun deleteLocalMessage(
+        context: Context,
+        message: Message
+    ): Boolean {
         withContext(Dispatchers.IO) {
             OchagDatabase
                 .getInstance(context.applicationContext)
                 .messageDao()
                 .deleteMessage(message.id)
         }
-
         return true
+    }
+
+    suspend fun deleteLocalMessages(
+        context: Context,
+        messages: Collection<Message>
+    ): Int {
+        val unique = messages.distinctBy { it.id }
+        withContext(Dispatchers.IO) {
+            val dao = OchagDatabase
+                .getInstance(context.applicationContext)
+                .messageDao()
+            unique.forEach { dao.deleteMessage(it.id) }
+        }
+        return unique.size
+    }
+
+    suspend fun deleteAllLocalMessages(
+        context: Context,
+        chatId: Long
+    ) {
+        withContext(Dispatchers.IO) {
+            OchagDatabase
+                .getInstance(context.applicationContext)
+                .messageDao()
+                .deleteChatMessages(chatId)
+        }
     }
 }
