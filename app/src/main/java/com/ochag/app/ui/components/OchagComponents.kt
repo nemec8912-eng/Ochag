@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ochag.app.ui.theme.BorderSoft
 import com.ochag.app.ui.theme.BrownTextPrimary
 import com.ochag.app.ui.theme.BrownTextSecondary
@@ -243,7 +244,9 @@ fun OchagBottomBar(
                 ) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.labelLarge,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        softWrap = false,
                         color = if (selected) TerracottaPrimary else BrownTextSecondary,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                     )
