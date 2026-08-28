@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.ochag.app.ui.theme.BorderSoft
 import com.ochag.app.ui.theme.BrownTextPrimary
 import com.ochag.app.ui.theme.BrownTextSecondary
+import com.ochag.app.ui.theme.CardCream
 import com.ochag.app.ui.theme.CardWhite
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.TerracottaPrimary
@@ -44,8 +45,8 @@ import com.ochag.app.ui.theme.TerracottaSoft
 @Composable
 fun OchagCard(
     modifier: Modifier = Modifier,
-    elevation: Dp = 6.dp,
-    contentPadding: PaddingValues = PaddingValues(18.dp),
+    elevation: Dp = 3.dp,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
@@ -57,7 +58,7 @@ fun OchagCard(
 
     Card(
         modifier = clickableModifier,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation)
     ) {
@@ -79,13 +80,14 @@ fun OchagPrimaryButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(20.dp),
+            .height(58.dp),
+        shape = RoundedCornerShape(24.dp),
+        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = TerracottaPrimary,
             contentColor = Color.White,
             disabledContainerColor = TerracottaSoft,
-            disabledContentColor = Color.White.copy(alpha = 0.75f)
+            disabledContentColor = Color.White.copy(alpha = 0.76f)
         )
     ) {
         Text(
@@ -120,17 +122,17 @@ fun OchagTextField(
         singleLine = singleLine,
         visualTransformation = visualTransformation,
         trailingIcon = trailingContent,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = TerracottaPrimary,
-            unfocusedBorderColor = BorderSoft,
+            focusedBorderColor = TerracottaPrimary.copy(alpha = 0.50f),
+            unfocusedBorderColor = Color.Transparent,
             focusedLabelColor = TerracottaPrimary,
             unfocusedLabelColor = BrownTextSecondary,
             focusedTextColor = BrownTextPrimary,
             unfocusedTextColor = BrownTextPrimary,
             cursorColor = TerracottaPrimary,
-            focusedContainerColor = CardWhite,
-            unfocusedContainerColor = CardWhite
+            focusedContainerColor = CardCream,
+            unfocusedContainerColor = CardCream
         )
     )
 }
@@ -145,11 +147,10 @@ fun OchagAvatar(
 ) {
     Box(modifier = modifier.size(size)) {
         Surface(
-            modifier = Modifier
-                .size(size)
-                .clip(CircleShape),
-            shape = CircleShape,
-            color = backgroundColor
+            modifier = Modifier.size(size),
+            shape = RoundedCornerShape(size * 0.38f),
+            color = backgroundColor,
+            shadowElevation = 1.dp
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
@@ -165,14 +166,14 @@ fun OchagAvatar(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .size(15.dp)
+                    .size(16.dp)
                     .clip(CircleShape)
                     .background(CardWhite)
-                    .padding(2.dp)
+                    .padding(3.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(11.dp)
+                        .size(10.dp)
                         .clip(CircleShape)
                         .background(OnlineGreen)
                 )
@@ -190,13 +191,13 @@ fun OchagSectionHeader(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.headlineMedium,
+            style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = BrownTextPrimary
         )
 
         if (subtitle.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
@@ -216,16 +217,16 @@ fun OchagBottomBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(74.dp),
-        shape = RoundedCornerShape(28.dp),
+            .height(78.dp),
+        shape = RoundedCornerShape(30.dp),
         color = CardWhite,
-        shadowElevation = 10.dp,
+        shadowElevation = 12.dp,
         tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -236,7 +237,7 @@ fun OchagBottomBar(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onSelected(index) }
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 7.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -244,20 +245,17 @@ fun OchagBottomBar(
                         text = title,
                         style = MaterialTheme.typography.labelLarge,
                         color = if (selected) TerracottaPrimary else BrownTextSecondary,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                     )
 
-                    Spacer(modifier = Modifier.height(7.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Box(
                         modifier = Modifier
-                            .width(if (selected) 34.dp else 18.dp)
+                            .width(if (selected) 38.dp else 18.dp)
                             .height(3.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (selected) TerracottaPrimary
-                                else Color.Transparent
-                            )
+                            .background(if (selected) TerracottaPrimary else Color.Transparent)
                     )
                 }
             }
