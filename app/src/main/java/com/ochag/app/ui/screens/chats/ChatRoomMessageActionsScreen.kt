@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 fun ChatRoomWithMessageActions(
     chatId: Long,
     chatTitle: String,
+    onKeeperClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current.applicationContext
@@ -72,6 +73,7 @@ fun ChatRoomWithMessageActions(
         ChatRoomScreen(
             chatId = chatId,
             chatTitle = chatTitle,
+            onKeeperClick = onKeeperClick,
             onBackClick = {
                 if (selectedIds.isNotEmpty()) {
                     MessageSelectionController.clear()
