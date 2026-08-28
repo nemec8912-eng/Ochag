@@ -54,7 +54,11 @@ fun ChatListScreen(
             val matchesUnread = !unreadOnly || chat.unreadCount > 0
             matchesSearch && matchesUnread
         }
-        .sortedWith(compareByDescending<Chat> { it.lastActivityAt }.thenBy { it.id })
+        .sortedWith(
+            compareByDescending<Chat> { it.id == ChatRepository.FAVORITES_CHAT_ID }
+                .thenByDescending { it.lastActivityAt }
+                .thenBy { it.id }
+        )
 
     val currentUserName = ServerRealtime.userName.ifBlank { "Очаг" }
 
@@ -288,7 +292,17 @@ private fun ChatCard(
                 .padding(horizontal = 13.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (chat.type == ChatType.PRIVATE) {
+            if (chat.id == ChatRepository.FAVORITES_CHAT_ID) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = CircleShape,
+                    color = AvatarSand
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("★", fontSize = 24.sp, color = TerracottaPrimary)
+                    }
+                }
+            } else if (chat.type == ChatType.PRIVATE) {
                 OchagAvatar(
                     name = chat.title,
                     size = 52.dp,
@@ -406,6 +420,10 @@ private fun avatarColor(id: Long): Color = when ((id % 4).toInt()) {
 }
 
 private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
+    if (chat.id == ChatRepository.FAVORITES_CHAT_ID) {
+        return "Только для вас"
+    }
+
     if (chat.type == ChatType.PRIVATE) {
         return if (isPrivateChatOnline(chat, onlineUsers)) "● В сети" else "Не в сети"
     }
