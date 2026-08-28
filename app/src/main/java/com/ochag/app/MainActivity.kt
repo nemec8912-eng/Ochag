@@ -72,11 +72,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        AppLockController.onAppForeground()
         Log.d(TAG, "ON_START: Подключить к WebSocket")
         ServerRealtime.ensureConnected(applicationContext)
     }
 
     override fun onStop() {
+        AppLockController.onAppBackground()
         Log.d(TAG, "ON_STOP: WebSocket не отключаем")
         super.onStop()
     }
