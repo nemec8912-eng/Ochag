@@ -50,6 +50,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +91,26 @@ private const val STICKER_IMAGE_CAPTION = "__STICKER_IMAGE__"
 
 private enum class MediaButtonMode { AUDIO, VIDEO }
 
+private enum class MessageFontStyle(val title: String, val family: FontFamily) {
+    NORMAL("Обычный", FontFamily.Default),
+    MODERN("Современный", FontFamily.SansSerif),
+    CLASSIC("Классический", FontFamily.Serif),
+    HANDWRITTEN("Рукописный", FontFamily.Cursive),
+    MONO("Печатный", FontFamily.Monospace)
+}
+
+private enum class MessageFontSize(val title: String, val sizeSp: Int) {
+    VERY_SMALL("Очень маленький", 12),
+    SMALL("Маленький", 14),
+    MEDIUM("Средний", 16),
+    LARGE("Большой", 19),
+    VERY_LARGE("Очень большой", 23)
+}
+
+private const val FONT_PREFS = "ochag_message_font"
+private const val FONT_STYLE_KEY = "font_style"
+private const val FONT_SIZE_KEY = "font_size"
+
 private data class PendingAttachment(
     val uri: Uri,
     val fileName: String,
@@ -115,7 +136,36 @@ fun ChatRoomScreen(
     val listState = rememberLazyListState()
 
     var showChatSettings by remember { mutableStateOf(false) }
+    var showFontSettings by remember { mutableStateOf(false) }
     var showStickerPicker by remember { mutableStateOf(false) }
+
+    val fontPreferences = remember {
+        appContext.getSharedPreferences(FONT_PREFS, Context.MODE_PRIVATE)
+    }
+    var messageFontStyle by remember {
+        mutableStateOf(
+            runCatching {
+                MessageFontStyle.valueOf(
+                    fontPreferences.getString(
+                        FONT_STYLE_KEY,
+                        MessageFontStyle.NORMAL.name
+                    ) ?: MessageFontStyle.NORMAL.name
+                )
+            }.getOrDefault(MessageFontStyle.NORMAL)
+        )
+    }
+    var messageFontSize by remember {
+        mutableStateOf(
+            runCatching {
+                MessageFontSize.valueOf(
+                    fontPreferences.getString(
+                        FONT_SIZE_KEY,
+                        MessageFontSize.MEDIUM.name
+                    ) ?: MessageFontSize.MEDIUM.name
+                )
+            }.getOrDefault(MessageFontSize.MEDIUM)
+        )
+    }
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
     val typingUsers by ServerRealtime.typingUsers.collectAsState()
 
@@ -414,6 +464,23 @@ fun ChatRoomScreen(
         )
     }
 
+    if (showFontSettings) {
+        MessageFontSettingsDialog(
+            selectedStyle = messageFontStyle,
+            selectedSize = messageFontSize,
+            onDismiss = { showFontSettings = false },
+            onSave = { style, size ->
+                messageFontStyle = style
+                messageFontSize = size
+                fontPreferences.edit()
+                    .putString(FONT_STYLE_KEY, style.name)
+                    .putString(FONT_SIZE_KEY, size.name)
+                    .apply()
+                showFontSettings = false
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -428,6 +495,7 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
+                onFontSettingsClick = { showFontSettings = true },
                 onBackClick = onBackClick
             )
 
@@ -441,7 +509,11 @@ fun ChatRoomScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(items = messages, key = { it.id }) { message ->
-                    MessageBubble(message)
+                    MessageBubble(
+                        message = message,
+                        fontStyle = messageFontStyle,
+                        fontSize = messageFontSize
+                    )
                 }
             }
 
@@ -1079,6 +1151,7 @@ private fun ChatHeader(
     statusText: String,
     canOpenSettings: Boolean,
     onSettingsClick: () -> Unit,
+    onFontSettingsClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Surface(
@@ -1153,6 +1226,25 @@ private fun ChatHeader(
                 )
             }
 
+            Surface(
+                modifier = Modifier
+                    .padding(start = 6.dp)
+                    .size(42.dp)
+                    .clickable(onClick = onFontSettingsClick),
+                shape = CircleShape,
+                color = CardCream
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Аа",
+                        color = TerracottaDark,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
+                }
+            }
+
             if (canOpenSettings) {
                 Surface(
                     modifier = Modifier
@@ -1168,6 +1260,86 @@ private fun ChatHeader(
             }
         }
     }
+}
+
+@Composable
+private fun MessageFontSettingsDialog(
+    selectedStyle: MessageFontStyle,
+    selectedSize: MessageFontSize,
+    onDismiss: () -> Unit,
+    onSave: (MessageFontStyle, MessageFontSize) -> Unit
+) {
+    var style by remember(selectedStyle) { mutableStateOf(selectedStyle) }
+    var size by remember(selectedSize) { mutableStateOf(selectedSize) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Шрифт сообщений", color = BrownTextPrimary) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Стиль", fontWeight = FontWeight.Bold, color = BrownTextPrimary)
+                MessageFontStyle.values().forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { style = item }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = style == item,
+                            onClick = { style = item }
+                        )
+                        Text(item.title, fontFamily = item.family, color = BrownTextPrimary)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Размер — ${size.title}",
+                    fontWeight = FontWeight.Bold,
+                    color = BrownTextPrimary
+                )
+                Slider(
+                    value = size.ordinal.toFloat(),
+                    onValueChange = { value ->
+                        size = MessageFontSize.values()[value.toInt().coerceIn(0, 4)]
+                    },
+                    valueRange = 0f..4f,
+                    steps = 3
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Маленький", style = MaterialTheme.typography.labelSmall)
+                    Text("Большой", style = MaterialTheme.typography.labelSmall)
+                }
+
+                Spacer(Modifier.height(10.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    color = TerracottaPrimary
+                ) {
+                    Text(
+                        text = "Привет! Так будут выглядеть сообщения.",
+                        modifier = Modifier.padding(14.dp),
+                        color = Color.White,
+                        fontFamily = style.family,
+                        fontSize = size.sizeSp.sp
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(style, size) }) { Text("Сохранить") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Отмена") }
+        },
+        containerColor = CreamBackground
+    )
 }
 
 @Composable
@@ -1316,7 +1488,11 @@ private fun PendingAttachmentPreview(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageBubble(message: Message) {
+private fun MessageBubble(
+    message: Message,
+    fontStyle: MessageFontStyle,
+    fontSize: MessageFontSize
+) {
     val context = LocalContext.current
     val isImage = message.messageType == MessageType.IMAGE.name
     val isFile = message.messageType == MessageType.FILE.name
@@ -1452,7 +1628,12 @@ fun MessageBubble(message: Message) {
                         )
                         if (message.text.isNotBlank() && !isImageSticker) {
                             Spacer(Modifier.height(8.dp))
-                            Text(message.text, color = bubbleText)
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
                         }
                     }
 
@@ -1489,7 +1670,12 @@ fun MessageBubble(message: Message) {
                         }
                         if (message.text.isNotBlank()) {
                             Spacer(Modifier.height(8.dp))
-                            Text(message.text, color = bubbleText)
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
                         }
                     }
 
@@ -1500,7 +1686,8 @@ fun MessageBubble(message: Message) {
                         Text(
                             message.text,
                             color = bubbleText,
-                            style = MaterialTheme.typography.bodyLarge
+                            fontFamily = fontStyle.family,
+                            fontSize = fontSize.sizeSp.sp
                         )
                     }
 
