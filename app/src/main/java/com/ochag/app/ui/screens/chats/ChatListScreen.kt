@@ -1,7 +1,9 @@
 package com.ochag.app.ui.screens.chats
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -392,6 +399,20 @@ private fun ChatCard(
 
 @Composable
 private fun GroupAvatar(chat: Chat) {
+    val context = LocalContext.current
+    val avatarUri = context.getSharedPreferences(
+        "ochag_group_avatars",
+        android.content.Context.MODE_PRIVATE
+    ).getString("group_avatar_${chat.id}", "").orEmpty()
+
+    if (avatarUri.isNotBlank()) {
+        GroupAvatarImage(
+            uri = Uri.parse(avatarUri),
+            modifier = Modifier.size(52.dp)
+        )
+        return
+    }
+
     Surface(
         modifier = Modifier.size(52.dp),
         shape = CircleShape,
@@ -409,6 +430,36 @@ private fun GroupAvatar(chat: Chat) {
                 color = BrownTextPrimary
             )
         }
+    }
+}
+
+@Composable
+private fun GroupAvatarImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, uri) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = "Аватар группы",
+            modifier = modifier.clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Surface(modifier = modifier, shape = CircleShape, color = AvatarSage) {}
     }
 }
 
