@@ -63,6 +63,7 @@ object OchagThemeController {
             ?.apply()
     }
 
+    @JvmName("applyMessageFontSizeLevel")
     fun setMessageFontSizeLevel(level: Int) {
         val safeLevel = level.coerceIn(1, 5)
         messageFontSizeLevel = safeLevel
