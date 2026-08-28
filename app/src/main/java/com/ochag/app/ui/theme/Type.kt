@@ -26,36 +26,39 @@ fun ochagTypography(): Typography {
         displaySmall = TextStyle(
             fontFamily = heading,
             fontWeight = FontWeight.Bold,
-            fontSize = 38.sp,
-            lineHeight = 44.sp,
+            fontSize = 42.sp,
+            lineHeight = 46.sp,
+            letterSpacing = (-0.7).sp,
             color = BrownTextPrimary
         ),
         headlineLarge = TextStyle(
             fontFamily = heading,
             fontWeight = FontWeight.Bold,
-            fontSize = 34.sp,
+            fontSize = 36.sp,
             lineHeight = 40.sp,
+            letterSpacing = (-0.45).sp,
             color = BrownTextPrimary
         ),
         headlineMedium = TextStyle(
             fontFamily = heading,
             fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            lineHeight = 34.sp,
+            fontSize = 30.sp,
+            lineHeight = 35.sp,
+            letterSpacing = (-0.25).sp,
             color = BrownTextPrimary
         ),
         headlineSmall = TextStyle(
             fontFamily = heading,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 24.sp,
+            fontSize = 25.sp,
             lineHeight = 30.sp,
             color = BrownTextPrimary
         ),
         titleLarge = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
-            lineHeight = 26.sp,
+            fontSize = 21.sp,
+            lineHeight = 27.sp,
             color = BrownTextPrimary
         ),
         titleMedium = TextStyle(
@@ -65,32 +68,53 @@ fun ochagTypography(): Typography {
             lineHeight = 23.sp,
             color = BrownTextPrimary
         ),
+        titleSmall = TextStyle(
+            fontFamily = body,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 15.sp,
+            lineHeight = 21.sp,
+            color = BrownTextPrimary
+        ),
         bodyLarge = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.Normal,
             fontSize = 16.sp,
-            lineHeight = 23.sp,
+            lineHeight = 24.sp,
             color = BrownTextPrimary
         ),
         bodyMedium = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
-            lineHeight = 20.sp,
+            lineHeight = 21.sp,
+            color = BrownTextSecondary
+        ),
+        bodySmall = TextStyle(
+            fontFamily = body,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            lineHeight = 19.sp,
             color = BrownTextSecondary
         ),
         labelLarge = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            lineHeight = 20.sp,
+            fontSize = 14.sp,
+            lineHeight = 19.sp,
             color = BrownTextPrimary
         ),
         labelMedium = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.Medium,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
+            fontSize = 12.sp,
+            lineHeight = 17.sp,
+            color = BrownTextSecondary
+        ),
+        labelSmall = TextStyle(
+            fontFamily = body,
+            fontWeight = FontWeight.Medium,
+            fontSize = 11.sp,
+            lineHeight = 15.sp,
             color = BrownTextSecondary
         )
     )
