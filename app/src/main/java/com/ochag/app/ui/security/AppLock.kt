@@ -3,6 +3,8 @@ package com.ochag.app.ui.security
 import android.content.Context
 import java.security.MessageDigest
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -147,39 +153,91 @@ fun PatternPad(
     value: String,
     onValueChange: (String) -> Unit
 ) {
+    var fingerPosition by remember { mutableStateOf<Offset?>(null) }
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val emptyColor = MaterialTheme.colorScheme.outline
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        (0..2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                (1..3).forEach { column ->
-                    val number = row * 3 + column
-                    val selected = value.contains(number.toString())
-                    Surface(
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clickable {
-                                if (!selected) onValueChange(value + number)
-                            },
-                        shape = CircleShape,
-                        color = if (selected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                if (selected) "●" else "○",
-                                color = if (selected) {
-                                    MaterialTheme.colorScheme.onPrimary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
+        Canvas(
+            modifier = Modifier
+                .size(220.dp)
+                .pointerInput(value) {
+                    fun centers(): List<Offset> {
+                        val gap = size.width / 4f
+                        return (0..2).flatMap { row ->
+                            (0..2).map { column ->
+                                Offset(gap * (column + 1), gap * (row + 1))
+                            }
                         }
                     }
+
+                    fun nodeAt(position: Offset): Int? {
+                        val radius = size.width / 8f
+                        return centers().indexOfFirst { center ->
+                            (center - position).getDistance() <= radius
+                        }.takeIf { it >= 0 }?.plus(1)
+                    }
+
+                    var currentPattern = value
+                    detectDragGestures(
+                        onDragStart = { position ->
+                            currentPattern = ""
+                            nodeAt(position)?.let { node ->
+                                currentPattern = node.toString()
+                                onValueChange(currentPattern)
+                            }
+                            fingerPosition = position
+                        },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            fingerPosition = change.position
+                            nodeAt(change.position)?.let { node ->
+                                val digit = node.toString()
+                                if (!currentPattern.contains(digit)) {
+                                    currentPattern += digit
+                                    onValueChange(currentPattern)
+                                }
+                            }
+                        },
+                        onDragEnd = { fingerPosition = null },
+                        onDragCancel = { fingerPosition = null }
+                    )
+                }
+        ) {
+            val gap = size.width / 4f
+            val centers = (0..2).flatMap { row ->
+                (0..2).map { column ->
+                    Offset(gap * (column + 1), gap * (row + 1))
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            val selectedCenters = value.mapNotNull { digit ->
+                digit.digitToIntOrNull()?.takeIf { it in 1..9 }?.let { centers[it - 1] }
+            }
+
+            selectedCenters.zipWithNext().forEach { (start, end) ->
+                drawLine(primaryColor, start, end, strokeWidth = 8f)
+            }
+            if (selectedCenters.isNotEmpty() && fingerPosition != null) {
+                drawLine(
+                    primaryColor.copy(alpha = 0.65f),
+                    selectedCenters.last(),
+                    fingerPosition!!,
+                    strokeWidth = 7f
+                )
+            }
+
+            centers.forEachIndexed { index, center ->
+                val selected = value.contains((index + 1).toString())
+                drawCircle(
+                    color = if (selected) primaryColor else emptyColor,
+                    radius = if (selected) 18f else 15f,
+                    center = center,
+                    style = if (selected) Stroke(width = 9f) else Stroke(width = 5f)
+                )
+                if (selected) {
+                    drawCircle(primaryColor, radius = 7f, center = center)
+                }
+            }
         }
         TextButton(onClick = { onValueChange("") }) {
             Text("Сбросить рисунок")
