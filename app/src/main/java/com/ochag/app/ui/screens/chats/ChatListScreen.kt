@@ -1,43 +1,20 @@
 package com.ochag.app.ui.screens.chats
 
 import android.net.Uri
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ochag.app.data.Chat
 import com.ochag.app.data.ChatRepository
 import com.ochag.app.data.ChatType
@@ -45,14 +22,7 @@ import com.ochag.app.data.ServerRealtime
 import com.ochag.app.ui.components.OchagAvatar
 import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagTextField
-import com.ochag.app.ui.theme.BorderSoft
-import com.ochag.app.ui.theme.BrownTextPrimary
-import com.ochag.app.ui.theme.BrownTextSecondary
-import com.ochag.app.ui.theme.CardWhite
-import com.ochag.app.ui.theme.CreamBackground
-import com.ochag.app.ui.theme.OnlineGreen
-import com.ochag.app.ui.theme.TerracottaPrimary
-import com.ochag.app.ui.theme.TerracottaSoft
+import com.ochag.app.ui.theme.*
 import java.util.Locale
 
 @Composable
@@ -91,7 +61,7 @@ fun ChatListScreen(
             OchagBottomBar(
                 items = listOf("Чаты", "Файлы", "Профиль"),
                 selectedIndex = 0,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
             ) { index ->
                 when (index) {
                     1 -> onFilesClick()
@@ -100,123 +70,158 @@ fun ChatListScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 18.dp)
         ) {
-            Spacer(Modifier.height(18.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Чаты",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = BrownTextPrimary
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = when (connectionState) {
-                            ServerRealtime.ConnectionState.ONLINE -> "Только свои люди ♥"
-                            ServerRealtime.ConnectionState.CONNECTING -> "Подключаемся к близким…"
-                            ServerRealtime.ConnectionState.OFFLINE -> "Сейчас без соединения"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = BrownTextSecondary
-                    )
-                }
-
-                Surface(
-                    onClick = onProfileClick,
-                    modifier = Modifier.size(54.dp),
-                    shape = CircleShape,
-                    color = TerracottaSoft,
-                    shadowElevation = 5.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = TerracottaPrimary
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            OchagTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                label = "Поиск",
-                placeholder = "Чат, участник или сообщение"
+            Text(
+                text = "❧",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp, end = 6.dp),
+                fontSize = 74.sp,
+                color = SoftGreen.copy(alpha = 0.12f)
             )
 
-            Spacer(Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 18.dp)
             ) {
-                FilterChip(
-                    selected = unreadOnly,
-                    onClick = { unreadOnly = !unreadOnly },
-                    label = {
-                        Text(
-                            text = "Непрочитанные",
-                            color = if (unreadOnly) TerracottaPrimary else BrownTextSecondary
-                        )
-                    },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = CardWhite,
-                        selectedContainerColor = TerracottaSoft
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = unreadOnly,
-                        borderColor = BorderSoft,
-                        selectedBorderColor = TerracottaSoft
+                Spacer(Modifier.height(18.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(46.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = TerracottaSoft
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                "⌂",
+                                color = TerracottaDark,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.width(10.dp))
+
+                    Text(
+                        text = "Очаг",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = BrownTextPrimary,
+                        fontWeight = FontWeight.SemiBold
                     )
-                )
 
-                Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.weight(1f))
 
-                if (searchText.isNotBlank() || unreadOnly) {
-                    TextButton(onClick = {
-                        searchText = ""
-                        unreadOnly = false
-                    }) {
-                        Text("Сбросить", color = TerracottaPrimary)
+                    Surface(
+                        onClick = onProfileClick,
+                        modifier = Modifier.size(50.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        color = AvatarPeach,
+                        shadowElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrownTextPrimary
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(28.dp))
 
-            if (sortedChats.isEmpty()) {
-                EmptyChatsState(filtered = searchText.isNotBlank() || unreadOnly)
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(top = 4.dp, bottom = 22.dp)
+                Text(
+                    text = "Чаты",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = BrownTextPrimary
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = when (connectionState) {
+                        ServerRealtime.ConnectionState.ONLINE -> "Только свои люди ♥"
+                        ServerRealtime.ConnectionState.CONNECTING -> "Собираем близких рядом…"
+                        ServerRealtime.ConnectionState.OFFLINE -> "Сообщения останутся рядом"
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = BrownTextSecondary
+                )
+
+                Spacer(Modifier.height(22.dp))
+
+                OchagTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    label = "Поиск",
+                    placeholder = "Чат, человек или сообщение"
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(sortedChats, key = { it.id }) { chat ->
-                        val isOnline = isPrivateChatOnline(chat, normalizedOnlineUsers)
-                        val presenceText = buildPresenceText(chat, normalizedOnlineUsers)
-                        ChatCard(
-                            chat = chat,
-                            isOnline = isOnline,
-                            presenceText = presenceText,
-                            onClick = { onChatClick(chat.id, chat.title) }
+                    Surface(
+                        onClick = { unreadOnly = !unreadOnly },
+                        shape = RoundedCornerShape(18.dp),
+                        color = if (unreadOnly) TerracottaSoft else CardWhite,
+                        border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else BorderSoft)
+                    ) {
+                        Text(
+                            text = if (unreadOnly) "● Непрочитанные" else "Непрочитанные",
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (unreadOnly) TerracottaDark else BrownTextSecondary
                         )
+                    }
+
+                    Spacer(Modifier.weight(1f))
+
+                    if (searchText.isNotBlank() || unreadOnly) {
+                        TextButton(
+                            onClick = {
+                                searchText = ""
+                                unreadOnly = false
+                            }
+                        ) {
+                            Text("Сбросить", color = TerracottaPrimary)
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                if (sortedChats.isEmpty()) {
+                    EmptyChatsState(filtered = searchText.isNotBlank() || unreadOnly)
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(13.dp),
+                        contentPadding = PaddingValues(top = 4.dp, bottom = 26.dp)
+                    ) {
+                        items(sortedChats, key = { it.id }) { chat ->
+                            val isOnline = isPrivateChatOnline(chat, normalizedOnlineUsers)
+                            val presenceText = buildPresenceText(chat, normalizedOnlineUsers)
+                            ChatCard(
+                                chat = chat,
+                                isOnline = isOnline,
+                                presenceText = presenceText,
+                                onClick = { onChatClick(chat.id, chat.title) }
+                            )
+                        }
                     }
                 }
             }
@@ -228,7 +233,11 @@ fun ChatListScreen(
 private fun EmptyChatsState(filtered: Boolean) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Surface(modifier = Modifier.size(76.dp), shape = CircleShape, color = TerracottaSoft) {
+            Surface(
+                modifier = Modifier.size(82.dp),
+                shape = RoundedCornerShape(28.dp),
+                color = TerracottaSoft
+            ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = if (filtered) "⌕" else "♡",
@@ -237,14 +246,14 @@ private fun EmptyChatsState(filtered: Boolean) {
                     )
                 }
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 text = if (filtered) "Ничего не нашли" else "Здесь будут ваши чаты",
                 style = MaterialTheme.typography.titleLarge,
                 color = BrownTextPrimary,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(5.dp))
             Text(
                 text = if (filtered) "Попробуй изменить поиск" else "Начни разговор с близкими",
                 style = MaterialTheme.typography.bodyMedium,
@@ -264,16 +273,23 @@ private fun ChatCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 17.dp, vertical = 17.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (chat.type == ChatType.PRIVATE) {
-                OchagAvatar(name = chat.title, size = 58.dp, online = isOnline)
+                OchagAvatar(
+                    name = chat.title,
+                    size = 60.dp,
+                    online = isOnline,
+                    backgroundColor = avatarColor(chat.id)
+                )
             } else {
                 GroupAvatar(chat)
             }
@@ -294,23 +310,28 @@ private fun ChatCard(
                         fontWeight = if (chat.unreadCount > 0) FontWeight.Bold else FontWeight.SemiBold,
                         color = BrownTextPrimary
                     )
+
                     if (chat.lastTime.isNotBlank()) {
                         Spacer(Modifier.width(8.dp))
-                        Text(chat.lastTime, style = MaterialTheme.typography.labelMedium, color = BrownTextSecondary)
+                        Text(
+                            text = chat.lastTime,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = BrownTextMuted
+                        )
                     }
                 }
 
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(4.dp))
 
                 Text(
                     text = presenceText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else BrownTextSecondary
+                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else BrownTextMuted
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(9.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -331,6 +352,7 @@ private fun ChatCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = BrownTextSecondary
                     )
+
                     if (chat.unreadCount > 0) {
                         Spacer(Modifier.width(10.dp))
                         Surface(shape = CircleShape, color = TerracottaPrimary) {
@@ -352,19 +374,30 @@ private fun ChatCard(
 @Composable
 private fun GroupAvatar(chat: Chat) {
     Surface(
-        modifier = Modifier.size(58.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.size(60.dp),
+        shape = RoundedCornerShape(22.dp),
         color = when (chat.type) {
-            ChatType.FAMILY -> Color(0xFFF6DCCF)
-            ChatType.GROUP -> Color(0xFFE4EEE8)
-            ChatType.THEME -> Color(0xFFF1E6D1)
+            ChatType.FAMILY -> AvatarPeach
+            ChatType.GROUP -> AvatarSage
+            ChatType.THEME -> AvatarSand
             ChatType.PRIVATE -> TerracottaSoft
         }
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = avatarText(chat), style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = avatarText(chat),
+                style = MaterialTheme.typography.headlineSmall,
+                color = BrownTextPrimary
+            )
         }
     }
+}
+
+private fun avatarColor(id: Long): Color = when ((id % 4).toInt()) {
+    0 -> AvatarPeach
+    1 -> AvatarSage
+    2 -> AvatarSand
+    else -> AvatarRose
 }
 
 private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
