@@ -38,6 +38,15 @@ fun ChatRoomWithMessageActions(
     var confirmBulkDelete by remember { mutableStateOf(false) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
     var editText by remember { mutableStateOf("") }
+    val pinPreferences = remember(chatId) {
+        context.getSharedPreferences("ochag_pinned_messages", android.content.Context.MODE_PRIVATE)
+    }
+    var pinnedMessageId by remember(chatId) {
+        mutableStateOf(
+            pinPreferences.getLong("pinned_$chatId", -1L).takeIf { it > 0L }
+        )
+    }
+    val pinnedMessage = messages.firstOrNull { it.id == pinnedMessageId }
 
     DisposableEffect(chatId) {
         MessageSelectionController.attach(chatId)
@@ -56,6 +65,47 @@ fun ChatRoomWithMessageActions(
                 }
             }
         )
+
+        pinnedMessage?.let { pinned ->
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 78.dp, start = 14.dp, end = 14.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                        MessageSelectionController.requestScrollTo(pinned.id)
+                    },
+                shape = RoundedCornerShape(16.dp),
+                color = TerracottaLight,
+                shadowElevation = 5.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("📌", modifier = Modifier.padding(end = 8.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Закреплённое сообщение",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TerracottaDark,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            messagePreview(pinned),
+                            maxLines = 1,
+                            color = BrownTextPrimary
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            pinPreferences.edit().remove("pinned_$chatId").apply()
+                            pinnedMessageId = null
+                        }
+                    ) { Text("✕") }
+                }
+            }
+        }
 
         if (selectedIds.isNotEmpty()) {
             SelectionToolbar(
@@ -120,6 +170,17 @@ fun ChatRoomWithMessageActions(
                     title = "Выделить"
                 ) {
                     MessageSelectionController.startSelection(message.id)
+                }
+
+                ActionRow(
+                    icon = "📌",
+                    title = "Закрепить в чате"
+                ) {
+                    pinPreferences.edit()
+                        .putLong("pinned_$chatId", message.id)
+                        .apply()
+                    pinnedMessageId = message.id
+                    MessageSelectionController.closeActions()
                 }
 
                 ActionRow(
