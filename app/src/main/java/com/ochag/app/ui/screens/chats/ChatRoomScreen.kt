@@ -137,6 +137,14 @@ fun ChatRoomScreen(
     val lifecycleOwner = context as LifecycleOwner
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+    var currentGroupAvatarUri by remember(chatId) {
+        mutableStateOf(
+            appContext.getSharedPreferences(
+                "ochag_group_avatars",
+                Context.MODE_PRIVATE
+            ).getString("group_avatar_$chatId", "").orEmpty()
+        )
+    }
 
     var showChatSettings by remember { mutableStateOf(false) }
     var showFontSettings by remember { mutableStateOf(false) }
@@ -533,6 +541,9 @@ fun ChatRoomScreen(
             chat = currentChat,
             serverUsers = serverUsers,
             onlineUsers = onlineUsers,
+            onAvatarChanged = { uri ->
+                currentGroupAvatarUri = uri
+            },
             onDismiss = { showChatSettings = false },
             onSave = { newTitle, newMembers ->
                 coroutineScope.launch {
@@ -630,6 +641,7 @@ fun ChatRoomScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             ChatHeader(
                 chatId = chatId,
+                avatarUri = currentGroupAvatarUri,
                 chatTitle = currentChat?.title ?: chatTitle,
                 statusText = headerStatusText,
                 canOpenSettings = currentChat != null && currentChat.type != ChatType.PRIVATE,
@@ -1119,6 +1131,7 @@ private fun ChatGroupSettingsDialog(
     chat: Chat,
     serverUsers: List<String>,
     onlineUsers: Set<String>,
+    onAvatarChanged: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: (String, List<String>) -> Unit
 ) {
@@ -1140,6 +1153,7 @@ private fun ChatGroupSettingsDialog(
             avatarPrefs.edit()
                 .putString("group_avatar_${chat.id}", avatarUri)
                 .apply()
+            onAvatarChanged(avatarUri)
         }
     }
     var title by remember(chat.id, chat.title) { mutableStateOf(chat.title) }
@@ -1387,6 +1401,7 @@ private fun buildChatHeaderPresenceText(
 @Composable
 private fun ChatHeader(
     chatId: Long,
+    avatarUri: String,
     chatTitle: String,
     statusText: String,
     canOpenSettings: Boolean,
@@ -1394,12 +1409,6 @@ private fun ChatHeader(
     onFontSettingsClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    val context = LocalContext.current
-    val avatarUri = context.getSharedPreferences(
-        "ochag_group_avatars",
-        Context.MODE_PRIVATE
-    ).getString("group_avatar_$chatId", "").orEmpty()
-
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp),
