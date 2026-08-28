@@ -40,6 +40,7 @@ fun ProfileScreen(
     val connectionState by ServerRealtime.connectionState.collectAsState()
     val darkTheme = OchagThemeController.isDarkTheme
     val fontStyle = OchagThemeController.fontStyle
+    val messageFontSizeLevel = OchagThemeController.messageFontSizeLevel
 
     val serverPhone = profiles
         .firstOrNull { it.name.equals(userName, ignoreCase = true) }
@@ -232,7 +233,7 @@ fun ProfileScreen(
                         HorizontalDivider(color = DividerSoft)
 
                         Text(
-                            text = "Шрифт",
+                            text = "Стиль шрифта",
                             style = MaterialTheme.typography.titleMedium,
                             color = BrownTextPrimary
                         )
@@ -250,6 +251,53 @@ fun ProfileScreen(
                             FontChoice("Классика", fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
                                 OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC)
                             }
+                        }
+
+                        HorizontalDivider(color = DividerSoft)
+
+                        Text(
+                            text = "Размер текста сообщений",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = BrownTextPrimary
+                        )
+                        Text(
+                            text = when (messageFontSizeLevel) {
+                                1 -> "Очень маленький"
+                                2 -> "Маленький"
+                                3 -> "Средний"
+                                4 -> "Большой"
+                                else -> "Очень большой"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = BrownTextSecondary
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            (1..5).forEach { level ->
+                                FontSizeChoice(
+                                    level = level,
+                                    selected = messageFontSizeLevel == level,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    OchagThemeController.setMessageFontSizeLevel(level)
+                                }
+                            }
+                        }
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp),
+                            color = CardCream
+                        ) {
+                            Text(
+                                text = "Так будет выглядеть сообщение в чате",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = BrownTextPrimary
+                            )
                         }
                     }
                 }
@@ -398,6 +446,31 @@ private fun FontChoice(
                 style = MaterialTheme.typography.labelMedium,
                 color = if (selected) TerracottaDark else BrownTextSecondary,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+private fun FontSizeChoice(
+    level: Int,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .height(42.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        color = if (selected) TerracottaPrimary else CardCream,
+        border = BorderStroke(1.dp, if (selected) TerracottaPrimary else BorderSoft)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = level.toString(),
+                color = if (selected) Color.White else BrownTextSecondary,
+                fontWeight = FontWeight.Bold
             )
         }
     }
