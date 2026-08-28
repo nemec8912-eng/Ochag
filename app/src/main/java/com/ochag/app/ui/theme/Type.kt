@@ -18,6 +18,22 @@ private fun bodyFamily(): FontFamily = when (OchagThemeController.fontStyle) {
     OchagFontStyle.CLASSIC -> FontFamily.Serif
 }
 
+private fun messageFontSize() = when (OchagThemeController.messageFontSizeLevel) {
+    1 -> 13.sp
+    2 -> 15.sp
+    3 -> 16.sp
+    4 -> 18.sp
+    else -> 20.sp
+}
+
+private fun messageLineHeight() = when (OchagThemeController.messageFontSizeLevel) {
+    1 -> 19.sp
+    2 -> 22.sp
+    3 -> 24.sp
+    4 -> 27.sp
+    else -> 30.sp
+}
+
 fun ochagTypography(): Typography {
     val heading = headingFamily()
     val body = bodyFamily()
@@ -78,8 +94,8 @@ fun ochagTypography(): Typography {
         bodyLarge = TextStyle(
             fontFamily = body,
             fontWeight = FontWeight.Normal,
-            fontSize = 16.sp,
-            lineHeight = 24.sp,
+            fontSize = messageFontSize(),
+            lineHeight = messageLineHeight(),
             color = BrownTextPrimary
         ),
         bodyMedium = TextStyle(
