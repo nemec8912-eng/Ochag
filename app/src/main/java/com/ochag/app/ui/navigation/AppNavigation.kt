@@ -17,7 +17,7 @@ import com.ochag.app.ui.screens.login.LoginScreen
 import com.ochag.app.ui.screens.registration.InviteRegistrationScreen
 import com.ochag.app.ui.screens.files.FilesMediaScreen
 import com.ochag.app.ui.screens.chats.ChatListScreen
-import com.ochag.app.ui.screens.chats.ChatRoomScreen
+import com.ochag.app.ui.screens.chats.ChatRoomWithMessageActions
 import com.ochag.app.ui.screens.chats.NewChatScreen
 import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
@@ -170,7 +170,7 @@ fun AppNavigation() {
                 }
             }
 
-            ChatRoomScreen(
+            ChatRoomWithMessageActions(
                 chatId = chatId,
                 chatTitle = title,
                 onBackClick = { navController.popBackStack() }
