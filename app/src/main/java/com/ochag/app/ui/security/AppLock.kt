@@ -161,7 +161,7 @@ fun PatternPad(
         Canvas(
             modifier = Modifier
                 .size(220.dp)
-                .pointerInput(value) {
+                .pointerInput(Unit) {
                     fun centers(): List<Offset> {
                         val gap = size.width / 4f
                         return (0..2).flatMap { row ->
