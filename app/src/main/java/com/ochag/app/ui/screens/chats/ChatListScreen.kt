@@ -30,6 +30,8 @@ import java.util.Locale
 fun ChatListScreen(
     onFilesClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onChatClick: (Long, String) -> Unit = { _, _ -> }
 ) {
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
@@ -60,13 +62,15 @@ fun ChatListScreen(
         containerColor = CreamBackground,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Файлы", "Профиль"),
+                items = listOf("Чаты", "Контакты", "Звонки", "Файлы", "Профиль"),
                 selectedIndex = 0,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
                 when (index) {
-                    1 -> onFilesClick()
-                    2 -> onProfileClick()
+                    1 -> onContactsClick()
+                    2 -> onCallsClick()
+                    3 -> onFilesClick()
+                    4 -> onProfileClick()
                 }
             }
         }
@@ -88,9 +92,9 @@ fun ChatListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 18.dp)
+                    .padding(horizontal = 12.dp)
             ) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -140,7 +144,7 @@ fun ChatListScreen(
                     }
                 }
 
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Text(
                     text = "Чаты",
@@ -160,7 +164,7 @@ fun ChatListScreen(
                     color = BrownTextSecondary
                 )
 
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(12.dp))
 
                 OchagTextField(
                     value = searchText,
@@ -169,7 +173,7 @@ fun ChatListScreen(
                     placeholder = "Чат, человек или сообщение"
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -203,15 +207,15 @@ fun ChatListScreen(
                     }
                 }
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(6.dp))
 
                 if (sortedChats.isEmpty()) {
                     EmptyChatsState(filtered = searchText.isNotBlank() || unreadOnly)
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(13.dp),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 26.dp)
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                        contentPadding = PaddingValues(top = 2.dp, bottom = 16.dp)
                     ) {
                         items(sortedChats, key = { it.id }) { chat ->
                             val isOnline = isPrivateChatOnline(chat, normalizedOnlineUsers)
@@ -274,20 +278,20 @@ private fun ChatCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 17.dp, vertical = 17.dp),
+                .padding(horizontal = 13.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (chat.type == ChatType.PRIVATE) {
                 OchagAvatar(
                     name = chat.title,
-                    size = 60.dp,
+                    size = 52.dp,
                     online = isOnline,
                     backgroundColor = avatarColor(chat.id)
                 )
@@ -295,7 +299,7 @@ private fun ChatCard(
                 GroupAvatar(chat)
             }
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(11.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -332,7 +336,7 @@ private fun ChatCard(
                     color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else BrownTextMuted
                 )
 
-                Spacer(Modifier.height(9.dp))
+                Spacer(Modifier.height(5.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -375,8 +379,8 @@ private fun ChatCard(
 @Composable
 private fun GroupAvatar(chat: Chat) {
     Surface(
-        modifier = Modifier.size(60.dp),
-        shape = RoundedCornerShape(22.dp),
+        modifier = Modifier.size(52.dp),
+        shape = CircleShape,
         color = when (chat.type) {
             ChatType.FAMILY -> AvatarPeach
             ChatType.GROUP -> AvatarSage
