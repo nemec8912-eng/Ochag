@@ -939,7 +939,7 @@ private fun ChatGroupSettingsDialog(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(items = availableMembers, key = { it.lowercase() }) { member ->
-                        val selected = selectedMembers.any {
+                        val selectedMember = selectedMembers.any {
                             it.equals(member, ignoreCase = true)
                         }
                         val isMe = member.equals(myName, ignoreCase = true)
@@ -989,11 +989,11 @@ private fun ChatGroupSettingsDialog(
                                 }
 
                                 Checkbox(
-                                    checked = selected,
+                                    checked = selectedMember,
                                     enabled = !isMe,
                                     onCheckedChange = {
                                         if (isMe) return@Checkbox
-                                        if (selected) {
+                                        if (selectedMember) {
                                             selectedMembers.removeAll {
                                                 it.equals(member, ignoreCase = true)
                                             }
@@ -1336,178 +1336,210 @@ fun MessageBubble(message: Message) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (message.isMine) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (!message.isMine) {
+        if (MessageSelectionController.isSelecting) {
             Surface(
-                modifier = Modifier.size(34.dp),
-                shape = CircleShape,
-                color = SoftGreenLight
+                modifier = Modifier
+                    .padding(end = 8.dp, bottom = 8.dp)
+                    .size(26.dp)
+                    .clickable { MessageSelectionController.toggle(message.id) },
+                shape = RoundedCornerShape(8.dp),
+                color = if (selected) TerracottaPrimary else CardWhite,
+                border = BorderStroke(
+                    width = 1.5.dp,
+                    color = if (selected) TerracottaPrimary else BorderSoft
+                )
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        message.sender.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?",
-                        color = BrownTextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (selected) {
+                        Text(
+                            text = "✓",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    }
                 }
             }
-            Spacer(Modifier.width(7.dp))
         }
 
-        Surface(
-            modifier = Modifier
-                .widthIn(min = 82.dp, max = 292.dp)
-                .combinedClickable(
-                    onClick = {
-                        if (MessageSelectionController.isSelecting) {
-                            MessageSelectionController.toggle(message.id)
-                        }
-                    },
-                    onLongClick = {
-                        if (MessageSelectionController.isSelecting) {
-                            MessageSelectionController.toggle(message.id)
-                        } else {
-                            MessageSelectionController.openActions(message)
-                        }
-                    }
-                ),
-            shape = if (message.isMine) {
-                RoundedCornerShape(
-                    topStart = 24.dp,
-                    topEnd = 8.dp,
-                    bottomStart = 24.dp,
-                    bottomEnd = 24.dp
-                )
-            } else {
-                RoundedCornerShape(
-                    topStart = 8.dp,
-                    topEnd = 24.dp,
-                    bottomStart = 24.dp,
-                    bottomEnd = 24.dp
-                )
-            },
-            color = bubbleColor,
-            contentColor = bubbleText,
-            shadowElevation = if (message.isMine) 0.dp else 4.dp,
-            tonalElevation = 0.dp
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = if (message.isMine) Arrangement.End else Arrangement.Start,
+            verticalAlignment = Alignment.Bottom
         ) {
-            Column(modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)) {
-                if (!message.isMine) {
-                    Text(
-                        message.sender,
-                        fontWeight = FontWeight.Bold,
-                        color = TerracottaDark,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Spacer(Modifier.height(5.dp))
-                }
-
-                if (isEmojiSticker) {
-                    Text(
-                        text = message.text.removePrefix(STICKER_EMOJI_PREFIX),
-                        fontSize = 64.sp,
-                        lineHeight = 72.sp
-                    )
-                } else if (isImage) {
-                    UriImage(
-                        uri = Uri.parse(message.attachmentUri),
-                        modifier = if (isImageSticker) {
-                            Modifier.size(190.dp)
-                        } else {
-                            Modifier.width(240.dp).height(180.dp)
-                        }
-                    )
-                    if (message.text.isNotBlank() && !isImageSticker) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(message.text, color = bubbleText)
-                    }
-                }
-
-                if (isFile) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(enabled = !MessageSelectionController.isSelecting) {
-                                try {
-                                    val uri = Uri.parse(message.attachmentUri)
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(uri, "*/*")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(intent)
-                                } catch (_: Exception) {}
-                            },
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (message.isMine) {
-                            Color.White.copy(alpha = 0.16f)
-                        } else {
-                            CardCream
-                        },
-                        contentColor = bubbleText
-                    ) {
-                        Row(modifier = Modifier.padding(12.dp)) {
-                            Text("📎 ", color = bubbleText)
-                            Text(
-                                message.fileName.ifBlank { "Файл" },
-                                color = bubbleText,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                    if (message.text.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(message.text, color = bubbleText)
-                    }
-                }
-
-                if (isAudio) VoiceMessagePlayer(message, message.isMine)
-                if (isVideo) VideoCirclePlayer(message)
-
-                if (message.messageType == MessageType.TEXT.name && !isEmojiSticker) {
-                    Text(
-                        message.text,
-                        color = bubbleText,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-
-                Spacer(Modifier.height(6.dp))
-
-                Row(modifier = Modifier.align(Alignment.End)) {
-                    Text(
-                        message.time,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (message.isMine) {
-                            Color.White.copy(alpha = 0.78f)
-                        } else {
-                            BrownTextSecondary
-                        }
-                    )
-
-                    if (message.isMine) {
-                        Spacer(Modifier.width(5.dp))
+            if (!message.isMine) {
+                Surface(
+                    modifier = Modifier.size(34.dp),
+                    shape = CircleShape,
+                    color = SoftGreenLight
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Text(
-                            when (message.status) {
-                                MessageStatus.SENDING.name -> "◷"
-                                MessageStatus.SENT.name -> "✓"
-                                MessageStatus.DELIVERED.name -> "✓✓"
-                                MessageStatus.READ.name -> "✓✓"
-                                MessageStatus.FAILED.name -> "!"
-                                else -> "✓"
-                            },
-                            color = when (message.status) {
-                                MessageStatus.READ.name -> Color.White
-                                MessageStatus.FAILED.name -> Color.White
-                                else -> Color.White.copy(alpha = 0.82f)
-                            },
-                            fontWeight = if (message.status == MessageStatus.READ.name) {
-                                FontWeight.Bold
+                            message.sender.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?",
+                            color = BrownTextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(Modifier.width(7.dp))
+            }
+
+            Surface(
+                modifier = Modifier
+                    .widthIn(min = 82.dp, max = 292.dp)
+                    .combinedClickable(
+                        onClick = {
+                            if (MessageSelectionController.isSelecting) {
+                                MessageSelectionController.toggle(message.id)
+                            }
+                        },
+                        onLongClick = {
+                            if (MessageSelectionController.isSelecting) {
+                                MessageSelectionController.toggle(message.id)
                             } else {
-                                FontWeight.Normal
+                                MessageSelectionController.openActions(message)
+                            }
+                        }
+                    ),
+                shape = if (message.isMine) {
+                    RoundedCornerShape(
+                        topStart = 24.dp,
+                        topEnd = 8.dp,
+                        bottomStart = 24.dp,
+                        bottomEnd = 24.dp
+                    )
+                } else {
+                    RoundedCornerShape(
+                        topStart = 8.dp,
+                        topEnd = 24.dp,
+                        bottomStart = 24.dp,
+                        bottomEnd = 24.dp
+                    )
+                },
+                color = bubbleColor,
+                contentColor = bubbleText,
+                shadowElevation = if (message.isMine) 0.dp else 4.dp,
+                tonalElevation = 0.dp
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)) {
+                    if (!message.isMine) {
+                        Text(
+                            message.sender,
+                            fontWeight = FontWeight.Bold,
+                            color = TerracottaDark,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        Spacer(Modifier.height(5.dp))
+                    }
+
+                    if (isEmojiSticker) {
+                        Text(
+                            text = message.text.removePrefix(STICKER_EMOJI_PREFIX),
+                            fontSize = 64.sp,
+                            lineHeight = 72.sp
+                        )
+                    } else if (isImage) {
+                        UriImage(
+                            uri = Uri.parse(message.attachmentUri),
+                            modifier = if (isImageSticker) {
+                                Modifier.size(190.dp)
+                            } else {
+                                Modifier.width(240.dp).height(180.dp)
                             }
                         )
+                        if (message.text.isNotBlank() && !isImageSticker) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(message.text, color = bubbleText)
+                        }
+                    }
+
+                    if (isFile) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !MessageSelectionController.isSelecting) {
+                                    try {
+                                        val uri = Uri.parse(message.attachmentUri)
+                                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                                            setDataAndType(uri, "*/*")
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {}
+                                },
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (message.isMine) {
+                                Color.White.copy(alpha = 0.16f)
+                            } else {
+                                CardCream
+                            },
+                            contentColor = bubbleText
+                        ) {
+                            Row(modifier = Modifier.padding(12.dp)) {
+                                Text("📎 ", color = bubbleText)
+                                Text(
+                                    message.fileName.ifBlank { "Файл" },
+                                    color = bubbleText,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        if (message.text.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(message.text, color = bubbleText)
+                        }
+                    }
+
+                    if (isAudio) VoiceMessagePlayer(message, message.isMine)
+                    if (isVideo) VideoCirclePlayer(message)
+
+                    if (message.messageType == MessageType.TEXT.name && !isEmojiSticker) {
+                        Text(
+                            message.text,
+                            color = bubbleText,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+
+                    Row(modifier = Modifier.align(Alignment.End)) {
+                        Text(
+                            message.time,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (message.isMine) {
+                                Color.White.copy(alpha = 0.78f)
+                            } else {
+                                BrownTextSecondary
+                            }
+                        )
+
+                        if (message.isMine) {
+                            Spacer(Modifier.width(5.dp))
+                            Text(
+                                when (message.status) {
+                                    MessageStatus.SENDING.name -> "◷"
+                                    MessageStatus.SENT.name -> "✓"
+                                    MessageStatus.DELIVERED.name -> "✓✓"
+                                    MessageStatus.READ.name -> "✓✓"
+                                    MessageStatus.FAILED.name -> "!"
+                                    else -> "✓"
+                                },
+                                color = when (message.status) {
+                                    MessageStatus.READ.name -> Color.White
+                                    MessageStatus.FAILED.name -> Color.White
+                                    else -> Color.White.copy(alpha = 0.82f)
+                                },
+                                fontWeight = if (message.status == MessageStatus.READ.name) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                }
+                            )
+                        }
                     }
                 }
             }
