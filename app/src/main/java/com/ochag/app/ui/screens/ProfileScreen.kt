@@ -36,6 +36,7 @@ import com.ochag.app.ui.components.OchagPrimaryButton
 import com.ochag.app.ui.components.OchagTextField
 import com.ochag.app.ui.security.AppLockController
 import com.ochag.app.ui.security.AppLockMode
+import com.ochag.app.ui.security.PatternPad
 import com.ochag.app.ui.theme.*
 
 @Composable
@@ -215,10 +216,10 @@ fun ProfileScreen(
                     if (AppLockController.enabled) {
                         Text("Блокировка включена")
                         Text(
-                            if (AppLockController.mode == AppLockMode.PIN) {
-                                "Способ: цифровой PIN-код"
-                            } else {
-                                "Способ: пароль"
+                            when (AppLockController.mode) {
+                                AppLockMode.PIN -> "Способ: цифровой PIN-код"
+                                AppLockMode.PASSWORD -> "Способ: пароль"
+                                AppLockMode.PATTERN -> "Способ: графический ключ"
                             }
                         )
                         OutlinedButton(
@@ -243,31 +244,51 @@ fun ProfileScreen(
                             )
                             Text("Пароль")
                         }
-                        OutlinedTextField(
-                            value = lockSecret,
-                            onValueChange = {
-                                lockSecret = if (lockMode == AppLockMode.PIN) {
-                                    it.filter(Char::isDigit).take(12)
-                                } else it
-                            },
-                            label = { Text("Введите код или пароль") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = lockSecretRepeat,
-                            onValueChange = {
-                                lockSecretRepeat = if (lockMode == AppLockMode.PIN) {
-                                    it.filter(Char::isDigit).take(12)
-                                } else it
-                            },
-                            label = { Text("Повторите") },
-                            singleLine = true,
-                            isError = lockSecretRepeat.isNotBlank() &&
-                                lockSecretRepeat != lockSecret,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text("Минимум 4 символа")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { lockMode = AppLockMode.PATTERN },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = lockMode == AppLockMode.PATTERN,
+                                onClick = { lockMode = AppLockMode.PATTERN }
+                            )
+                            Text("Графический ключ")
+                        }
+
+                        if (lockMode == AppLockMode.PATTERN) {
+                            Text("Нарисуйте ключ")
+                            PatternPad(lockSecret) { lockSecret = it }
+                            Text("Повторите ключ")
+                            PatternPad(lockSecretRepeat) { lockSecretRepeat = it }
+                        } else {
+                            OutlinedTextField(
+                                value = lockSecret,
+                                onValueChange = {
+                                    lockSecret = if (lockMode == AppLockMode.PIN) {
+                                        it.filter(Char::isDigit).take(12)
+                                    } else it
+                                },
+                                label = { Text("Введите код или пароль") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = lockSecretRepeat,
+                                onValueChange = {
+                                    lockSecretRepeat = if (lockMode == AppLockMode.PIN) {
+                                        it.filter(Char::isDigit).take(12)
+                                    } else it
+                                },
+                                label = { Text("Повторите") },
+                                singleLine = true,
+                                isError = lockSecretRepeat.isNotBlank() &&
+                                    lockSecretRepeat != lockSecret,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        Text("Минимум 4 точки или символа")
                     }
                 }
             },
