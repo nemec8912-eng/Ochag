@@ -21,6 +21,7 @@ import com.ochag.app.ui.screens.chats.ChatRoomScreen
 import com.ochag.app.ui.screens.chats.NewChatScreen
 import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
+import com.ochag.app.ui.screens.stickers.StickerPacksScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -32,6 +33,7 @@ sealed class Screen(val route: String) {
     object MemberProfile : Screen("profile/{name}")
     object MyProfile : Screen("my_profile")
     object Files : Screen("files")
+    object Stickers : Screen("stickers")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
 }
@@ -70,6 +72,7 @@ fun AppNavigation() {
                     navController.navigate(Screen.Files.route) { launchSingleTop = true }
                 },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
+                onStickersClick = { navController.navigate(Screen.Stickers.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
                     ServerRealtime.disconnect()
@@ -89,6 +92,12 @@ fun AppNavigation() {
                 onProfileClick = {
                     navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
                 }
+            )
+        }
+
+        composable(Screen.Stickers.route) {
+            StickerPacksScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
