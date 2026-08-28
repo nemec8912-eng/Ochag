@@ -2,6 +2,8 @@ package com.ochag.app.ui.screens.chats
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -41,12 +43,25 @@ fun ChatRoomWithMessageActions(
     val pinPreferences = remember(chatId) {
         context.getSharedPreferences("ochag_pinned_messages", android.content.Context.MODE_PRIVATE)
     }
-    var pinnedMessageId by remember(chatId) {
+    var pinnedMessageIds by remember(chatId) {
         mutableStateOf(
-            pinPreferences.getLong("pinned_$chatId", -1L).takeIf { it > 0L }
+            pinPreferences.getStringSet("pinned_$chatId", emptySet())
+                .orEmpty()
+                .mapNotNull { it.toLongOrNull() }
+                .toSet()
         )
     }
-    val pinnedMessage = messages.firstOrNull { it.id == pinnedMessageId }
+    var showPinnedMessages by remember { mutableStateOf(false) }
+    val selectedForUnpin = remember { mutableStateListOf<Long>() }
+    val pinnedMessages = messages.filter { pinnedMessageIds.contains(it.id) }
+    val latestPinnedMessage = pinnedMessages.maxByOrNull { it.createdAt }
+
+    fun savePinned(ids: Set<Long>) {
+        pinnedMessageIds = ids
+        pinPreferences.edit()
+            .putStringSet("pinned_$chatId", ids.map { it.toString() }.toSet())
+            .apply()
+    }
 
     DisposableEffect(chatId) {
         MessageSelectionController.attach(chatId)
@@ -66,15 +81,13 @@ fun ChatRoomWithMessageActions(
             }
         )
 
-        pinnedMessage?.let { pinned ->
+        latestPinnedMessage?.let { pinned ->
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 78.dp, start = 14.dp, end = 14.dp)
                     .fillMaxWidth()
-                    .clickable {
-                        MessageSelectionController.requestScrollTo(pinned.id)
-                    },
+                    .clickable { showPinnedMessages = true },
                 shape = RoundedCornerShape(16.dp),
                 color = TerracottaLight,
                 shadowElevation = 5.dp
@@ -86,7 +99,7 @@ fun ChatRoomWithMessageActions(
                     Text("📌", modifier = Modifier.padding(end = 8.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Закреплённое сообщение",
+                            "Закреплено сообщений: ${pinnedMessages.size}",
                             style = MaterialTheme.typography.labelMedium,
                             color = TerracottaDark,
                             fontWeight = FontWeight.Bold
@@ -97,12 +110,7 @@ fun ChatRoomWithMessageActions(
                             color = BrownTextPrimary
                         )
                     }
-                    TextButton(
-                        onClick = {
-                            pinPreferences.edit().remove("pinned_$chatId").apply()
-                            pinnedMessageId = null
-                        }
-                    ) { Text("✕") }
+                    Text("›", style = MaterialTheme.typography.titleLarge)
                 }
             }
         }
@@ -123,6 +131,83 @@ fun ChatRoomWithMessageActions(
                 onDeleteAll = { confirmDeleteAll = true }
             )
         }
+    }
+
+    if (showPinnedMessages) {
+        AlertDialog(
+            onDismissRequest = {
+                selectedForUnpin.clear()
+                showPinnedMessages = false
+            },
+            title = { Text("Закреплённые сообщения (${pinnedMessages.size})") },
+            text = {
+                if (pinnedMessages.isEmpty()) {
+                    Text("Закреплённых сообщений нет")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 420.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(pinnedMessages, key = { it.id }) { pinned ->
+                            val selected = selectedForUnpin.contains(pinned.id)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        MessageSelectionController.requestScrollTo(pinned.id)
+                                        showPinnedMessages = false
+                                    },
+                                shape = RoundedCornerShape(14.dp),
+                                color = CardCream
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = selected,
+                                        onCheckedChange = {
+                                            if (selected) selectedForUnpin.remove(pinned.id)
+                                            else selectedForUnpin.add(pinned.id)
+                                        }
+                                    )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            messagePreview(pinned),
+                                            maxLines = 2,
+                                            color = BrownTextPrimary
+                                        )
+                                        Text(
+                                            "${pinned.sender} • ${pinned.time}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = BrownTextSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = selectedForUnpin.isNotEmpty(),
+                    onClick = {
+                        savePinned(pinnedMessageIds - selectedForUnpin.toSet())
+                        selectedForUnpin.clear()
+                        if (pinnedMessageIds.isEmpty()) showPinnedMessages = false
+                    }
+                ) { Text("Открепить выбранные") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedForUnpin.clear()
+                        showPinnedMessages = false
+                    }
+                ) { Text("Закрыть") }
+            }
+        )
     }
 
     actionMessage?.let { message ->
@@ -174,12 +259,13 @@ fun ChatRoomWithMessageActions(
 
                 ActionRow(
                     icon = "📌",
-                    title = "Закрепить в чате"
+                    title = if (pinnedMessageIds.contains(message.id)) {
+                        "Уже закреплено"
+                    } else {
+                        "Закрепить в чате"
+                    }
                 ) {
-                    pinPreferences.edit()
-                        .putLong("pinned_$chatId", message.id)
-                        .apply()
-                    pinnedMessageId = message.id
+                    savePinned(pinnedMessageIds + message.id)
                     MessageSelectionController.closeActions()
                 }
 
