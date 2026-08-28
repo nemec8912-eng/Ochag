@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +53,119 @@ fun ProfileScreen(
     var phone by remember(serverPhone) { mutableStateOf(serverPhone) }
     var saveStatus by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val profilePreferences = remember(userName) {
+        context.getSharedPreferences(
+            "ochag_profile_settings_$userName",
+            android.content.Context.MODE_PRIVATE
+        )
+    }
+    var selectedLanguage by remember(userName) {
+        mutableStateOf(
+            profilePreferences.getString("app_language", "Русский") ?: "Русский"
+        )
+    }
+
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text("Изменить тему") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Режим приложения", fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = !darkTheme,
+                            onClick = { OchagThemeController.setDarkTheme(false) }
+                        )
+                        Text("Светлая")
+                        Spacer(Modifier.width(14.dp))
+                        RadioButton(
+                            selected = darkTheme,
+                            onClick = { OchagThemeController.setDarkTheme(true) }
+                        )
+                        Text("Тёмная")
+                    }
+
+                    HorizontalDivider()
+                    Text("Стиль приложения и чатов", fontWeight = FontWeight.Bold)
+                    OchagFontStyle.values().forEach { style ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { OchagThemeController.setFontStyle(style) },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = fontStyle == style,
+                                onClick = { OchagThemeController.setFontStyle(style) }
+                            )
+                            Text(
+                                when (style) {
+                                    OchagFontStyle.WARM -> "Тёплая"
+                                    OchagFontStyle.MODERN -> "Современная"
+                                    OchagFontStyle.CLASSIC -> "Классическая"
+                                }
+                            )
+                        }
+                    }
+
+                    Text("Обои и дополнительные цвета будут добавлены в следующем этапе.")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showThemeDialog = false }) { Text("Готово") }
+            }
+        )
+    }
+
+    if (showLanguageDialog) {
+        val languages = listOf(
+            "Русский", "English", "Deutsch", "Français",
+            "Español", "中文", "日本語"
+        )
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text("Язык приложения") },
+            text = {
+                Column {
+                    languages.forEach { language ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedLanguage = language }
+                                .padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedLanguage == language,
+                                onClick = { selectedLanguage = language }
+                            )
+                            Text(language)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        profilePreferences.edit()
+                            .putString("app_language", selectedLanguage)
+                            .apply()
+                        showLanguageDialog = false
+                    }
+                ) { Text("Сохранить") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(Unit) { ServerRealtime.requestServerUsers() }
 
@@ -187,6 +301,24 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(18.dp))
                 SectionTitle("Внешний вид", "Настрой «Очаг» под себя")
+                Spacer(Modifier.height(10.dp))
+
+                ProfileAction(
+                    "◐",
+                    "Изменить тему",
+                    "Приложение, чаты, сообщения и шрифт",
+                    AvatarPeach
+                ) { showThemeDialog = true }
+
+                Spacer(Modifier.height(8.dp))
+
+                ProfileAction(
+                    "文",
+                    "Язык приложения",
+                    selectedLanguage,
+                    AvatarSage
+                ) { showLanguageDialog = true }
+
                 Spacer(Modifier.height(10.dp))
 
                 OchagCard(
