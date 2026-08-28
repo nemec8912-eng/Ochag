@@ -433,7 +433,7 @@ fun ProfileScreen(
                         HorizontalDivider(color = DividerSoft)
 
                         Text(
-                            text = "Размер текста сообщений",
+                            text = "Размер текста всего приложения",
                             style = MaterialTheme.typography.titleMedium,
                             color = BrownTextPrimary
                         )
@@ -470,7 +470,7 @@ fun ProfileScreen(
                             color = CardCream
                         ) {
                             Text(
-                                text = "Так будет выглядеть сообщение в чате",
+                                text = "Так будет выглядеть текст во всём приложении",
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = BrownTextPrimary
