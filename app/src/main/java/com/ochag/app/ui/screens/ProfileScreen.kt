@@ -1,5 +1,7 @@
 package com.ochag.app.ui.screens.profile
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerAccountApi
 import com.ochag.app.data.ServerRealtime
@@ -18,7 +22,6 @@ import com.ochag.app.ui.components.OchagAvatar
 import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagPrimaryButton
-import com.ochag.app.ui.components.OchagSectionHeader
 import com.ochag.app.ui.components.OchagTextField
 import com.ochag.app.ui.theme.*
 
@@ -47,9 +50,7 @@ fun ProfileScreen(
     var saveStatus by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        ServerRealtime.requestServerUsers()
-    }
+    LaunchedEffect(Unit) { ServerRealtime.requestServerUsers() }
 
     val online = connectionState == ServerRealtime.ConnectionState.ONLINE
     val statusText = when (connectionState) {
@@ -64,7 +65,7 @@ fun ProfileScreen(
             OchagBottomBar(
                 items = listOf("Чаты", "Файлы", "Профиль"),
                 selectedIndex = 2,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
             ) { index ->
                 when (index) {
                     0 -> onChatsClick()
@@ -73,261 +74,304 @@ fun ProfileScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 14.dp)
         ) {
-            OchagSectionHeader(
-                title = "Профиль",
-                subtitle = "Личное пространство в «Очаге»"
+            Text(
+                text = "❧",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 2.dp, end = 4.dp),
+                fontSize = 80.sp,
+                color = SoftGreen.copy(alpha = 0.12f)
             )
 
-            Spacer(Modifier.height(18.dp))
-
-            OchagCard(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(22.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
-                Column(
+                Text(
+                    text = "Профиль",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = BrownTextPrimary
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Личное пространство в «Очаге»",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = BrownTextSecondary
+                )
+
+                Spacer(Modifier.height(22.dp))
+
+                OchagCard(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    elevation = 3.dp,
+                    contentPadding = PaddingValues(22.dp)
                 ) {
-                    OchagAvatar(
-                        name = userName,
-                        size = 92.dp,
-                        online = online,
-                        backgroundColor = TerracottaSoft
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Text(
-                        text = userName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = BrownTextPrimary
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            modifier = Modifier.size(8.dp),
-                            shape = CircleShape,
-                            color = if (online) OnlineGreen else BorderSoft
-                        ) {}
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (online) OnlineGreen else BrownTextSecondary
-                        )
-                    }
-
-                    if (user?.isOwner == true) {
-                        Spacer(Modifier.height(10.dp))
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = TerracottaSoft
-                        ) {
-                            Text(
-                                text = "Владелец «Очага»",
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = TerracottaDark,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            OchagCard(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(18.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "Внешний вид",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Surface(
-                            modifier = Modifier.size(44.dp),
-                            shape = CircleShape,
-                            color = if (darkTheme) TerracottaSoft else SoftGreenLight
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = if (darkTheme) "☾" else "☀",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = BrownTextPrimary
-                                )
+                        Box {
+                            OchagAvatar(
+                                name = userName,
+                                size = 104.dp,
+                                online = online,
+                                backgroundColor = AvatarPeach
+                            )
+                            Surface(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(34.dp),
+                                shape = CircleShape,
+                                color = TerracottaPrimary,
+                                shadowElevation = 2.dp
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("✎", color = Color.White, fontSize = 15.sp)
+                                }
                             }
                         }
 
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.height(15.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Тёмная тема",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = BrownTextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = if (darkTheme) "Включена" else "Светлая тема включена",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = BrownTextSecondary
-                            )
-                        }
-
-                        Switch(
-                            checked = darkTheme,
-                            onCheckedChange = OchagThemeController::setDarkTheme,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = TerracottaPrimary,
-                                checkedThumbColor = OutgoingText,
-                                uncheckedTrackColor = BorderSoft,
-                                uncheckedThumbColor = CardWhite,
-                                uncheckedBorderColor = BorderSoft
-                            )
-                        )
-                    }
-
-                    Spacer(Modifier.height(18.dp))
-
-                    Text(
-                        text = "Шрифт",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = BrownTextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
-                    ) {
-                        FontChoice(
-                            title = "Тёплый",
-                            selected = fontStyle == OchagFontStyle.WARM,
-                            modifier = Modifier.weight(1f)
-                        ) { OchagThemeController.setFontStyle(OchagFontStyle.WARM) }
-
-                        FontChoice(
-                            title = "Современный",
-                            selected = fontStyle == OchagFontStyle.MODERN,
-                            modifier = Modifier.weight(1f)
-                        ) { OchagThemeController.setFontStyle(OchagFontStyle.MODERN) }
-
-                        FontChoice(
-                            title = "Классика",
-                            selected = fontStyle == OchagFontStyle.CLASSIC,
-                            modifier = Modifier.weight(1f)
-                        ) { OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC) }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            OchagCard(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(18.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "Контакты",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
-                    )
-
-                    Spacer(Modifier.height(6.dp))
-
-                    Text(
-                        text = "Номер нужен, чтобы близкие могли найти тебя через контакты телефона.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = BrownTextSecondary
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    OchagTextField(
-                        value = phone,
-                        onValueChange = {
-                            phone = it
-                            saveStatus = ""
-                        },
-                        label = "Телефон",
-                        placeholder = "+7 999 123-45-67"
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    OchagPrimaryButton(
-                        text = if (saving) "Сохраняю…" else "Сохранить номер",
-                        enabled = !saving && userName != "Гость"
-                    ) {
-                        saving = true
-                        saveStatus = ""
-
-                        ServerAccountApi.updatePhone(
-                            userName = userName,
-                            phone = phone
-                        ) { result ->
-                            saving = false
-                            saveStatus = if (result.success) "Номер сохранён" else result.error
-                            if (result.success) ServerRealtime.requestServerUsers()
-                        }
-                    }
-
-                    if (saveStatus.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
                         Text(
-                            text = saveStatus,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (saveStatus == "Номер сохранён") OnlineGreen else MaterialTheme.colorScheme.error
+                            text = userName,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = BrownTextPrimary
                         )
+
+                        Spacer(Modifier.height(6.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                modifier = Modifier.size(8.dp),
+                                shape = CircleShape,
+                                color = if (online) OnlineGreen else BorderSoft
+                            ) {}
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = statusText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (online) OnlineGreen else BrownTextSecondary
+                            )
+                        }
+
+                        if (user?.isOwner == true) {
+                            Spacer(Modifier.height(12.dp))
+                            Surface(
+                                shape = RoundedCornerShape(18.dp),
+                                color = TerracottaSoft
+                            ) {
+                                Text(
+                                    text = "Владелец «Очага»",
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = TerracottaDark,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
+
+                Spacer(Modifier.height(18.dp))
+                SectionTitle("Внешний вид", "Настрой «Очаг» под себя")
+                Spacer(Modifier.height(10.dp))
+
+                OchagCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 2.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(48.dp),
+                                shape = RoundedCornerShape(17.dp),
+                                color = if (darkTheme) TerracottaSoft else SoftGreenLight
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = if (darkTheme) "☾" else "☀",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = BrownTextPrimary
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (darkTheme) "Тёмная тема" else "Светлая тема",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = BrownTextPrimary
+                                )
+                                Text(
+                                    text = if (darkTheme) "Мягкая тёмная палитра" else "Тёплая молочная палитра",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = BrownTextSecondary
+                                )
+                            }
+
+                            ThemeToggle(
+                                checked = darkTheme,
+                                onClick = { OchagThemeController.setDarkTheme(!darkTheme) }
+                            )
+                        }
+
+                        HorizontalDivider(color = DividerSoft)
+
+                        Text(
+                            text = "Шрифт",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = BrownTextPrimary
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        ) {
+                            FontChoice("Тёплый", fontStyle == OchagFontStyle.WARM, Modifier.weight(1f)) {
+                                OchagThemeController.setFontStyle(OchagFontStyle.WARM)
+                            }
+                            FontChoice("Современный", fontStyle == OchagFontStyle.MODERN, Modifier.weight(1f)) {
+                                OchagThemeController.setFontStyle(OchagFontStyle.MODERN)
+                            }
+                            FontChoice("Классика", fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
+                                OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(18.dp))
+                SectionTitle("Семья", "Люди и всё общее")
+                Spacer(Modifier.height(8.dp))
+
+                ProfileAction("♡", "Семья", "Участники, роли и доступ", AvatarSage, onFamilyClick)
+                ProfileAction("✦", "Стикеры", "Встроенные и свои стикерпаки", AvatarSand, onStickersClick)
+                ProfileAction("＋", "Пригласить близких", "Добавить нового участника", AvatarRose, onInviteClick)
+
+                Spacer(Modifier.height(18.dp))
+                SectionTitle("Контакты", "Чтобы близкие могли найти тебя")
+                Spacer(Modifier.height(10.dp))
+
+                OchagCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 2.dp,
+                    contentPadding = PaddingValues(18.dp)
+                ) {
+                    Column {
+                        OchagTextField(
+                            value = phone,
+                            onValueChange = {
+                                phone = it
+                                saveStatus = ""
+                            },
+                            label = "Телефон",
+                            placeholder = "+7 999 123-45-67"
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        OchagPrimaryButton(
+                            text = if (saving) "Сохраняю…" else "Сохранить номер",
+                            enabled = !saving && userName != "Гость"
+                        ) {
+                            saving = true
+                            saveStatus = ""
+                            ServerAccountApi.updatePhone(
+                                userName = userName,
+                                phone = phone
+                            ) { result ->
+                                saving = false
+                                saveStatus = if (result.success) "Номер сохранён" else result.error
+                                if (result.success) ServerRealtime.requestServerUsers()
+                            }
+                        }
+
+                        if (saveStatus.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = saveStatus,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (saveStatus == "Номер сохранён") OnlineGreen else MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(18.dp))
+
+                OutlinedButton(
+                    onClick = onLogoutClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, BorderSoft),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
+                ) {
+                    Text("Выйти из «Очага»", fontWeight = FontWeight.SemiBold)
+                }
+
+                Spacer(Modifier.height(12.dp))
             }
+        }
+    }
+}
 
-            Spacer(Modifier.height(12.dp))
+@Composable
+private fun SectionTitle(title: String, subtitle: String) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = BrownTextPrimary
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = BrownTextSecondary
+        )
+    }
+}
 
-            ProfileAction("Стикеры", "Встроенные и свои стикерпаки", onStickersClick)
-            ProfileAction("Семья", "Участники, роли и доступ", onFamilyClick)
-            ProfileAction("Пригласить близких", "Добавить нового участника", onInviteClick)
-
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = onLogoutClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
-            ) {
-                Text("Выйти", fontWeight = FontWeight.SemiBold)
-            }
-
-            Spacer(Modifier.height(10.dp))
+@Composable
+private fun ThemeToggle(
+    checked: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .width(58.dp)
+            .height(34.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = if (checked) TerracottaPrimary else CardCream,
+        border = BorderStroke(1.dp, if (checked) TerracottaPrimary else BorderSoft)
+    ) {
+        Box(
+            modifier = Modifier.padding(4.dp),
+            contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
+        ) {
+            Surface(
+                modifier = Modifier.size(24.dp),
+                shape = CircleShape,
+                color = if (checked) Color.White else CardWhite,
+                shadowElevation = 2.dp
+            ) {}
         }
     }
 }
@@ -339,43 +383,40 @@ private fun FontChoice(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        modifier = modifier,
-        label = {
+    Surface(
+        modifier = modifier
+            .height(46.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(17.dp),
+        color = if (selected) TerracottaSoft else CardCream,
+        border = BorderStroke(1.dp, if (selected) TerracottaSoft else BorderSoft)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
             Text(
                 text = title,
                 maxLines = 1,
-                color = if (selected) TerracottaDark else BrownTextSecondary
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) TerracottaDark else BrownTextSecondary,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             )
-        },
-        shape = RoundedCornerShape(16.dp),
-        colors = FilterChipDefaults.filterChipColors(
-            containerColor = CardCream,
-            selectedContainerColor = TerracottaSoft
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            enabled = true,
-            selected = selected,
-            borderColor = BorderSoft,
-            selectedBorderColor = TerracottaSoft
-        )
-    )
+        }
+    }
 }
 
 @Composable
 private fun ProfileAction(
+    symbol: String,
     title: String,
     subtitle: String,
+    accent: Color,
     onClick: () -> Unit
 ) {
     OchagCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = 3.dp,
-        contentPadding = PaddingValues(horizontal = 17.dp, vertical = 14.dp),
+            .padding(vertical = 5.dp),
+        elevation = 2.dp,
+        contentPadding = PaddingValues(horizontal = 17.dp, vertical = 15.dp),
         onClick = onClick
     ) {
         Row(
@@ -383,28 +424,28 @@ private fun ProfileAction(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(42.dp),
-                shape = CircleShape,
-                color = TerracottaSoft
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(17.dp),
+                color = accent
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = title.firstOrNull()?.uppercase() ?: "О",
-                        color = TerracottaDark,
-                        fontWeight = FontWeight.Bold
+                        text = symbol,
+                        color = BrownTextPrimary,
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
             }
 
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(13.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
                 )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -415,7 +456,7 @@ private fun ProfileAction(
             Text(
                 text = "›",
                 style = MaterialTheme.typography.headlineSmall,
-                color = BrownTextSecondary
+                color = BrownTextMuted
             )
         }
     }
