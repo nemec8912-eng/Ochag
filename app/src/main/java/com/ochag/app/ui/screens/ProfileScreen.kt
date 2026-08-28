@@ -1,6 +1,12 @@
 package com.ochag.app.ui.screens.profile
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,7 +17,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +77,27 @@ fun ProfileScreen(
         mutableStateOf(
             profilePreferences.getString("app_language", "Русский") ?: "Русский"
         )
+    }
+    var profileAvatarUri by remember(userName) {
+        mutableStateOf(
+            profilePreferences.getString("profile_avatar", "").orEmpty()
+        )
+    }
+    val profileAvatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            profileAvatarUri = uri.toString()
+            profilePreferences.edit()
+                .putString("profile_avatar", profileAvatarUri)
+                .apply()
+        }
     }
 
     if (showThemeDialog) {
@@ -237,16 +268,26 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box {
-                            OchagAvatar(
-                                name = userName,
-                                size = 104.dp,
-                                online = online,
-                                backgroundColor = AvatarPeach
-                            )
+                            if (profileAvatarUri.isNotBlank()) {
+                                ProfileAvatarImage(
+                                    uri = Uri.parse(profileAvatarUri),
+                                    modifier = Modifier.size(104.dp)
+                                )
+                            } else {
+                                OchagAvatar(
+                                    name = userName,
+                                    size = 104.dp,
+                                    online = online,
+                                    backgroundColor = AvatarPeach
+                                )
+                            }
                             Surface(
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .size(34.dp),
+                                    .size(34.dp)
+                                    .clickable {
+                                        profileAvatarLauncher.launch(arrayOf("image/*"))
+                                    },
                                 shape = CircleShape,
                                 color = TerracottaPrimary,
                                 shadowElevation = 2.dp
@@ -512,6 +553,36 @@ fun ProfileScreen(
                 Spacer(Modifier.height(12.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileAvatarImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, uri) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = "Аватар профиля",
+            modifier = modifier.clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Surface(modifier = modifier, shape = CircleShape, color = AvatarPeach) {}
     }
 }
 
