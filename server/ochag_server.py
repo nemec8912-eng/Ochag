@@ -152,6 +152,22 @@ def init_database():
 
         db.execute(
             """
+            CREATE TABLE IF NOT EXISTS join_requests (
+                request_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                login TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                pin_salt TEXT NOT NULL,
+                pin_hash TEXT NOT NULL,
+                invite_code TEXT NOT NULL DEFAULT '',
+                family_id TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at INTEGER NOT NULL
+            )
+            """
+        )
+
+        db.execute(
+            """
             CREATE TABLE IF NOT EXISTS chat_members (
                 chat_id INTEGER NOT NULL,
                 user_name TEXT NOT NULL,
@@ -217,6 +233,17 @@ class RegisterRequest(BaseModel):
 class ProfilePhoneRequest(BaseModel):
     user_name: str
     phone: str = ""
+
+
+class JoinRequestCreate(BaseModel):
+    login: str
+    name: str
+    pin: str
+    invite_code: str = ""
+
+
+class JoinRequestDecision(BaseModel):
+    owner_name: str
 
 
 class LoginRequest(BaseModel):
@@ -1160,6 +1187,139 @@ async def send_history_sync(
         f"offline_delivered={len(pending_ids)}"
     )
 
+
+
+@app.post("/family/join-requests")
+async def create_join_request(payload: JoinRequestCreate):
+    login = normalize_login(payload.login)
+    name = str(payload.name or "").strip()
+    pin = validate_pin(payload.pin)
+    invite_code = str(payload.invite_code or "").strip().upper()
+
+    if len(login) < 2 or len(name) < 2:
+        raise HTTPException(status_code=400, detail="Проверьте имя и логин")
+
+    with db_connect() as db:
+        owner = db.execute(
+            "SELECT family_id FROM users WHERE is_owner = 1 ORDER BY user_id LIMIT 1"
+        ).fetchone()
+        if owner is None:
+            raise HTTPException(status_code=409, detail="Сначала владелец должен войти в Очаг")
+
+        existing_user = db.execute(
+            "SELECT 1 FROM users WHERE login = ? COLLATE NOCASE OR name = ? COLLATE NOCASE",
+            (login, name)
+        ).fetchone()
+        if existing_user is not None:
+            raise HTTPException(status_code=409, detail="Такой пользователь уже зарегистрирован")
+
+        salt = secrets.token_hex(16)
+        pin_hash = hash_pin(pin, salt)
+        try:
+            cursor = db.execute(
+                """
+                INSERT INTO join_requests(
+                    login, name, pin_salt, pin_hash, invite_code,
+                    family_id, status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
+                """,
+                (login, name, salt, pin_hash, invite_code, owner["family_id"] or "", now_ms())
+            )
+            db.commit()
+        except sqlite3.IntegrityError:
+            raise HTTPException(status_code=409, detail="Такая заявка уже отправлена")
+
+    return {"status": "ok", "request_id": int(cursor.lastrowid)}
+
+
+@app.get("/family/join-requests")
+async def list_join_requests(owner_name: str):
+    owner_name = str(owner_name or "").strip()
+    with db_connect() as db:
+        owner = db.execute(
+            "SELECT family_id, is_owner FROM users WHERE name = ? COLLATE NOCASE",
+            (owner_name,)
+        ).fetchone()
+        if owner is None or not bool(owner["is_owner"]):
+            raise HTTPException(status_code=403, detail="Только владелец может смотреть заявки")
+        rows = db.execute(
+            """
+            SELECT request_id, login, name, invite_code, created_at
+            FROM join_requests
+            WHERE family_id = ? AND status = 'pending'
+            ORDER BY created_at
+            """,
+            (owner["family_id"] or "",)
+        ).fetchall()
+
+    return {"status": "ok", "requests": [dict(row) for row in rows]}
+
+
+@app.post("/family/join-requests/{request_id}/approve")
+async def approve_join_request(request_id: int, payload: JoinRequestDecision):
+    owner_name = str(payload.owner_name or "").strip()
+    with db_connect() as db:
+        owner = db.execute(
+            "SELECT family_id, is_owner FROM users WHERE name = ? COLLATE NOCASE",
+            (owner_name,)
+        ).fetchone()
+        if owner is None or not bool(owner["is_owner"]):
+            raise HTTPException(status_code=403, detail="Только владелец может подтверждать заявки")
+
+        request_row = db.execute(
+            """
+            SELECT * FROM join_requests
+            WHERE request_id = ? AND family_id = ? AND status = 'pending'
+            """,
+            (request_id, owner["family_id"] or "")
+        ).fetchone()
+        if request_row is None:
+            raise HTTPException(status_code=404, detail="Заявка не найдена")
+
+        timestamp = now_ms()
+        try:
+            db.execute(
+                """
+                INSERT INTO users(
+                    login, name, pin_salt, pin_hash, is_owner, family_id,
+                    avatar_url, phone, phone_normalized, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, 0, ?, '', '', '', ?, ?)
+                """,
+                (
+                    request_row["login"], request_row["name"],
+                    request_row["pin_salt"], request_row["pin_hash"],
+                    request_row["family_id"], timestamp, timestamp
+                )
+            )
+        except sqlite3.IntegrityError:
+            raise HTTPException(status_code=409, detail="Пользователь уже зарегистрирован")
+
+        db.execute("DELETE FROM join_requests WHERE request_id = ?", (request_id,))
+        db.commit()
+
+    return {"status": "ok"}
+
+
+@app.post("/family/join-requests/{request_id}/decline")
+async def decline_join_request(request_id: int, payload: JoinRequestDecision):
+    owner_name = str(payload.owner_name or "").strip()
+    with db_connect() as db:
+        owner = db.execute(
+            "SELECT family_id, is_owner FROM users WHERE name = ? COLLATE NOCASE",
+            (owner_name,)
+        ).fetchone()
+        if owner is None or not bool(owner["is_owner"]):
+            raise HTTPException(status_code=403, detail="Только владелец может отклонять заявки")
+
+        cursor = db.execute(
+            "DELETE FROM join_requests WHERE request_id = ? AND family_id = ?",
+            (request_id, owner["family_id"] or "")
+        )
+        db.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Заявка не найдена")
+
+    return {"status": "ok"}
 
 
 @app.post("/auth/register")
