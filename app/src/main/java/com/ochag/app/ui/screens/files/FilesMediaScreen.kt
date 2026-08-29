@@ -1344,6 +1344,7 @@ private fun SearchIcon(
 private fun HomeFlameLogo(
     modifier: Modifier
 ) {
+    val logoCutoutColor = MaterialTheme.colorScheme.surface
 
     Canvas(
         modifier = modifier
@@ -1395,7 +1396,7 @@ private fun HomeFlameLogo(
         )
 
         drawCircle(
-            color = MaterialTheme.colorScheme.surface,
+            color = logoCutoutColor,
             radius = size.width * 0.20f,
             center = Offset(
                 size.width * 0.50f,
