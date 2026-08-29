@@ -41,7 +41,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CreamBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         DecorativeLeaves(
             modifier = Modifier
@@ -71,7 +71,7 @@ fun LoginScreen(
                     .size(126.dp)
                     .shadow(10.dp, RoundedCornerShape(34.dp)),
                 shape = RoundedCornerShape(34.dp),
-                color = CardWhite
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     HomeFlameLogo(Modifier.size(86.dp))
@@ -84,7 +84,7 @@ fun LoginScreen(
                 text = ochagText("Очаг"),
                 fontSize = 52.sp,
                 fontWeight = FontWeight.Light,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(Modifier.height(6.dp))
@@ -94,7 +94,7 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 lineHeight = 22.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(30.dp))
@@ -104,7 +104,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .shadow(8.dp, RoundedCornerShape(30.dp)),
                 shape = RoundedCornerShape(30.dp),
-                colors = CardDefaults.cardColors(containerColor = CardWhite)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp)
@@ -119,7 +119,7 @@ fun LoginScreen(
                         singleLine = true,
                         placeholder = { Text(ochagText("Логин")) },
                         leadingIcon = {
-                            Text("○", fontSize = 20.sp, color = BrownTextSecondary)
+                            Text("○", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         shape = RoundedCornerShape(18.dp),
                         colors = loginFieldColors()
@@ -137,7 +137,7 @@ fun LoginScreen(
                         singleLine = true,
                         placeholder = { Text(ochagText("Пароль")) },
                         leadingIcon = {
-                            Text("□", fontSize = 18.sp, color = BrownTextSecondary)
+                            Text("□", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         trailingIcon = {
                             Text(
@@ -147,7 +147,7 @@ fun LoginScreen(
                                     .clickable { passwordVisible = !passwordVisible }
                                     .padding(8.dp),
                                 fontSize = 20.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         visualTransformation = if (passwordVisible) {
@@ -232,15 +232,15 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(14.dp))
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = CardWhite.copy(alpha = 0.72f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderSoft)
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -251,7 +251,7 @@ fun LoginScreen(
                     Text(
                         text = ochagText("Переписки и данные семьи защищены"),
                         fontSize = 11.sp,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -262,14 +262,14 @@ fun LoginScreen(
 @Composable
 private fun loginFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = TerracottaPrimary,
-    unfocusedBorderColor = BorderSoft,
-    focusedContainerColor = CardWhite,
-    unfocusedContainerColor = CardWhite,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
     cursorColor = TerracottaPrimary,
-    focusedTextColor = BrownTextPrimary,
-    unfocusedTextColor = BrownTextPrimary,
-    focusedPlaceholderColor = BrownTextSecondary,
-    unfocusedPlaceholderColor = BrownTextSecondary
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
 
 @Composable
@@ -288,7 +288,7 @@ private fun HomeFlameLogo(modifier: Modifier) {
 
         drawPath(house, color = TerracottaPrimary)
         drawCircle(
-            color = CardWhite,
+            color = MaterialTheme.colorScheme.surface,
             radius = size.width * 0.20f,
             center = Offset(size.width * 0.50f, size.height * 0.60f)
         )
