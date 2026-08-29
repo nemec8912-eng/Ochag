@@ -1,5 +1,6 @@
 package com.ochag.app.ui.navigation
 
+import com.ochag.app.ui.localization.ochagText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -153,7 +154,7 @@ fun AppNavigation() {
         composable(Screen.ChatRoom.route) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId")?.toLongOrNull() ?: 0L
             val chat = ChatRepository.findChat(chatId)
-            val title = chat?.title ?: "Чат"
+            val title = chat?.title ?: ochagText("Чат")
 
             LaunchedEffect(chatId) {
                 if (chatId > 0L) {
@@ -197,7 +198,7 @@ fun AppNavigation() {
 
             MemberProfileScreen(
                 name = name,
-                status = "Участник семьи",
+                status = ochagText("Участник семьи"),
                 onBackClick = { navController.popBackStack() },
                 onMessageClick = {
                     coroutineScope.launch {
