@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.calls.OchagWebRtcCallController
 import com.ochag.app.ui.localization.ochagText
 import android.Manifest
 import android.content.Context
@@ -145,7 +146,6 @@ fun ChatRoomScreen(
     var showChatSettings by remember { mutableStateOf(false) }
     var showFontSettings by remember { mutableStateOf(false) }
     var showStickerPicker by remember { mutableStateOf(false) }
-    var activeCallType by remember { mutableStateOf<String?>(null) }
 
     val fontPreferences = remember {
         appContext.getSharedPreferences(FONT_PREFS, Context.MODE_PRIVATE)
@@ -556,14 +556,6 @@ fun ChatRoomScreen(
         )
     }
 
-    if (activeCallType != null) {
-        ChatCallDialog(
-            chatTitle = currentChat?.title ?: chatTitle,
-            video = activeCallType == "video",
-            onDismiss = { activeCallType = null }
-        )
-    }
-
     if (showFontSettings) {
         MessageFontSettingsDialog(
             selectedStyle = messageFontStyle,
@@ -654,8 +646,30 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
-                onAudioCallClick = { activeCallType = "audio" },
-                onVideoCallClick = { activeCallType = "video" },
+                onAudioCallClick = {
+                    val targets = currentChat?.members.orEmpty().filter {
+                        !it.equals(ServerRealtime.userName, ignoreCase = true)
+                    }
+                    OchagWebRtcCallController.startCall(
+                        context = context,
+                        chatId = chatId,
+                        chatTitle = currentChat?.title ?: chatTitle,
+                        targets = targets,
+                        video = false
+                    )
+                },
+                onVideoCallClick = {
+                    val targets = currentChat?.members.orEmpty().filter {
+                        !it.equals(ServerRealtime.userName, ignoreCase = true)
+                    }
+                    OchagWebRtcCallController.startCall(
+                        context = context,
+                        chatId = chatId,
+                        chatTitle = currentChat?.title ?: chatTitle,
+                        targets = targets,
+                        video = true
+                    )
+                },
                 onBackClick = onBackClick
             )
 
@@ -2310,81 +2324,3 @@ private fun getFileName(context: Context, uri: Uri): String {
 }
 
 
-@Composable
-private fun ChatCallDialog(
-    chatTitle: String,
-    video: Boolean,
-    onDismiss: () -> Unit
-) {
-    var microphoneEnabled by remember { mutableStateOf(true) }
-    var cameraEnabled by remember { mutableStateOf(video) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                if (video) ochagText("Видеозвонок")
-                else ochagText("Аудиозвонок")
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Surface(
-                    modifier = Modifier.size(88.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            chatTitle.firstOrNull()?.uppercase() ?: "О",
-                            style = MaterialTheme.typography.displaySmall
-                        )
-                    }
-                }
-                Text(chatTitle, style = MaterialTheme.typography.titleLarge)
-                Text(
-                    ochagText("Подключение к звонку…"),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    FilterChip(
-                        selected = microphoneEnabled,
-                        onClick = { microphoneEnabled = !microphoneEnabled },
-                        label = {
-                            Text(
-                                if (microphoneEnabled) ochagText("Микрофон включён")
-                                else ochagText("Микрофон выключен")
-                            )
-                        }
-                    )
-                    if (video) {
-                        FilterChip(
-                            selected = cameraEnabled,
-                            onClick = { cameraEnabled = !cameraEnabled },
-                            label = {
-                                Text(
-                                    if (cameraEnabled) ochagText("Камера включена")
-                                    else ochagText("Камера выключена")
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text(ochagText("Завершить звонок"))
-            }
-        }
-    )
-}
