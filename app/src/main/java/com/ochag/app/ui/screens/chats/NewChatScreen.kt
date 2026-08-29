@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -82,7 +83,7 @@ fun NewChatScreen(
     val context = uiContext.applicationContext
     val coroutineScope = rememberCoroutineScope()
 
-    val currentUserName = OchagAppState.currentUser?.name?.trim().orEmpty().ifBlank { "Михаил" }
+    val currentUserName = OchagAppState.currentUser?.name?.trim().orEmpty().ifBlank { ochagText("Михаил") }
     val serverUsers by ServerRealtime.serverUsers.collectAsState()
     val serverProfiles by ServerRealtime.serverUserProfiles.collectAsState()
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
@@ -220,11 +221,11 @@ fun NewChatScreen(
                 Spacer(Modifier.width(12.dp))
 
                 OchagSectionHeader(
-                    title = "Новый чат",
+                    title = ochagText("Новый чат"),
                     subtitle = if (selectedType == ChatType.PRIVATE) {
-                        "Выбери человека для личного диалога"
+                        ochagText("Выбери человека для личного диалога")
                     } else {
-                        "Собери своё пространство для общения"
+                        ochagText("Собери своё пространство для общения")
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -239,7 +240,7 @@ fun NewChatScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Личный",
+                        title = ochagText("Личный"),
                         selected = selectedType == ChatType.PRIVATE
                     ) {
                         selectedType = ChatType.PRIVATE
@@ -248,7 +249,7 @@ fun NewChatScreen(
                     }
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Группа",
+                        title = ochagText("Группа"),
                         selected = selectedType == ChatType.GROUP
                     ) {
                         selectedType = ChatType.GROUP
@@ -257,7 +258,7 @@ fun NewChatScreen(
                     }
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Тема",
+                        title = ochagText("Тема"),
                         selected = selectedType == ChatType.THEME
                     ) {
                         selectedType = ChatType.THEME
@@ -275,8 +276,8 @@ fun NewChatScreen(
                         title = it
                         errorText = ""
                     },
-                    label = if (selectedType == ChatType.GROUP) "Название группы" else "Название темы",
-                    placeholder = "Например, Поездка летом"
+                    label = if (selectedType == ChatType.GROUP) ochagText("Название группы") else ochagText("Название темы"),
+                    placeholder = ochagText("Например, Поездка летом")
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -287,9 +288,9 @@ fun NewChatScreen(
                 ) {
                     Text(
                         if (groupAvatarUri == null) {
-                            "Добавить аватарку группы"
+                            ochagText("Добавить аватарку группы")
                         } else {
-                            "Изменить аватарку группы ✓"
+                            ochagText("Изменить аватарку группы ✓")
                         }
                     )
                 }
@@ -299,14 +300,14 @@ fun NewChatScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SourcePill(
-                    title = "В Очаге",
+                    title = ochagText("В Очаге"),
                     selected = selectedSource == MemberSource.OCHAG
                 ) {
                     selectedSource = MemberSource.OCHAG
                 }
 
                 SourcePill(
-                    title = "Контакты",
+                    title = ochagText("Контакты"),
                     selected = selectedSource == MemberSource.PHONE
                 ) {
                     selectedSource = MemberSource.PHONE
@@ -327,8 +328,8 @@ fun NewChatScreen(
             OchagTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                label = if (selectedSource == MemberSource.PHONE) "Поиск по контактам" else "Поиск участника",
-                placeholder = "Имя или номер"
+                label = if (selectedSource == MemberSource.PHONE) ochagText("Поиск по контактам") else ochagText("Поиск участника"),
+                placeholder = ochagText("Имя или номер")
             )
 
             Spacer(Modifier.height(12.dp))
@@ -338,7 +339,7 @@ fun NewChatScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (selectedMembers.isEmpty()) "Участники" else "Выбрано: ${selectedMembers.size}",
+                    text = if (selectedMembers.isEmpty()) ochagText("Участники") else "Выбрано: ${selectedMembers.size}",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
@@ -370,7 +371,7 @@ fun NewChatScreen(
 
                         MemberCard(
                             name = member,
-                            subtitle = if (isOnline) "В сети" else "Не в сети",
+                            subtitle = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                             online = isOnline,
                             selected = selected,
                             onClick = { toggleMember(member) }
@@ -385,17 +386,17 @@ fun NewChatScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Нужен доступ к контактам телефона",
+                                text = ochagText("Нужен доступ к контактам телефона"),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = BrownTextPrimary
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "Разреши доступ, чтобы находить близких по номеру телефона.",
+                                text = ochagText("Разреши доступ, чтобы находить близких по номеру телефона."),
                                 color = BrownTextSecondary
                             )
                             Spacer(Modifier.height(12.dp))
-                            OchagPrimaryButton(text = "Разрешить доступ") {
+                            OchagPrimaryButton(text = ochagText("Разрешить доступ")) {
                                 permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                             }
                         }
@@ -441,16 +442,16 @@ fun NewChatScreen(
 
             OchagPrimaryButton(
                 text = when (selectedType) {
-                    ChatType.PRIVATE -> "Открыть личный чат"
-                    ChatType.GROUP -> "Создать группу"
-                    ChatType.THEME -> "Создать тему"
-                    ChatType.FAMILY -> "Создать чат"
+                    ChatType.PRIVATE -> ochagText("Открыть личный чат")
+                    ChatType.GROUP -> ochagText("Создать группу")
+                    ChatType.THEME -> ochagText("Создать тему")
+                    ChatType.FAMILY -> ochagText("Создать чат")
                 }
             ) {
                 when (selectedType) {
                     ChatType.PRIVATE -> {
                         if (selectedMembers.isEmpty()) {
-                            errorText = "Выберите пользователя «Очага»"
+                            errorText = ochagText("Выберите пользователя «Очага»")
                             return@OchagPrimaryButton
                         }
                         val member = selectedMembers.first()
@@ -465,11 +466,11 @@ fun NewChatScreen(
 
                     ChatType.GROUP -> {
                         if (title.isBlank()) {
-                            errorText = "Введите название группы"
+                            errorText = ochagText("Введите название группы")
                             return@OchagPrimaryButton
                         }
                         if (selectedMembers.isEmpty()) {
-                            errorText = "Выберите участников"
+                            errorText = ochagText("Выберите участников")
                             return@OchagPrimaryButton
                         }
                         coroutineScope.launch {
@@ -493,7 +494,7 @@ fun NewChatScreen(
 
                     ChatType.THEME -> {
                         if (title.isBlank()) {
-                            errorText = "Введите название темы"
+                            errorText = ochagText("Введите название темы")
                             return@OchagPrimaryButton
                         }
                         coroutineScope.launch {
@@ -651,7 +652,7 @@ private fun PhoneContactCard(
                     color = BrownTextSecondary
                 )
                 Text(
-                    text = if (registered) "В Очаге: $registeredName" else "Ещё не в Очаге",
+                    text = if (registered) "В Очаге: $registeredName" else ochagText("Ещё не в Очаге"),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (registered) OnlineGreen else BrownTextSecondary
                 )
@@ -665,7 +666,7 @@ private fun PhoneContactCard(
                 )
             } else {
                 TextButton(onClick = onInvite) {
-                    Text("Пригласить", color = TerracottaDark)
+                    Text(ochagText("Пригласить"), color = TerracottaDark)
                 }
             }
         }
