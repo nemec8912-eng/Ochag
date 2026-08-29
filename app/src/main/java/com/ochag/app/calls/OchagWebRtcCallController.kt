@@ -31,6 +31,8 @@ object OchagWebRtcCallController {
     private var audioTrack: AudioTrack? = null
     private var videoSource: VideoSource? = null
     private var videoTrack: VideoTrack? = null
+    var remoteVideoTrack by mutableStateOf<VideoTrack?>(null)
+        private set
     private var videoCapturer: VideoCapturer? = null
     private var surfaceTextureHelper: SurfaceTextureHelper? = null
     private val peers = mutableMapOf<String, PeerConnection>()
@@ -168,6 +170,7 @@ object OchagWebRtcCallController {
     }
 
     fun eglContext(): EglBase.Context? = eglBase?.eglBaseContext
+    fun localVideoTrack(): VideoTrack? = videoTrack
 
     private fun prepareLocalMedia(video: Boolean) {
         val context = appContext ?: return
@@ -243,7 +246,10 @@ object OchagWebRtcCallController {
                 override fun onRemoveStream(stream: MediaStream?) {}
                 override fun onDataChannel(channel: DataChannel?) {}
                 override fun onRenegotiationNeeded() {}
-                override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {}
+                override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {
+                    val track = receiver?.track()
+                    if (track is VideoTrack) remoteVideoTrack = track
+                }
             }
         ) ?: return null
         audioTrack?.let { peer.addTrack(it, listOf("ochag_stream")) }
@@ -328,6 +334,7 @@ object OchagWebRtcCallController {
         audioTrack = null
         audioSource?.dispose()
         audioSource = null
+        remoteVideoTrack = null
         state = null
     }
 
