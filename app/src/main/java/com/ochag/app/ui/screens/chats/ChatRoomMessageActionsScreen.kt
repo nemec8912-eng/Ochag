@@ -102,7 +102,7 @@ fun ChatRoomWithMessageActions(
                     Text("📌", modifier = Modifier.padding(end = 8.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Закреплено сообщений: ${pinnedMessages.size}",
+                            ochagText("Закреплено сообщений: ${pinnedMessages.size}"),
                             style = MaterialTheme.typography.labelMedium,
                             color = TerracottaDark,
                             fontWeight = FontWeight.Bold
@@ -142,7 +142,7 @@ fun ChatRoomWithMessageActions(
                 selectedForUnpin.clear()
                 showPinnedMessages = false
             },
-            title = { Text("Закреплённые сообщения (${pinnedMessages.size})") },
+            title = { Text(ochagText("Закреплённые сообщения (${pinnedMessages.size})")) },
             text = {
                 if (pinnedMessages.isEmpty()) {
                     Text(ochagText("Закреплённых сообщений нет"))
@@ -233,7 +233,7 @@ fun ChatRoomWithMessageActions(
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = if (message.isMine) "Ваше сообщение" else "Сообщение от ${message.sender}",
+                    text = if (message.isMine) ochagText("Ваше сообщение") else ochagText("Сообщение от ${message.sender}"),
                     style = MaterialTheme.typography.bodySmall,
                     color = BrownTextSecondary
                 )
@@ -245,7 +245,7 @@ fun ChatRoomWithMessageActions(
                     !message.text.startsWith("__STICKER_EMOJI__:")) {
                     ActionRow(
                         icon = "✎",
-                        title = "Редактировать"
+                        title = ochagText("Редактировать")
                     ) {
                         editingMessage = message
                         editText = message.text
@@ -255,7 +255,7 @@ fun ChatRoomWithMessageActions(
 
                 ActionRow(
                     icon = "✓",
-                    title = "Выделить"
+                    title = ochagText("Выделить")
                 ) {
                     MessageSelectionController.startSelection(message.id)
                 }
@@ -263,9 +263,9 @@ fun ChatRoomWithMessageActions(
                 ActionRow(
                     icon = "📌",
                     title = if (pinnedMessageIds.contains(message.id)) {
-                        "Уже закреплено"
+                        ochagText("Уже закреплено")
                     } else {
-                        "Закрепить в чате"
+                        ochagText("Закрепить в чате")
                     }
                 ) {
                     savePinned(pinnedMessageIds + message.id)
@@ -274,7 +274,7 @@ fun ChatRoomWithMessageActions(
 
                 ActionRow(
                     icon = "⌫",
-                    title = "Удалить",
+                    title = ochagText("Удалить"),
                     destructive = true
                 ) {
                     deletingMessage = message
@@ -291,7 +291,7 @@ fun ChatRoomWithMessageActions(
             onDismissRequest = { editingMessage = null },
             containerColor = CardWhite,
             shape = RoundedCornerShape(28.dp),
-            title = { Text("Редактировать сообщение", color = BrownTextPrimary) },
+            title = { Text(ochagText("Редактировать сообщение"), color = BrownTextPrimary) },
             text = {
                 OutlinedTextField(
                     value = editText,
@@ -325,12 +325,12 @@ fun ChatRoomWithMessageActions(
                         }
                     }
                 ) {
-                    Text("Сохранить", color = TerracottaPrimary)
+                    Text(ochagText("Сохранить"), color = TerracottaPrimary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingMessage = null }) {
-                    Text("Отмена", color = BrownTextSecondary)
+                    Text(ochagText("Отмена"), color = BrownTextSecondary)
                 }
             }
         )
@@ -341,13 +341,13 @@ fun ChatRoomWithMessageActions(
             onDismissRequest = { deletingMessage = null },
             containerColor = CardWhite,
             shape = RoundedCornerShape(28.dp),
-            title = { Text("Удалить сообщение?", color = BrownTextPrimary) },
+            title = { Text(ochagText("Удалить сообщение?"), color = BrownTextPrimary) },
             text = {
                 Text(
                     if (message.isMine) {
-                        "Сообщение будет удалено на этом устройстве. Серверное удаление у второго участника подключим отдельно."
+                        ochagText("Сообщение будет удалено на этом устройстве. Серверное удаление у второго участника подключим отдельно.")
                     } else {
-                        "Полученное сообщение будет скрыто на этом устройстве."
+                        ochagText("Полученное сообщение будет скрыто на этом устройстве.")
                     },
                     color = BrownTextSecondary
                 )
@@ -361,12 +361,12 @@ fun ChatRoomWithMessageActions(
                         }
                     }
                 ) {
-                    Text("Удалить", color = TerracottaDark)
+                    Text(ochagText("Удалить"), color = TerracottaDark)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deletingMessage = null }) {
-                    Text("Отмена", color = BrownTextSecondary)
+                    Text(ochagText("Отмена"), color = BrownTextSecondary)
                 }
             }
         )
@@ -378,10 +378,10 @@ fun ChatRoomWithMessageActions(
             onDismissRequest = { confirmBulkDelete = false },
             containerColor = CardWhite,
             shape = RoundedCornerShape(28.dp),
-            title = { Text("Удалить выбранные?", color = BrownTextPrimary) },
+            title = { Text(ochagText("Удалить выбранные?"), color = BrownTextPrimary) },
             text = {
                 Text(
-                    "Будет удалено сообщений: ${selectedMessages.size}.",
+                    ochagText("Будет удалено сообщений: ${selectedMessages.size}."),
                     color = BrownTextSecondary
                 )
             },
@@ -395,12 +395,12 @@ fun ChatRoomWithMessageActions(
                         }
                     }
                 ) {
-                    Text("Удалить", color = TerracottaDark)
+                    Text(ochagText("Удалить"), color = TerracottaDark)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { confirmBulkDelete = false }) {
-                    Text("Отмена", color = BrownTextSecondary)
+                    Text(ochagText("Отмена"), color = BrownTextSecondary)
                 }
             }
         )
@@ -411,10 +411,10 @@ fun ChatRoomWithMessageActions(
             onDismissRequest = { confirmDeleteAll = false },
             containerColor = CardWhite,
             shape = RoundedCornerShape(28.dp),
-            title = { Text("Удалить все сообщения?", color = BrownTextPrimary) },
+            title = { Text(ochagText("Удалить все сообщения?"), color = BrownTextPrimary) },
             text = {
                 Text(
-                    "Вся история этого чата будет удалена с этого устройства.",
+                    ochagText("Вся история этого чата будет удалена с этого устройства."),
                     color = BrownTextSecondary
                 )
             },
@@ -428,12 +428,12 @@ fun ChatRoomWithMessageActions(
                         }
                     }
                 ) {
-                    Text("Удалить все", color = TerracottaDark)
+                    Text(ochagText("Удалить все"), color = TerracottaDark)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { confirmDeleteAll = false }) {
-                    Text("Отмена", color = BrownTextSecondary)
+                    Text(ochagText("Отмена"), color = BrownTextSecondary)
                 }
             }
         )
@@ -480,23 +480,23 @@ private fun SelectionToolbar(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Выбрано: $count",
+                    text = ochagText("Выбрано: $count"),
                     color = BrownTextPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Нажимай на другие сообщения",
+                    text = ochagText("Нажимай на другие сообщения"),
                     style = MaterialTheme.typography.bodySmall,
                     color = BrownTextSecondary
                 )
             }
 
             TextButton(onClick = onSelectAll) {
-                Text(if (allSelected) "Снять все" else "Все", color = TerracottaPrimary)
+                Text(if (allSelected) ochagText("Снять все") else ochagText("Все"), color = TerracottaPrimary)
             }
 
             TextButton(onClick = onDeleteAll) {
-                Text("Очистить", color = BrownTextSecondary)
+                Text(ochagText("Очистить"), color = BrownTextSecondary)
             }
 
             Surface(
@@ -551,7 +551,7 @@ private fun ActionRow(
 
 private fun messagePreview(message: Message): String = when (message.messageType) {
     MessageType.TEXT.name -> message.text.removePrefix("__STICKER_EMOJI__:")
-    MessageType.IMAGE.name -> if (message.text == "__STICKER_IMAGE__") "Стикер" else "Фото ${message.text}".trim()
+    MessageType.IMAGE.name -> if (message.text == "__STICKER_IMAGE__") "Стикер" else ochagText("Фото ${message.text}").trim()
     MessageType.FILE.name -> message.fileName.ifBlank { "Файл" }
     MessageType.AUDIO.name -> "Голосовое сообщение"
     MessageType.VIDEO_CIRCLE.name -> "Видеокружок"
