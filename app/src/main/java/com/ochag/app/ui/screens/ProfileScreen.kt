@@ -498,7 +498,7 @@ fun ProfileScreen(
                 ProfileAction(
                     "文",
                     "Язык приложения",
-                    selectedLanguage,
+                    languageNames[selectedLanguage] ?: "Русский",
                     AvatarSage
                 ) { showLanguageDialog = true }
 
