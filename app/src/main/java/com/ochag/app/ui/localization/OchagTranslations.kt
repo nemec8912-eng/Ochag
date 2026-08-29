@@ -1,6 +1,5 @@
 package com.ochag.app.ui.localization
 
-import java.util.Locale
 
 private val en = mapOf(
     "Очаг" to "Hearth", "Чаты" to "Chats", "Контакты" to "Contacts",
@@ -56,9 +55,9 @@ private val common = mapOf(
 )
 
 fun ochagText(source: String): String {
-    return when (Locale.getDefault().language) {
+    return when (OchagLocaleController.language) {
         "en" -> en[source] ?: source
         "ru" -> source
-        else -> common[Locale.getDefault().language]?.get(source) ?: en[source] ?: source
+        else -> common[OchagLocaleController.language]?.get(source) ?: en[source] ?: source
     }
 }
