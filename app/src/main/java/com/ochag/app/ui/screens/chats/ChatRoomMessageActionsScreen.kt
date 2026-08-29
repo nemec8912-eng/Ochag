@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -144,7 +145,7 @@ fun ChatRoomWithMessageActions(
             title = { Text("Закреплённые сообщения (${pinnedMessages.size})") },
             text = {
                 if (pinnedMessages.isEmpty()) {
-                    Text("Закреплённых сообщений нет")
+                    Text(ochagText("Закреплённых сообщений нет"))
                 } else {
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 420.dp),
@@ -199,7 +200,7 @@ fun ChatRoomWithMessageActions(
                         selectedForUnpin.clear()
                         if (pinnedMessageIds.isEmpty()) showPinnedMessages = false
                     }
-                ) { Text("Открепить выбранные") }
+                ) { Text(ochagText("Открепить выбранные")) }
             },
             dismissButton = {
                 TextButton(
@@ -207,7 +208,7 @@ fun ChatRoomWithMessageActions(
                         selectedForUnpin.clear()
                         showPinnedMessages = false
                     }
-                ) { Text("Закрыть") }
+                ) { Text(ochagText("Закрыть")) }
             }
         )
     }
