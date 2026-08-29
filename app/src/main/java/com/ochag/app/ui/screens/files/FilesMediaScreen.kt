@@ -49,7 +49,7 @@ fun FilesMediaScreen(
     }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
 
         bottomBar = {
             FilesBottomBar(
@@ -64,7 +64,7 @@ fun FilesMediaScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CreamBackground)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
 
@@ -216,7 +216,7 @@ fun FilesMediaScreen(
                         text = ochagText("Быстрые действия"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(
@@ -253,7 +253,7 @@ private fun FilesHeader(
                 shape = RoundedCornerShape(23.dp)
             ),
         shape = RoundedCornerShape(23.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -275,7 +275,7 @@ private fun FilesHeader(
 
                 BackIcon(
                     modifier = Modifier.size(24.dp),
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -307,20 +307,20 @@ private fun FilesHeader(
                     text = ochagText("Семья"),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = ochagText("Файлы и медиа"),
                     fontSize = 12.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
-                color = CreamBackground
+                color = MaterialTheme.colorScheme.background
             ) {
 
                 Box(
@@ -329,7 +329,7 @@ private fun FilesHeader(
 
                     SearchIcon(
                         modifier = Modifier.size(21.dp),
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -346,7 +346,7 @@ private fun FilesHeader(
                 Text(
                     text = "⋮",
                     fontSize = 27.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -373,7 +373,7 @@ private fun MediaTabs(
                 shape = RoundedCornerShape(20.dp)
             ),
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -472,7 +472,7 @@ private fun MediaTabButton(
                     if (selected) {
                         TerracottaPrimary
                     } else {
-                        BrownTextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     }
             )
 
@@ -483,7 +483,7 @@ private fun MediaTabButton(
                     if (selected) {
                         TerracottaDark
                     } else {
-                        BrownTextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 maxLines = 1
             )
@@ -511,7 +511,7 @@ private fun SectionTitle(
             modifier = Modifier.weight(1f),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = BrownTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
@@ -695,7 +695,7 @@ private fun VideoCard(
                 RoundedCornerShape(15.dp)
             ),
         shape = RoundedCornerShape(15.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Column {
@@ -760,7 +760,7 @@ private fun VideoCard(
                     top = 5.dp
                 ),
                 fontSize = 10.sp,
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -812,7 +812,7 @@ private fun VoiceCard(
         modifier = modifier
             .height(82.dp),
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.dp
     ) {
 
@@ -860,13 +860,13 @@ private fun VoiceCard(
             Text(
                 text = duration,
                 fontSize = 10.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = subtitle,
                 fontSize = 8.sp,
-                color = BrownTextSecondary.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                     alpha = 0.75f
                 ),
                 maxLines = 1
@@ -972,7 +972,7 @@ private fun DocumentCard(
         modifier = modifier
             .height(85.dp),
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.dp
     ) {
 
@@ -1015,7 +1015,7 @@ private fun DocumentCard(
                 Text(
                     text = fileName,
                     fontSize = 10.sp,
-                    color = BrownTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1023,14 +1023,14 @@ private fun DocumentCard(
                 Text(
                     text = info,
                     fontSize = 8.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Text(
                 text = "↓",
                 fontSize = 18.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1087,7 +1087,7 @@ private fun QuickAction(
             .height(82.dp)
             .clickable { },
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
 
@@ -1101,7 +1101,7 @@ private fun QuickAction(
             Text(
                 text = icon,
                 fontSize = 24.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(
@@ -1112,7 +1112,7 @@ private fun QuickAction(
                 text = title,
                 fontSize = 9.sp,
                 lineHeight = 11.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1144,7 +1144,7 @@ private fun FilesBottomBar(
                 shape = RoundedCornerShape(26.dp)
             ),
         shape = RoundedCornerShape(26.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -1205,7 +1205,7 @@ private fun BottomItem(
         if (selected) {
             TerracottaPrimary
         } else {
-            BrownTextSecondary
+            MaterialTheme.colorScheme.onSurfaceVariant
         }
 
     Column(
@@ -1395,7 +1395,7 @@ private fun HomeFlameLogo(
         )
 
         drawCircle(
-            color = CardWhite,
+            color = MaterialTheme.colorScheme.surface,
             radius = size.width * 0.20f,
             center = Offset(
                 size.width * 0.50f,
