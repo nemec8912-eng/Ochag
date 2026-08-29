@@ -24,6 +24,7 @@ import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
 import com.ochag.app.ui.screens.stickers.StickerPacksScreen
 import com.ochag.app.ui.screens.ai.KeeperOfTheHearthScreen
+import com.ochag.app.ui.screens.calls.CallsScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -35,6 +36,7 @@ sealed class Screen(val route: String) {
     object MemberProfile : Screen("profile/{name}")
     object MyProfile : Screen("my_profile")
     object Files : Screen("files")
+    object Calls : Screen("calls")
     object Stickers : Screen("stickers")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
@@ -74,6 +76,9 @@ fun AppNavigation() {
                 onFilesClick = {
                     navController.navigate(Screen.Files.route) { launchSingleTop = true }
                 },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
+                },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onStickersClick = { navController.navigate(Screen.Stickers.route) },
                 onLogoutClick = {
@@ -91,6 +96,23 @@ fun AppNavigation() {
                 onBackClick = { navController.popBackStack() },
                 onChatsClick = {
                     navController.navigate(Screen.Chats.route) { launchSingleTop = true }
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
+                }
+            )
+        }
+
+        composable(Screen.Calls.route) {
+            CallsScreen(
+                onChatsClick = {
+                    navController.navigate(Screen.Chats.route) { launchSingleTop = true }
+                },
+                onFilesClick = {
+                    navController.navigate(Screen.Files.route) { launchSingleTop = true }
                 },
                 onProfileClick = {
                     navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
@@ -146,6 +168,9 @@ fun AppNavigation() {
                 },
                 onProfileClick = {
                     navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
                 },
                 onChatClick = { id, _ -> navController.navigate("chat/$id") }
             )
