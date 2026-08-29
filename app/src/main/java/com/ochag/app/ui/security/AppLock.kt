@@ -2,6 +2,10 @@ package com.ochag.app.ui.security
 
 import com.ochag.app.ui.localization.ochagText
 import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import java.security.MessageDigest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
@@ -17,8 +21,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 enum class AppLockMode { PIN, PASSWORD, PATTERN }
 
@@ -118,6 +124,14 @@ fun AppLockGate(content: @Composable () -> Unit) {
 
     var secret by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    LaunchedEffect(error, AppLockController.mode) {
+        if (error && AppLockController.mode == AppLockMode.PATTERN) {
+            delay(550)
+            secret = ""
+        }
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -141,6 +155,7 @@ fun AppLockGate(content: @Composable () -> Unit) {
             if (AppLockController.mode == AppLockMode.PATTERN) {
                 PatternPad(
                     value = secret,
+                    isError = error,
                     onValueChange = {
                         secret = it
                         error = false
@@ -168,7 +183,13 @@ fun AppLockGate(content: @Composable () -> Unit) {
             }
             Spacer(Modifier.height(16.dp))
             Button(
-                onClick = { error = !AppLockController.verify(secret) },
+                onClick = {
+                    val valid = AppLockController.verify(secret)
+                    error = !valid
+                    if (!valid && AppLockController.mode == AppLockMode.PATTERN) {
+                        vibrateWrongPattern(context)
+                    }
+                },
                 enabled = secret.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) { Text(ochagText("Открыть")) }
@@ -179,10 +200,12 @@ fun AppLockGate(content: @Composable () -> Unit) {
 @Composable
 fun PatternPad(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    isError: Boolean = false
 ) {
     var fingerPosition by remember { mutableStateOf<Offset?>(null) }
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = if (isError) MaterialTheme.colorScheme.error
+        else MaterialTheme.colorScheme.primary
     val emptyColor = MaterialTheme.colorScheme.outline
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -270,5 +293,27 @@ fun PatternPad(
         TextButton(onClick = { onValueChange("") }) {
             Text(ochagText("Сбросить рисунок"))
         }
+    }
+}
+
+
+private fun vibrateWrongPattern(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    } ?: return
+
+    if (!vibrator.hasVibrator()) return
+
+    val pattern = longArrayOf(0L, 90L, 70L, 140L)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(
+            VibrationEffect.createWaveform(pattern, -1)
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(pattern, -1)
     }
 }
