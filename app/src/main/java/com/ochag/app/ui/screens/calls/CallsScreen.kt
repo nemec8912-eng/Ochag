@@ -17,7 +17,7 @@ import com.ochag.app.data.ServerRealtime
 import com.ochag.app.ui.components.OchagAvatar
 import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.localization.ochagText
-import com.ochag.app.ui.theme.CreamBackground
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.background
 
 @Composable
 fun CallsScreen(
@@ -31,7 +31,7 @@ fun CallsScreen(
     var message by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             OchagBottomBar(
                 items = listOf(
