@@ -147,7 +147,11 @@ private val en = mapOf(
     "Вся история этого чата будет удалена с этого устройства." to "All chat history will be deleted from this device.",
     "Удалить все" to "Delete all", "Нажимай на другие сообщения" to "Tap other messages",
     "Снять все" to "Clear selection", "Все" to "All", "Очистить" to "Clear"
-
+,
+    "Выберите близкого человека для звонка" to "Choose a family member to call",
+    "Список контактов пока пуст" to "Your contact list is empty",
+    "Номер телефона не указан" to "Phone number not provided",
+    "Сначала добавьте номер телефона в профиле" to "Add a phone number in the profile first"
 )
 
 private val common = mapOf(
