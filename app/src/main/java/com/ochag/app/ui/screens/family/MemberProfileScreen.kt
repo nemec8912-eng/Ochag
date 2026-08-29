@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.family
 
+import com.ochag.app.ui.localization.ochagText
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -69,7 +70,7 @@ fun MemberProfileScreen(
                 Spacer(Modifier.width(12.dp))
 
                 Text(
-                    text = "Профиль",
+                    text = ochagText("Профиль"),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
@@ -106,7 +107,7 @@ fun MemberProfileScreen(
                     Spacer(Modifier.height(5.dp))
 
                     Text(
-                        text = if (isOnline) "В сети" else "Не в сети",
+                        text = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isOnline) OnlineGreen else BrownTextSecondary
                     )
@@ -136,14 +137,14 @@ fun MemberProfileScreen(
             ) {
                 Column {
                     Text(
-                        text = "Участник семьи",
+                        text = ochagText("Участник семьи"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = BrownTextPrimary
                     )
                     Spacer(Modifier.height(7.dp))
                     Text(
-                        text = "Личная переписка доступна только внутри вашего семейного «Очага».",
+                        text = ochagText("Личная переписка доступна только внутри вашего семейного «Очага»."),
                         style = MaterialTheme.typography.bodyMedium,
                         color = BrownTextSecondary
                     )
@@ -153,7 +154,7 @@ fun MemberProfileScreen(
             Spacer(Modifier.weight(1f))
 
             OchagPrimaryButton(
-                text = "Написать сообщение",
+                text = ochagText("Написать сообщение"),
                 onClick = onMessageClick
             )
         }
