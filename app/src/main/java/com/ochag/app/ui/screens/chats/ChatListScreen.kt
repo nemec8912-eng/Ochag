@@ -71,7 +71,7 @@ fun ChatListScreen(
     val currentUserName = ServerRealtime.userName.ifBlank { ochagText("Очаг") }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             OchagBottomBar(
                 items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
@@ -132,7 +132,7 @@ fun ChatListScreen(
                     Text(
                         text = ochagText("Очаг"),
                         style = MaterialTheme.typography.titleMedium,
-                        color = BrownTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
 
@@ -150,7 +150,7 @@ fun ChatListScreen(
                                 text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -161,7 +161,7 @@ fun ChatListScreen(
                 Text(
                     text = ochagText("Чаты"),
                     style = MaterialTheme.typography.displaySmall,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -173,7 +173,7 @@ fun ChatListScreen(
                         ServerRealtime.ConnectionState.OFFLINE -> ochagText("Сообщения останутся рядом")
                     },
                     style = MaterialTheme.typography.bodyLarge,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -194,14 +194,14 @@ fun ChatListScreen(
                     Surface(
                         onClick = { unreadOnly = !unreadOnly },
                         shape = RoundedCornerShape(18.dp),
-                        color = if (unreadOnly) TerracottaSoft else CardWhite,
-                        border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else BorderSoft)
+                        color = if (unreadOnly) TerracottaSoft else MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else MaterialTheme.colorScheme.outline)
                     ) {
                         Text(
                             text = if (unreadOnly) ochagText("● Непрочитанные") else ochagText("Непрочитанные"),
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                             style = MaterialTheme.typography.labelLarge,
-                            color = if (unreadOnly) TerracottaDark else BrownTextSecondary
+                            color = if (unreadOnly) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -267,14 +267,14 @@ private fun EmptyChatsState(filtered: Boolean) {
             Text(
                 text = if (filtered) ochagText("Ничего не нашли") else ochagText("Здесь будут ваши чаты"),
                 style = MaterialTheme.typography.titleLarge,
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(5.dp))
             Text(
                 text = if (filtered) ochagText("Попробуй изменить поиск") else ochagText("Начни разговор с близкими"),
                 style = MaterialTheme.typography.bodyMedium,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -291,7 +291,7 @@ private fun ChatCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
@@ -335,7 +335,7 @@ private fun ChatCard(
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = if (chat.unreadCount > 0) FontWeight.Bold else FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (chat.lastTime.isNotBlank()) {
@@ -343,7 +343,7 @@ private fun ChatCard(
                         Text(
                             text = chat.lastTime,
                             style = MaterialTheme.typography.labelMedium,
-                            color = BrownTextMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -355,7 +355,7 @@ private fun ChatCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else BrownTextMuted
+                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(5.dp))
@@ -377,7 +377,7 @@ private fun ChatCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     if (chat.unreadCount > 0) {
@@ -428,7 +428,7 @@ private fun GroupAvatar(chat: Chat) {
             Text(
                 text = avatarText(chat),
                 style = MaterialTheme.typography.headlineSmall,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
