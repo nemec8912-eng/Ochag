@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.family
 
+import com.ochag.app.ui.localization.ochagText
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,11 +25,11 @@ fun FamilyManagementScreen(
     onMemberClick: (String) -> Unit
 ) {
     val members = listOf(
-        "Михаил",
-        "Анна",
-        "Дочь",
-        "Сын",
-        "Бабушка"
+        ochagText("Михаил"),
+        ochagText("Анна"),
+        ochagText("Дочь"),
+        ochagText("Сын"),
+        ochagText("Бабушка")
     )
 
     val currentUserName = OchagAppState.currentUser?.name.orEmpty()
@@ -57,13 +58,13 @@ fun FamilyManagementScreen(
         ) {
             item {
                 OchagSectionHeader(
-                    title = "Семья и приглашения",
-                    subtitle = "Только свои люди — доступ под твоим контролем"
+                    title = ochagText("Семья и приглашения"),
+                    subtitle = ochagText("Только свои люди — доступ под твоим контролем")
                 )
             }
 
             item {
-                val owner = currentUserName.ifBlank { "Михаил" }
+                val owner = currentUserName.ifBlank { ochagText("Михаил") }
                 val ownerOnline = normalizedOnlineUsers.contains(normalizePresenceName(owner))
 
                 OchagCard(
@@ -100,7 +101,7 @@ fun FamilyManagementScreen(
                                 color = TerracottaSoft
                             ) {
                                 Text(
-                                    text = "Владелец семьи",
+                                    text = ochagText("Владелец семьи"),
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = TerracottaDark
@@ -110,7 +111,7 @@ fun FamilyManagementScreen(
                             Spacer(Modifier.height(6.dp))
 
                             Text(
-                                text = if (ownerOnline) "В сети" else "Не в сети",
+                                text = if (ownerOnline) ochagText("В сети") else ochagText("Не в сети"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (ownerOnline) OnlineGreen else BrownTextSecondary
                             )
@@ -127,7 +128,7 @@ fun FamilyManagementScreen(
 
             item {
                 Text(
-                    text = "Участники семьи",
+                    text = ochagText("Участники семьи"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
@@ -172,7 +173,7 @@ fun FamilyManagementScreen(
                                 if (isOwner) {
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = "Вы",
+                                        text = ochagText("Вы"),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = TerracottaDark
                                     )
@@ -182,7 +183,7 @@ fun FamilyManagementScreen(
                             Spacer(Modifier.height(3.dp))
 
                             Text(
-                                text = if (isOnline) "В сети" else "Не в сети",
+                                text = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (isOnline) OnlineGreen else BrownTextSecondary
                             )
@@ -199,7 +200,7 @@ fun FamilyManagementScreen(
 
             item {
                 Text(
-                    text = "Приглашения",
+                    text = ochagText("Приглашения"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
@@ -226,13 +227,13 @@ fun FamilyManagementScreen(
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Пригласить близких",
+                                text = ochagText("Пригласить близких"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = BrownTextPrimary
                             )
                             Text(
-                                text = "Коды приглашения подключим отдельным шагом",
+                                text = ochagText("Коды приглашения подключим отдельным шагом"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = BrownTextSecondary
                             )
@@ -243,7 +244,7 @@ fun FamilyManagementScreen(
                             color = TerracottaSoft
                         ) {
                             Text(
-                                text = "Скоро",
+                                text = ochagText("Скоро"),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = TerracottaDark
@@ -261,14 +262,14 @@ fun FamilyManagementScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Безопасность семьи",
+                            text = ochagText("Безопасность семьи"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = BrownTextPrimary
                         )
                         Spacer(Modifier.height(7.dp))
                         Text(
-                            text = "Вход новых участников будет происходить только после приглашения и подтверждения владельца.",
+                            text = ochagText("Вход новых участников будет происходить только после приглашения и подтверждения владельца."),
                             style = MaterialTheme.typography.bodyMedium,
                             color = BrownTextSecondary
                         )
