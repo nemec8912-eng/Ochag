@@ -15,6 +15,7 @@ import android.location.LocationManager
 import android.provider.ContactsContract
 import android.provider.OpenableColumns
 import android.widget.VideoView
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -87,6 +88,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val STICKER_EMOJI_PREFIX = "__STICKER_EMOJI__:"
 private const val STICKER_IMAGE_CAPTION = "__STICKER_IMAGE__"
+private const val POLL_VOTE_PREFIX = "__POLL_VOTE__:"
 
 private enum class MediaButtonMode { AUDIO, VIDEO }
 
@@ -109,6 +111,12 @@ private enum class MessageFontSize(val title: String, val sizeSp: Int) {
 private const val FONT_PREFS = "ochag_message_font"
 private const val FONT_STYLE_KEY = "font_style"
 private const val FONT_SIZE_KEY = "font_size"
+
+private data class PollVote(
+    val pollId: Long,
+    val voter: String,
+    val option: String
+)
 
 private data class PendingAttachment(
     val uri: Uri,
@@ -325,6 +333,11 @@ fun ChatRoomScreen(
         chatId = chatId
     ).collectAsState(initial = emptyList())
 
+    val pollVotes = remember(messages) { collectPollVotes(messages) }
+    val visibleMessages = remember(messages) {
+        messages.filterNot { isPollVoteMessage(it.text) }
+    }
+
     val serverUsers by ServerRealtime.serverUsers.collectAsState()
 
     LaunchedEffect(chatId, messages.map { it.id to it.isMine }) {
@@ -401,16 +414,16 @@ fun ChatRoomScreen(
         ChatRepository.seedInitialMessages(appContext, chatId)
     }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+    LaunchedEffect(visibleMessages.size) {
+        if (visibleMessages.isNotEmpty()) {
+            listState.animateScrollToItem(visibleMessages.lastIndex)
         }
     }
 
     val requestedMessageId = MessageSelectionController.scrollToMessageId
     LaunchedEffect(requestedMessageId, messages) {
         val targetId = requestedMessageId ?: return@LaunchedEffect
-        val index = messages.indexOfFirst { it.id == targetId }
+        val index = visibleMessages.indexOfFirst { it.id == targetId }
         if (index >= 0) {
             listState.animateScrollToItem(index)
         }
@@ -703,11 +716,12 @@ fun ChatRoomScreen(
                 contentPadding = PaddingValues(top = 18.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(items = messages, key = { it.id }) { message ->
+                items(items = visibleMessages, key = { it.id }) { message ->
                     MessageBubble(
                         message = message,
                         fontStyle = messageFontStyle,
-                        fontSize = messageFontSize
+                        fontSize = messageFontSize,
+                        pollVotes = pollVotes[message.id].orEmpty()
                     )
                 }
             }
@@ -1798,7 +1812,8 @@ private fun PendingAttachmentPreview(
 private fun MessageBubble(
     message: Message,
     fontStyle: MessageFontStyle,
-    fontSize: MessageFontSize
+    fontSize: MessageFontSize,
+    pollVotes: List<PollVote> = emptyList()
 ) {
     val context = LocalContext.current
     val bubbleScope = rememberCoroutineScope()
@@ -1999,12 +2014,18 @@ private fun MessageBubble(
                             PollMessageContent(
                                 message = message,
                                 textColor = bubbleText,
+                                votes = pollVotes,
+                                currentUserName = ServerRealtime.userName,
                                 onVote = { option ->
                                     bubbleScope.launch {
                                         ChatRepository.sendMessage(
                                             context = context.applicationContext,
                                             chatId = message.chatId,
-                                            text = "🗳 ${message.sender}: $option"
+                                            text = encodePollVote(
+                                                pollId = message.id,
+                                                voter = ServerRealtime.userName,
+                                                option = option
+                                            )
                                         )
                                     }
                                 }
@@ -2066,6 +2087,8 @@ private fun MessageBubble(
 private fun PollMessageContent(
     message: Message,
     textColor: Color,
+    votes: List<PollVote>,
+    currentUserName: String,
     onVote: (String) -> Unit
 ) {
     val lines = remember(message.text) { message.text.lines() }
@@ -2078,10 +2101,16 @@ private fun PollMessageContent(
             .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
             .filter { it.isNotBlank() }
     }
-    var selectedOption by remember(message.id) { mutableStateOf<String?>(null) }
-    var voted by remember(message.id) { mutableStateOf(false) }
+    val myVote = votes.lastOrNull {
+        it.voter.equals(currentUserName, ignoreCase = true)
+    }?.option
+    var selectedOption by remember(message.id, myVote) {
+        mutableStateOf(myVote)
+    }
+    val voted = myVote != null
+    val totalVotes = votes.map { it.voter.lowercase() }.distinct().size
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text(
             text = "📊 $question",
             color = textColor,
@@ -2090,44 +2119,124 @@ private fun PollMessageContent(
         )
 
         options.forEach { option ->
+            val optionVotes = votes.count { it.option.equals(option, ignoreCase = true) }
+            val percent = if (totalVotes == 0) 0 else (optionVotes * 100 / totalVotes)
+            val selected = selectedOption.equals(option, ignoreCase = true)
+
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(enabled = !voted) { selectedOption = option },
                 shape = RoundedCornerShape(12.dp),
-                color = if (selectedOption == option) {
+                color = if (selected) {
                     TerracottaLight
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.94f)
                 }
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = selectedOption == option,
-                        enabled = !voted,
-                        onClick = { selectedOption = option }
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = selected,
+                            enabled = !voted,
+                            onClick = { if (!voted) selectedOption = option }
+                        )
+                        Text(
+                            text = option,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "$percent%",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { percent / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = TerracottaPrimary,
+                        trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
                     )
-                    Text(option, color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = ochagText("Голосов: $optionVotes"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
         }
 
+        Text(
+            text = ochagText("Всего проголосовало: $totalVotes"),
+            color = textColor.copy(alpha = 0.85f),
+            style = MaterialTheme.typography.bodySmall
+        )
+
         Button(
-            onClick = {
-                selectedOption?.let {
-                    onVote(it)
-                    voted = true
-                }
-            },
+            onClick = { selectedOption?.let(onVote) },
             enabled = selectedOption != null && !voted,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (voted) ochagText("Голос отправлен") else ochagText("Проголосовать"))
+            Text(if (voted) ochagText("Ваш голос учтён") else ochagText("Проголосовать"))
         }
     }
+}
+
+private fun isPollVoteMessage(text: String): Boolean =
+    text.startsWith(POLL_VOTE_PREFIX) || text.startsWith("🗳 ")
+
+private fun encodePollVote(pollId: Long, voter: String, option: String): String {
+    fun encode(value: String): String = Base64.encodeToString(
+        value.toByteArray(Charsets.UTF_8),
+        Base64.URL_SAFE or Base64.NO_WRAP
+    )
+    return "$POLL_VOTE_PREFIX$pollId:${encode(voter)}:${encode(option)}"
+}
+
+private fun collectPollVotes(messages: List<Message>): Map<Long, List<PollVote>> {
+    val votesByPoll = linkedMapOf<Long, LinkedHashMap<String, PollVote>>()
+    var lastPollId: Long? = null
+
+    messages.forEach { message ->
+        if (message.text.startsWith("📊 ОПРОС:")) {
+            lastPollId = message.id
+            return@forEach
+        }
+
+        val vote = if (message.text.startsWith(POLL_VOTE_PREFIX)) {
+            val parts = message.text.removePrefix(POLL_VOTE_PREFIX).split(":", limit = 3)
+            if (parts.size == 3) {
+                try {
+                    fun decode(value: String) = String(
+                        Base64.decode(value, Base64.URL_SAFE or Base64.NO_WRAP),
+                        Charsets.UTF_8
+                    )
+                    PollVote(
+                        pollId = parts[0].toLong(),
+                        voter = decode(parts[1]),
+                        option = decode(parts[2])
+                    )
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
+        } else if (message.text.startsWith("🗳 ") && lastPollId != null) {
+            PollVote(
+                pollId = lastPollId!!,
+                voter = message.sender,
+                option = message.text.substringAfter(": ", "").trim()
+            ).takeIf { it.option.isNotBlank() }
+        } else null
+
+        if (vote != null) {
+            val voterKey = vote.voter.trim().lowercase()
+            votesByPoll.getOrPut(vote.pollId) { linkedMapOf() }[voterKey] = vote
+        }
+    }
+
+    return votesByPoll.mapValues { it.value.values.toList() }
 }
 
 @Composable
