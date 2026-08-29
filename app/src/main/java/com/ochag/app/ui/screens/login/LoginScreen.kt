@@ -274,6 +274,7 @@ private fun loginFieldColors() = OutlinedTextFieldDefaults.colors(
 
 @Composable
 private fun HomeFlameLogo(modifier: Modifier) {
+    val logoCutoutColor = MaterialTheme.colorScheme.surface
     Canvas(modifier = modifier) {
         val house = Path().apply {
             moveTo(size.width * 0.14f, size.height * 0.43f)
@@ -288,7 +289,7 @@ private fun HomeFlameLogo(modifier: Modifier) {
 
         drawPath(house, color = TerracottaPrimary)
         drawCircle(
-            color = MaterialTheme.colorScheme.surface,
+            color = logoCutoutColor,
             radius = size.width * 0.20f,
             center = Offset(size.width * 0.50f, size.height * 0.60f)
         )
