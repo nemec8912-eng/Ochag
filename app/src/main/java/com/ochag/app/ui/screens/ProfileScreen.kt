@@ -1,7 +1,6 @@
 package com.ochag.app.ui.screens.profile
 
 import com.ochag.app.ui.localization.ochagText
-import android.app.Activity
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -199,7 +198,7 @@ fun ProfileScreen(
                             .putString("app_language", selectedLanguage)
                             .apply()
                         showLanguageDialog = false
-                        (context as? Activity)?.recreate()
+                        selectedLanguage = OchagLocaleController.language
                     }
                 ) { Text(ochagText("Сохранить")) }
             },
