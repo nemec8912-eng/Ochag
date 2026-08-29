@@ -257,7 +257,6 @@ fun ProfileScreen(
                 Spacer(Modifier.height(8.dp))
 
                 ProfileAction("♡", ochagText("Семья"), ochagText("Участники, роли и доступ"), AvatarSage, onFamilyClick)
-                ProfileAction("✦", ochagText("Стикеры"), ochagText("Встроенные и свои стикерпаки"), AvatarSand, onStickersClick)
                 ProfileAction("＋", ochagText("Пригласить близких"), ochagText("Добавить нового участника"), AvatarRose, onInviteClick)
 
                 Spacer(Modifier.height(18.dp))
