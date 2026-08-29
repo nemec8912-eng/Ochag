@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.profile
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -34,6 +35,7 @@ import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagPrimaryButton
 import com.ochag.app.ui.components.OchagTextField
+import com.ochag.app.ui.localization.OchagLocaleController
 import com.ochag.app.ui.security.AppLockController
 import com.ochag.app.ui.security.AppLockMode
 import com.ochag.app.ui.security.PatternPad
@@ -77,10 +79,17 @@ fun ProfileScreen(
             android.content.Context.MODE_PRIVATE
         )
     }
-    var selectedLanguage by remember(userName) {
-        mutableStateOf(
-            profilePreferences.getString("app_language", "Русский") ?: "Русский"
-        )
+    val languageNames = mapOf(
+        "ru" to "Русский",
+        "en" to "English",
+        "de" to "Deutsch",
+        "fr" to "Français",
+        "es" to "Español",
+        "zh" to "中文",
+        "ja" to "日本語"
+    )
+    var selectedLanguage by remember {
+        mutableStateOf(OchagLocaleController.currentLanguage(context))
     }
     var profileAvatarUri by remember(userName) {
         mutableStateOf(
@@ -158,28 +167,25 @@ fun ProfileScreen(
     }
 
     if (showLanguageDialog) {
-        val languages = listOf(
-            "Русский", "English", "Deutsch", "Français",
-            "Español", "中文", "日本語"
-        )
+        val languages = languageNames.toList()
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
             title = { Text("Язык приложения") },
             text = {
                 Column {
-                    languages.forEach { language ->
+                    languages.forEach { (languageCode, languageName) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedLanguage = language }
+                                .clickable { selectedLanguage = languageCode }
                                 .padding(vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = selectedLanguage == language,
-                                onClick = { selectedLanguage = language }
+                                selected = selectedLanguage == languageCode,
+                                onClick = { selectedLanguage = languageCode }
                             )
-                            Text(language)
+                            Text(languageName)
                         }
                     }
                 }
@@ -187,10 +193,12 @@ fun ProfileScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        OchagLocaleController.saveLanguage(context, selectedLanguage)
                         profilePreferences.edit()
                             .putString("app_language", selectedLanguage)
                             .apply()
                         showLanguageDialog = false
+                        (context as? Activity)?.recreate()
                     }
                 ) { Text("Сохранить") }
             },
