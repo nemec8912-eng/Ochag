@@ -1204,7 +1204,32 @@ async def create_join_request(payload: JoinRequestCreate):
             "SELECT family_id FROM users WHERE is_owner = 1 ORDER BY user_id LIMIT 1"
         ).fetchone()
         if owner is None:
-            raise HTTPException(status_code=409, detail="Сначала владелец должен войти в Очаг")
+            # Совместимость с первой тестовой версией приложения:
+            # Михаил мог войти в локальный аккаунт до появления серверных аккаунтов.
+            owner_salt = secrets.token_hex(16)
+            owner_pin_hash = hash_pin("123456", owner_salt)
+            timestamp = now_ms()
+            family_id = secrets.token_hex(4).upper()
+            try:
+                db.execute(
+                    """
+                    INSERT INTO users(
+                        login, name, pin_salt, pin_hash, is_owner, family_id,
+                        avatar_url, phone, phone_normalized, created_at, updated_at
+                    ) VALUES ('mikhail', 'Михаил', ?, ?, 1, ?, '', '', '', ?, ?)
+                    """,
+                    (owner_salt, owner_pin_hash, family_id, timestamp, timestamp)
+                )
+                db.commit()
+            except sqlite3.IntegrityError:
+                pass
+
+            owner = db.execute(
+                "SELECT family_id FROM users WHERE is_owner = 1 ORDER BY user_id LIMIT 1"
+            ).fetchone()
+
+        if owner is None:
+            raise HTTPException(status_code=409, detail="Не удалось создать владельца Очаг")
 
         existing_user = db.execute(
             "SELECT 1 FROM users WHERE login = ? COLLATE NOCASE OR name = ? COLLATE NOCASE",
