@@ -833,6 +833,13 @@ fun ChatRoomScreen(
                                 }
                             )
                             DropdownMenuItem(
+                                text = { Text(ochagText("Аа  Шрифт"), color = BrownTextPrimary) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    showFontSettings = true
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text(ochagText("✨  Хранитель Очага"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
