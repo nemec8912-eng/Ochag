@@ -1714,7 +1714,7 @@ private fun PendingAttachmentPreview(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    if (attachment.type == MessageType.IMAGE) "Фото" else "Файл",
+                    if (attachment.type == MessageType.IMAGE) ochagText("Фото") else ochagText("Файл"),
                     color = BrownTextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1922,7 +1922,7 @@ private fun MessageBubble(
                             Row(modifier = Modifier.padding(12.dp)) {
                                 Text("📎 ", color = bubbleText)
                                 Text(
-                                    message.fileName.ifBlank { "Файл" },
+                                    message.fileName.ifBlank { ochagText("Файл") },
                                     color = bubbleText,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -2136,7 +2136,7 @@ private fun VoiceMessagePlayer(
 
         Column {
             Text(
-                "Голосовое сообщение",
+                ochagText("Голосовое сообщение"),
                 color = if (isMine) Color.White else BrownTextPrimary,
                 fontWeight = FontWeight.Medium
             )
