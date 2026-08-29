@@ -50,6 +50,7 @@ fun ProfileScreen(
     onFamilyClick: () -> Unit = {},
     onInviteClick: () -> Unit = {},
     onStickersClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     val user = OchagAppState.currentUser
@@ -386,11 +387,29 @@ fun ProfileScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
-                Text(
-                    text = ochagText("Профиль"),
-                    style = MaterialTheme.typography.displaySmall,
-                    color = BrownTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = ochagText("Профиль"),
+                        style = MaterialTheme.typography.displaySmall,
+                        color = BrownTextPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Surface(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable(onClick = onSettingsClick),
+                        shape = CircleShape,
+                        color = CardCream,
+                        border = BorderStroke(1.dp, BorderSoft)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("⚙", style = MaterialTheme.typography.headlineSmall)
+                        }
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = ochagText("Личное пространство в «Очаге»"),
