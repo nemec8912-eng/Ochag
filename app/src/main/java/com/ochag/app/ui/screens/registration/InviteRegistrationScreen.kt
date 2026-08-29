@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.registration
 
+import com.ochag.app.ui.localization.ochagText
 import com.ochag.app.data.OchagAppState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -147,14 +148,14 @@ fun InviteRegistrationScreen(
                 Column {
 
                     Text(
-                        text = "Присоединиться",
+                        text = ochagText("Присоединиться"),
                         fontSize = 31.sp,
                         fontWeight = FontWeight.Normal,
                         color = BrownTextPrimary
                     )
 
                     Text(
-                        text = "Вход в семейный «Очаг»",
+                        text = ochagText("Вход в семейный «Очаг»"),
                         fontSize = 13.sp,
                         color = BrownTextSecondary
                     )
@@ -201,7 +202,7 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Добро пожаловать в «Очаг»",
+                    text = ochagText("Добро пожаловать в «Очаг»"),
                     fontSize = 21.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
@@ -212,7 +213,7 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Регистрация доступна только\nпо приглашению владельца семьи",
+                    text = ochagText("Регистрация доступна только\nпо приглашению владельца семьи"),
                     textAlign = TextAlign.Center,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -250,7 +251,7 @@ fun InviteRegistrationScreen(
                 ) {
 
                     Text(
-                        text = "Вернуться ко входу",
+                        text = ochagText("Вернуться ко входу"),
                         fontSize = 15.sp,
                         color = TerracottaDark,
                         fontWeight = FontWeight.Medium
@@ -264,7 +265,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Код приглашения"
+                    title = ochagText("Код приглашения")
                 ) {
 
                     OutlinedTextField(
@@ -276,7 +277,7 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Например: OCHAG-4821",
+                                text = ochagText("Например: OCHAG-4821"),
                                 color = BrownTextSecondary.copy(
                                     alpha = 0.65f
                                 )
@@ -310,9 +311,9 @@ fun InviteRegistrationScreen(
                         Text(
                             text =
                                 if (codeValid) {
-                                    "Формат кода правильный"
+                                    ochagText("Формат кода правильный")
                                 } else {
-                                    "Код должен выглядеть как OCHAG-4821"
+                                    ochagText("Код должен выглядеть как OCHAG-4821")
                                 },
                             fontSize = 11.sp,
                             color =
@@ -335,7 +336,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Ваши данные"
+                    title = ochagText("Ваши данные")
                 ) {
 
                     OutlinedTextField(
@@ -347,7 +348,7 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Имя",
+                                text = ochagText("Имя"),
                                 color = BrownTextSecondary.copy(
                                     alpha = 0.65f
                                 )
@@ -377,7 +378,7 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Логин",
+                                text = ochagText("Логин"),
                                 color = BrownTextSecondary.copy(
                                     alpha = 0.65f
                                 )
@@ -405,7 +406,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Пароль"
+                    title = ochagText("Пароль")
                 ) {
 
                     OutlinedTextField(
@@ -417,7 +418,7 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Придумайте пароль",
+                                text = ochagText("Придумайте пароль"),
                                 color = BrownTextSecondary.copy(
                                     alpha = 0.65f
                                 )
@@ -476,7 +477,7 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Повторите пароль",
+                                text = ochagText("Повторите пароль"),
                                 color = BrownTextSecondary.copy(
                                     alpha = 0.65f
                                 )
@@ -527,7 +528,7 @@ fun InviteRegistrationScreen(
                     )
 
                     Text(
-                        text = "Минимум 6 символов",
+                        text = ochagText("Минимум 6 символов"),
                         fontSize = 10.sp,
                         color =
                             if (
@@ -550,7 +551,7 @@ fun InviteRegistrationScreen(
                         )
 
                         Text(
-                            text = "Пароли не совпадают",
+                            text = ochagText("Пароли не совпадают"),
                             fontSize = 10.sp,
                             color = TerracottaDark
                         )
@@ -594,7 +595,7 @@ fun InviteRegistrationScreen(
                         )
 
                         Text(
-                            text = "После регистрации владелец семьи получит заявку. Войти в «Очаг» получится только после его подтверждения.",
+                            text = ochagText("После регистрации владелец семьи получит заявку. Войти в «Очаг» получится только после его подтверждения."),
                             modifier = Modifier.weight(1f),
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
@@ -639,7 +640,7 @@ fun InviteRegistrationScreen(
                     )
                 ) {
                     Text(
-                        text = "Отправить заявку",
+                        text = ochagText("Отправить заявку"),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -650,7 +651,7 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Никто не получит доступ к семейным чатам без разрешения владельца",
+                    text = ochagText("Никто не получит доступ к семейным чатам без разрешения владельца"),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 10.sp,
@@ -711,7 +712,7 @@ private fun FormCard(
 
 
 // ============================================================
-// КАРТОЧКА "ЗАЯВКА ОТПРАВЛЕНА"
+// КАРТОЧКА ochagText("ЗАЯВКА ОТПРАВЛЕНА")
 // ============================================================
 
 @Composable
@@ -764,7 +765,7 @@ private fun SuccessCard() {
             )
 
             Text(
-                text = "Заявка отправлена",
+                text = ochagText("Заявка отправлена"),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = BrownTextPrimary
@@ -775,7 +776,7 @@ private fun SuccessCard() {
             )
 
             Text(
-                text = "Теперь нужно дождаться подтверждения владельца семьи.",
+                text = ochagText("Теперь нужно дождаться подтверждения владельца семьи."),
                 textAlign = TextAlign.Center,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
@@ -794,7 +795,7 @@ private fun SuccessCard() {
             ) {
 
                 Text(
-                    text = "Ожидает подтверждения",
+                    text = ochagText("Ожидает подтверждения"),
                     modifier = Modifier.padding(
                         horizontal = 15.dp,
                         vertical = 7.dp
