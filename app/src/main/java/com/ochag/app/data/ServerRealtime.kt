@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,18 @@ data class ServerUserProfile(
     val normalizedPhone: String = ""
 )
 
+data class CallSignal(
+    val type: String,
+    val callId: String,
+    val senderName: String,
+    val chatId: Long,
+    val video: Boolean,
+    val sdp: String = "",
+    val sdpType: String = "",
+    val candidate: String = "",
+    val sdpMid: String = "",
+    val sdpMLineIndex: Int = 0
+)
 
 object ServerRealtime {
 
@@ -198,6 +211,10 @@ object ServerRealtime {
             StateFlow<Map<Long, Set<String>>> =
         _typingUsers
             .asStateFlow()
+
+    val callSignals = MutableSharedFlow<CallSignal>(
+        extraBufferCapacity = 64
+    )
 
 
     // =====================================================
@@ -489,6 +506,40 @@ object ServerRealtime {
         return currentSocket.send(
             json.toString()
         )
+    }
+
+
+    fun sendCallSignal(
+        type: String,
+        callId: String,
+        chatId: Long,
+        targets: List<String>,
+        video: Boolean,
+        sdp: String = "",
+        sdpType: String = "",
+        candidate: String = "",
+        sdpMid: String = "",
+        sdpMLineIndex: Int = 0
+    ): Boolean {
+        val currentSocket = socket ?: return false
+        if (!isConnected || callId.isBlank() || targets.isEmpty()) return false
+
+        val json = JSONObject()
+            .put("type", type)
+            .put("call_id", callId)
+            .put("chat_id", chatId)
+            .put("targets", JSONArray(targets))
+            .put("video", video)
+
+        if (sdp.isNotBlank()) json.put("sdp", sdp)
+        if (sdpType.isNotBlank()) json.put("sdp_type", sdpType)
+        if (candidate.isNotBlank()) {
+            json.put("candidate", candidate)
+            json.put("sdp_mid", sdpMid)
+            json.put("sdp_mline_index", sdpMLineIndex)
+        }
+
+        return currentSocket.send(json.toString())
     }
 
 
@@ -1622,6 +1673,32 @@ object ServerRealtime {
                                 _typingUsers.value =
                                     current
                             }
+                        }
+
+
+                        "call_invite",
+                        "call_accept",
+                        "call_reject",
+                        "call_end",
+                        "webrtc_offer",
+                        "webrtc_answer",
+                        "ice_candidate",
+                        "call_mute",
+                        "call_camera" -> {
+                            callSignals.tryEmit(
+                                CallSignal(
+                                    type = json.optString("type"),
+                                    callId = json.optString("call_id"),
+                                    senderName = json.optString("sender_name"),
+                                    chatId = json.optLong("chat_id", 0L),
+                                    video = json.optBoolean("video", false),
+                                    sdp = json.optString("sdp"),
+                                    sdpType = json.optString("sdp_type"),
+                                    candidate = json.optString("candidate"),
+                                    sdpMid = json.optString("sdp_mid"),
+                                    sdpMLineIndex = json.optInt("sdp_mline_index", 0)
+                                )
+                            )
                         }
 
 
