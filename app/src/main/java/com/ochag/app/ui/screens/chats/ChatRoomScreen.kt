@@ -96,19 +96,19 @@ private const val STICKER_IMAGE_CAPTION = "__STICKER_IMAGE__"
 private enum class MediaButtonMode { AUDIO, VIDEO }
 
 private enum class MessageFontStyle(val title: String, val family: FontFamily) {
-    NORMAL("Обычный", FontFamily.Default),
-    MODERN("Современный", FontFamily.SansSerif),
-    CLASSIC("Классический", FontFamily.Serif),
-    HANDWRITTEN("Рукописный", FontFamily.Cursive),
-    MONO("Печатный", FontFamily.Monospace)
+    NORMAL(ochagText("Обычный"), FontFamily.Default),
+    MODERN(ochagText("Современный"), FontFamily.SansSerif),
+    CLASSIC(ochagText("Классический"), FontFamily.Serif),
+    HANDWRITTEN(ochagText("Рукописный"), FontFamily.Cursive),
+    MONO(ochagText("Печатный"), FontFamily.Monospace)
 }
 
 private enum class MessageFontSize(val title: String, val sizeSp: Int) {
-    VERY_SMALL("Очень маленький", 12),
-    SMALL("Маленький", 14),
-    MEDIUM("Средний", 16),
-    LARGE("Большой", 19),
-    VERY_LARGE("Очень большой", 23)
+    VERY_SMALL(ochagText("Очень маленький"), 12),
+    SMALL(ochagText("Маленький"), 14),
+    MEDIUM(ochagText("Средний"), 16),
+    LARGE(ochagText("Большой"), 19),
+    VERY_LARGE(ochagText("Очень большой"), 23)
 }
 
 private const val FONT_PREFS = "ochag_message_font"
@@ -190,8 +190,8 @@ fun ChatRoomScreen(
 
     val headerStatusText = remember(onlineUsers, typingNames, currentChat, chatId) {
         if (typingNames.isNotEmpty()) {
-            if (typingNames.size == 1) "${typingNames.first()} печатает…"
-            else "${typingNames.size} печатают…"
+            if (typingNames.size == 1) ochagText("${typingNames.first()} печатает…")
+            else ochagText("${typingNames.size} печатают…")
         } else {
             buildChatHeaderPresenceText(currentChat, onlineUsers)
         }
@@ -250,7 +250,7 @@ fun ChatRoomScreen(
     fun sendCurrentLocation() {
         if (!locationGranted) {
             permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-            attachmentStatus = "Разрешите геолокацию и нажмите «Локация» ещё раз"
+            attachmentStatus = ochagText("Разрешите геолокацию и нажмите «Локация» ещё раз")
             return
         }
         try {
@@ -258,7 +258,7 @@ fun ChatRoomScreen(
             val location = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 ?: manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             if (location == null) {
-                attachmentStatus = "Включите GPS и попробуйте ещё раз"
+                attachmentStatus = ochagText("Включите GPS и попробуйте ещё раз")
                 return
             }
             coroutineScope.launch {
@@ -270,7 +270,7 @@ fun ChatRoomScreen(
             }
             attachmentStatus = ""
         } catch (_: SecurityException) {
-            attachmentStatus = "Нет разрешения на геолокацию"
+            attachmentStatus = ochagText("Нет разрешения на геолокацию")
         }
     }
 
@@ -355,7 +355,7 @@ fun ChatRoomScreen(
                 }
             }
         } catch (_: Exception) {
-            attachmentStatus = "Не удалось открыть контакт"
+            attachmentStatus = ochagText("Не удалось открыть контакт")
         }
     }
 
@@ -596,7 +596,7 @@ fun ChatRoomScreen(
                             onValueChange = { value ->
                                 pollOptions = pollOptions.toMutableList().also { it[index] = value }
                             },
-                            label = { Text("Вариант ${index + 1}") },
+                            label = { Text(ochagText("Вариант ${index + 1}")) },
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -696,9 +696,9 @@ fun ChatRoomScreen(
                 ) {
                     Text(
                         text = if (mediaButtonMode == MediaButtonMode.AUDIO) {
-                            "● Записывается голосовое…"
+                            ochagText("● Записывается голосовое…")
                         } else {
-                            "● Записывается видеокружок…"
+                            ochagText("● Записывается видеокружок…")
                         },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         color = TerracottaDark,
@@ -794,35 +794,35 @@ fun ChatRoomScreen(
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             DropdownMenuItem(
-                                text = { Text("📷  Фото", color = BrownTextPrimary) },
+                                text = { Text(ochagText("📷  Фото"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     imageLauncher.launch(arrayOf("image/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("📎  Файл", color = BrownTextPrimary) },
+                                text = { Text(ochagText("📎  Файл"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     fileLauncher.launch(arrayOf("*/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("📊  Опрос", color = BrownTextPrimary) },
+                                text = { Text(ochagText("📊  Опрос"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     showPollDialog = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("📍  Локация", color = BrownTextPrimary) },
+                                text = { Text(ochagText("📍  Локация"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     sendCurrentLocation()
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("📇  Контакт", color = BrownTextPrimary) },
+                                text = { Text(ochagText("📇  Контакт"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     val intent = Intent(
@@ -833,7 +833,7 @@ fun ChatRoomScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("✨  Хранитель Очага", color = BrownTextPrimary) },
+                                text = { Text(ochagText("✨  Хранитель Очага"), color = BrownTextPrimary) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     onKeeperClick()
@@ -867,8 +867,8 @@ fun ChatRoomScreen(
                         modifier = Modifier.weight(1f),
                         placeholder = {
                             Text(
-                                if (pendingAttachment != null) "Добавить подпись…"
-                                else "Сообщение…",
+                                if (pendingAttachment != null) ochagText("Добавить подпись…")
+                                else ochagText("Сообщение…"),
                                 color = BrownTextSecondary
                             )
                         },
@@ -1004,9 +1004,9 @@ fun ChatRoomScreen(
                                             }
                                         ),
                                         contentDescription = if (mediaButtonMode == MediaButtonMode.AUDIO) {
-                                            "Аудио"
+                                            ochagText("Аудио")
                                         } else {
-                                            "Видео"
+                                            ochagText("Видео")
                                         },
                                         modifier = Modifier.size(27.dp),
                                         tint = Color.Unspecified
@@ -1042,7 +1042,7 @@ private fun StickerPickerPanel(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Стикеры",
+                text = ochagText("Стикеры"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = BrownTextPrimary
@@ -1178,10 +1178,10 @@ private fun ChatGroupSettingsDialog(
         title = {
             Text(
                 when (chat.type) {
-                    ChatType.FAMILY -> "Семья"
-                    ChatType.GROUP -> "Настройки группы"
-                    ChatType.THEME -> "Настройки темы"
-                    ChatType.PRIVATE -> "Чат"
+                    ChatType.FAMILY -> ochagText("Семья")
+                    ChatType.GROUP -> ochagText("Настройки группы")
+                    ChatType.THEME -> ochagText("Настройки темы")
+                    ChatType.PRIVATE -> ochagText("Чат")
                 },
                 color = BrownTextPrimary,
                 fontWeight = FontWeight.Bold
@@ -1221,9 +1221,9 @@ private fun ChatGroupSettingsDialog(
                     ) {
                         Text(
                             if (avatarUri.isBlank()) {
-                                "Добавить аватарку группы"
+                                ochagText("Добавить аватарку группы")
                             } else {
-                                "Изменить аватарку группы"
+                                ochagText("Изменить аватарку группы")
                             }
                         )
                     }
@@ -1232,7 +1232,7 @@ private fun ChatGroupSettingsDialog(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    "${selectedMembers.size} участников",
+                    ochagText("${selectedMembers.size} участников"),
                     style = MaterialTheme.typography.titleSmall,
                     color = BrownTextSecondary
                 )
@@ -1284,7 +1284,7 @@ private fun ChatGroupSettingsDialog(
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
                                             member.firstOrNull { it.isLetterOrDigit() }
-                                                ?.uppercase() ?: "О",
+                                                ?.uppercase() ?: ochagText("О"),
                                             fontWeight = FontWeight.Bold,
                                             color = BrownTextPrimary
                                         )
@@ -1295,12 +1295,12 @@ private fun ChatGroupSettingsDialog(
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        if (isMe) "$member • вы" else member,
+                                        if (isMe) ochagText("$member • вы") else member,
                                         maxLines = 1,
                                         color = BrownTextPrimary
                                     )
                                     Text(
-                                        if (isOnline) "● В сети" else "○ Не в сети",
+                                        if (isOnline) ochagText("● В сети") else ochagText("○ Не в сети"),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (isOnline) OnlineGreen else BrownTextSecondary
                                     )
@@ -1346,11 +1346,11 @@ private fun ChatGroupSettingsDialog(
                         onSave(cleanTitle, finalMembers)
                     }
                 }
-            ) { Text("Сохранить", color = TerracottaPrimary) }
+            ) { Text(ochagText("Сохранить"), color = TerracottaPrimary) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = BrownTextSecondary)
             }
         }
     )
@@ -1361,7 +1361,7 @@ private fun buildChatHeaderPresenceText(
     onlineUsers: Set<String>
 ): String {
     if (chat == null) {
-        return if (ServerRealtime.isConnected) "● Подключено" else "○ Нет соединения"
+        return if (ServerRealtime.isConnected) ochagText("● Подключено") else ochagText("○ Нет соединения")
     }
 
     if (chat.type == ChatType.PRIVATE) {
@@ -1372,7 +1372,7 @@ private fun buildChatHeaderPresenceText(
         val isOnline = otherMember != null && onlineUsers.any {
             it.equals(otherMember, ignoreCase = true)
         }
-        return if (isOnline) "● В сети" else "○ Не в сети"
+        return if (isOnline) ochagText("● В сети") else ochagText("○ Не в сети")
     }
 
     val cleanMembers = chat.members
@@ -1385,9 +1385,9 @@ private fun buildChatHeaderPresenceText(
     }
 
     return if (cleanMembers.isNotEmpty()) {
-        "$onlineCount/${cleanMembers.size} в сети"
+        ochagText("$onlineCount/${cleanMembers.size} в сети")
     } else {
-        "0 в сети"
+        ochagText("0 в сети")
     }
 }
 
@@ -1446,7 +1446,7 @@ private fun ChatHeader(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
-                            chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
+                            chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
                             fontWeight = FontWeight.Bold,
                             color = BrownTextPrimary,
                             style = MaterialTheme.typography.titleMedium
@@ -1476,7 +1476,7 @@ private fun ChatHeader(
                     text = statusText,
                     style = MaterialTheme.typography.bodySmall,
                     color = if (
-                        statusText.contains("В сети") || statusText.contains("печатает")
+                        statusText.contains(ochagText("В сети")) || statusText.contains(ochagText("печатает"))
                     ) OnlineGreen else BrownTextSecondary
                 )
             }
@@ -1491,7 +1491,7 @@ private fun ChatHeader(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = "Аа",
+                        text = ochagText("Аа"),
                         color = TerracottaDark,
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold,
@@ -1529,10 +1529,10 @@ private fun MessageFontSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Шрифт сообщений", color = BrownTextPrimary) },
+        title = { Text(ochagText("Шрифт сообщений"), color = BrownTextPrimary) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Стиль", fontWeight = FontWeight.Bold, color = BrownTextPrimary)
+                Text(ochagText("Стиль"), fontWeight = FontWeight.Bold, color = BrownTextPrimary)
                 MessageFontStyle.values().forEach { item ->
                     Row(
                         modifier = Modifier
@@ -1551,7 +1551,7 @@ private fun MessageFontSettingsDialog(
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Размер — ${size.title}",
+                    ochagText("Размер — ${size.title}"),
                     fontWeight = FontWeight.Bold,
                     color = BrownTextPrimary
                 )
@@ -1567,8 +1567,8 @@ private fun MessageFontSettingsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Маленький", style = MaterialTheme.typography.labelSmall)
-                    Text("Большой", style = MaterialTheme.typography.labelSmall)
+                    Text(ochagText("Маленький"), style = MaterialTheme.typography.labelSmall)
+                    Text(ochagText("Большой"), style = MaterialTheme.typography.labelSmall)
                 }
 
                 Spacer(Modifier.height(10.dp))
@@ -1578,7 +1578,7 @@ private fun MessageFontSettingsDialog(
                     color = TerracottaPrimary
                 ) {
                     Text(
-                        text = "Привет! Так будут выглядеть сообщения.",
+                        text = ochagText("Привет! Так будут выглядеть сообщения."),
                         modifier = Modifier.padding(14.dp),
                         color = Color.White,
                         fontFamily = style.family,
@@ -1720,7 +1720,7 @@ private fun PendingAttachmentPreview(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    attachment.fileName.ifBlank { "Без имени" },
+                    attachment.fileName.ifBlank { ochagText("Без имени") },
                     color = BrownTextSecondary,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -2073,7 +2073,7 @@ private fun PollMessageContent(
             enabled = selectedOption != null && !voted,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (voted) "Голос отправлен" else "Проголосовать")
+            Text(if (voted) ochagText("Голос отправлен") else ochagText("Проголосовать"))
         }
     }
 }
