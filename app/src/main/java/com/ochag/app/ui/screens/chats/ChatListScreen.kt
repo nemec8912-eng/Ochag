@@ -230,13 +230,16 @@ fun ChatListScreen(
                         contentPadding = PaddingValues(top = 2.dp, bottom = 16.dp)
                     ) {
                         items(sortedChats, key = { it.id }) { chat ->
-                            val isOnline = isPrivateChatOnline(chat, normalizedOnlineUsers)
-                            val presenceText = buildPresenceText(chat, normalizedOnlineUsers)
+                            val displayChat = chat.copy(
+                                title = privateChatDisplayTitle(chat, currentUserName)
+                            )
+                            val isOnline = isPrivateChatOnline(displayChat, normalizedOnlineUsers)
+                            val presenceText = buildPresenceText(displayChat, normalizedOnlineUsers)
                             ChatCard(
-                                chat = chat,
+                                chat = displayChat,
                                 isOnline = isOnline,
                                 presenceText = presenceText,
-                                onClick = { onChatClick(chat.id, chat.title) }
+                                onClick = { onChatClick(displayChat.id, displayChat.title) }
                             )
                         }
                     }
@@ -513,4 +516,12 @@ private fun avatarText(chat: Chat): String = when (chat.type) {
     ChatType.THEME -> "✦"
     ChatType.GROUP -> "👥"
     ChatType.PRIVATE -> chat.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О")
+}
+
+
+private fun privateChatDisplayTitle(chat: Chat, currentUserName: String): String {
+    if (chat.type != ChatType.PRIVATE || chat.members.size <= 1) return chat.title
+    return chat.members.firstOrNull {
+        !it.equals(currentUserName, ignoreCase = true)
+    }?.trim()?.takeIf { it.isNotBlank() } ?: chat.title
 }
