@@ -1432,8 +1432,9 @@ async def login_account(payload: LoginRequest):
                    phone, phone_normalized
             FROM users
             WHERE login = ? COLLATE NOCASE
+               OR name = ? COLLATE NOCASE
             """,
-            (login,)
+            (login, str(payload.login or "").strip())
         ).fetchone()
 
     if row is None:
