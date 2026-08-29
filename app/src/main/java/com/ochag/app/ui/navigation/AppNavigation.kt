@@ -1,5 +1,6 @@
 package com.ochag.app.ui.navigation
 
+import com.ochag.app.ui.localization.ochagText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,10 @@ import com.ochag.app.ui.screens.chats.NewChatScreen
 import com.ochag.app.ui.screens.family.FamilyManagementScreen
 import com.ochag.app.ui.screens.family.MemberProfileScreen
 import com.ochag.app.ui.screens.stickers.StickerPacksScreen
+import com.ochag.app.ui.screens.ai.KeeperOfTheHearthScreen
+import com.ochag.app.ui.screens.calls.CallsScreen
+import com.ochag.app.ui.screens.contacts.ContactsScreen
+import com.ochag.app.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -33,9 +38,13 @@ sealed class Screen(val route: String) {
     object MemberProfile : Screen("profile/{name}")
     object MyProfile : Screen("my_profile")
     object Files : Screen("files")
+    object Calls : Screen("calls")
+    object Contacts : Screen("contacts")
+    object Settings : Screen("settings")
     object Stickers : Screen("stickers")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
+    object Keeper : Screen("keeper_of_the_hearth")
 }
 
 @Composable
@@ -71,8 +80,15 @@ fun AppNavigation() {
                 onFilesClick = {
                     navController.navigate(Screen.Files.route) { launchSingleTop = true }
                 },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
+                },
+                onContactsClick = {
+                    navController.navigate(Screen.Contacts.route) { launchSingleTop = true }
+                },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onStickersClick = { navController.navigate(Screen.Stickers.route) },
+                onSettingsClick = { navController.navigate(Screen.Settings.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
                     ServerRealtime.disconnect()
@@ -91,7 +107,55 @@ fun AppNavigation() {
                 },
                 onProfileClick = {
                     navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
                 }
+            )
+        }
+
+        composable(Screen.Calls.route) {
+            CallsScreen(
+                onChatsClick = {
+                    navController.navigate(Screen.Chats.route) { launchSingleTop = true }
+                },
+                onContactsClick = {
+                    navController.navigate(Screen.Contacts.route) { launchSingleTop = true }
+                },
+                onFilesClick = {
+                    navController.navigate(Screen.Files.route) { launchSingleTop = true }
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                }
+            )
+        }
+
+
+        composable(Screen.Contacts.route) {
+            ContactsScreen(
+                onChatsClick = {
+                    navController.navigate(Screen.Chats.route) { launchSingleTop = true }
+                },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
+                },
+                onFilesClick = {
+                    navController.navigate(Screen.Files.route) { launchSingleTop = true }
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
+                },
+                onContactClick = { name ->
+                    navController.navigate("profile/" + android.net.Uri.encode(name))
+                }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onStickersClick = { navController.navigate(Screen.Stickers.route) }
             )
         }
 
@@ -144,6 +208,12 @@ fun AppNavigation() {
                 onProfileClick = {
                     navController.navigate(Screen.MyProfile.route) { launchSingleTop = true }
                 },
+                onCallsClick = {
+                    navController.navigate(Screen.Calls.route) { launchSingleTop = true }
+                },
+                onContactsClick = {
+                    navController.navigate(Screen.Contacts.route) { launchSingleTop = true }
+                },
                 onChatClick = { id, _ -> navController.navigate("chat/$id") }
             )
         }
@@ -151,7 +221,7 @@ fun AppNavigation() {
         composable(Screen.ChatRoom.route) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId")?.toLongOrNull() ?: 0L
             val chat = ChatRepository.findChat(chatId)
-            val title = chat?.title ?: "Чат"
+            val title = chat?.title ?: ochagText("Чат")
 
             LaunchedEffect(chatId) {
                 if (chatId > 0L) {
@@ -173,6 +243,13 @@ fun AppNavigation() {
             ChatRoomWithMessageActions(
                 chatId = chatId,
                 chatTitle = title,
+                onKeeperClick = { navController.navigate(Screen.Keeper.route) },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Keeper.route) {
+            KeeperOfTheHearthScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -188,7 +265,7 @@ fun AppNavigation() {
 
             MemberProfileScreen(
                 name = name,
-                status = "Участник семьи",
+                status = ochagText("Участник семьи"),
                 onBackClick = { navController.popBackStack() },
                 onMessageClick = {
                     coroutineScope.launch {

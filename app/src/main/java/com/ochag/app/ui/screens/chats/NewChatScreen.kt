@@ -1,7 +1,10 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -80,7 +83,7 @@ fun NewChatScreen(
     val context = uiContext.applicationContext
     val coroutineScope = rememberCoroutineScope()
 
-    val currentUserName = OchagAppState.currentUser?.name?.trim().orEmpty().ifBlank { "Михаил" }
+    val currentUserName = OchagAppState.currentUser?.name?.trim().orEmpty().ifBlank { ochagText("Михаил") }
     val serverUsers by ServerRealtime.serverUsers.collectAsState()
     val serverProfiles by ServerRealtime.serverUserProfiles.collectAsState()
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
@@ -90,6 +93,21 @@ fun NewChatScreen(
     var title by remember { mutableStateOf("") }
     var searchText by remember { mutableStateOf("") }
     var errorText by remember { mutableStateOf("") }
+    var groupAvatarUri by remember { mutableStateOf<Uri?>(null) }
+
+    val groupAvatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                uiContext.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            groupAvatarUri = uri
+        }
+    }
 
     var contactsGranted by remember {
         mutableStateOf(
@@ -179,7 +197,7 @@ fun NewChatScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -192,22 +210,22 @@ fun NewChatScreen(
                         .size(44.dp)
                         .clickable(onClick = onBackClick),
                     shape = CircleShape,
-                    color = CardWhite,
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 3.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("←", color = BrownTextPrimary)
+                        Text("←", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
                 Spacer(Modifier.width(12.dp))
 
                 OchagSectionHeader(
-                    title = "Новый чат",
+                    title = ochagText("Новый чат"),
                     subtitle = if (selectedType == ChatType.PRIVATE) {
-                        "Выбери человека для личного диалога"
+                        ochagText("Выбери человека для личного диалога")
                     } else {
-                        "Собери своё пространство для общения"
+                        ochagText("Собери своё пространство для общения")
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -222,7 +240,7 @@ fun NewChatScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Личный",
+                        title = ochagText("Личный"),
                         selected = selectedType == ChatType.PRIVATE
                     ) {
                         selectedType = ChatType.PRIVATE
@@ -231,7 +249,7 @@ fun NewChatScreen(
                     }
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Группа",
+                        title = ochagText("Группа"),
                         selected = selectedType == ChatType.GROUP
                     ) {
                         selectedType = ChatType.GROUP
@@ -240,7 +258,7 @@ fun NewChatScreen(
                     }
                     TypePill(
                         modifier = Modifier.weight(1f),
-                        title = "Тема",
+                        title = ochagText("Тема"),
                         selected = selectedType == ChatType.THEME
                     ) {
                         selectedType = ChatType.THEME
@@ -258,23 +276,38 @@ fun NewChatScreen(
                         title = it
                         errorText = ""
                     },
-                    label = if (selectedType == ChatType.GROUP) "Название группы" else "Название темы",
-                    placeholder = "Например, Поездка летом"
+                    label = if (selectedType == ChatType.GROUP) ochagText("Название группы") else ochagText("Название темы"),
+                    placeholder = ochagText("Например, Поездка летом")
                 )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = { groupAvatarLauncher.launch(arrayOf("image/*")) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (groupAvatarUri == null) {
+                            ochagText("Добавить аватарку группы")
+                        } else {
+                            ochagText("Изменить аватарку группы ✓")
+                        }
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SourcePill(
-                    title = "В Очаге",
+                    title = ochagText("В Очаге"),
                     selected = selectedSource == MemberSource.OCHAG
                 ) {
                     selectedSource = MemberSource.OCHAG
                 }
 
                 SourcePill(
-                    title = "Контакты",
+                    title = ochagText("Контакты"),
                     selected = selectedSource == MemberSource.PHONE
                 ) {
                     selectedSource = MemberSource.PHONE
@@ -295,8 +328,8 @@ fun NewChatScreen(
             OchagTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                label = if (selectedSource == MemberSource.PHONE) "Поиск по контактам" else "Поиск участника",
-                placeholder = "Имя или номер"
+                label = if (selectedSource == MemberSource.PHONE) ochagText("Поиск по контактам") else ochagText("Поиск участника"),
+                placeholder = ochagText("Имя или номер")
             )
 
             Spacer(Modifier.height(12.dp))
@@ -306,21 +339,21 @@ fun NewChatScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (selectedMembers.isEmpty()) "Участники" else "Выбрано: ${selectedMembers.size}",
+                    text = if (selectedMembers.isEmpty()) ochagText("Участники") else "Выбрано: ${selectedMembers.size}",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = if (selectedSource == MemberSource.PHONE) {
-                        "${filteredPhoneContacts.size} контактов"
+                        ochagText("${filteredPhoneContacts.size} контактов")
                     } else {
-                        "${availableMembers.size} доступно"
+                        ochagText("${availableMembers.size} доступно")
                     },
                     style = MaterialTheme.typography.labelMedium,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -338,7 +371,7 @@ fun NewChatScreen(
 
                         MemberCard(
                             name = member,
-                            subtitle = if (isOnline) "В сети" else "Не в сети",
+                            subtitle = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                             online = isOnline,
                             selected = selected,
                             onClick = { toggleMember(member) }
@@ -353,17 +386,17 @@ fun NewChatScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Нужен доступ к контактам телефона",
+                                text = ochagText("Нужен доступ к контактам телефона"),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "Разреши доступ, чтобы находить близких по номеру телефона.",
-                                color = BrownTextSecondary
+                                text = ochagText("Разреши доступ, чтобы находить близких по номеру телефона."),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(Modifier.height(12.dp))
-                            OchagPrimaryButton(text = "Разрешить доступ") {
+                            OchagPrimaryButton(text = ochagText("Разрешить доступ")) {
                                 permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                             }
                         }
@@ -409,16 +442,16 @@ fun NewChatScreen(
 
             OchagPrimaryButton(
                 text = when (selectedType) {
-                    ChatType.PRIVATE -> "Открыть личный чат"
-                    ChatType.GROUP -> "Создать группу"
-                    ChatType.THEME -> "Создать тему"
-                    ChatType.FAMILY -> "Создать чат"
+                    ChatType.PRIVATE -> ochagText("Открыть личный чат")
+                    ChatType.GROUP -> ochagText("Создать группу")
+                    ChatType.THEME -> ochagText("Создать тему")
+                    ChatType.FAMILY -> ochagText("Создать чат")
                 }
             ) {
                 when (selectedType) {
                     ChatType.PRIVATE -> {
                         if (selectedMembers.isEmpty()) {
-                            errorText = "Выберите пользователя «Очага»"
+                            errorText = ochagText("Выберите пользователя «Очага»")
                             return@OchagPrimaryButton
                         }
                         val member = selectedMembers.first()
@@ -433,11 +466,11 @@ fun NewChatScreen(
 
                     ChatType.GROUP -> {
                         if (title.isBlank()) {
-                            errorText = "Введите название группы"
+                            errorText = ochagText("Введите название группы")
                             return@OchagPrimaryButton
                         }
                         if (selectedMembers.isEmpty()) {
-                            errorText = "Выберите участников"
+                            errorText = ochagText("Выберите участников")
                             return@OchagPrimaryButton
                         }
                         coroutineScope.launch {
@@ -447,13 +480,21 @@ fun NewChatScreen(
                                 type = ChatType.GROUP,
                                 selectedMembers = selectedMembers.toList()
                             )
+                            groupAvatarUri?.let { uri ->
+                                context.getSharedPreferences(
+                                    "ochag_group_avatars",
+                                    android.content.Context.MODE_PRIVATE
+                                ).edit()
+                                    .putString("group_avatar_${chat.id}", uri.toString())
+                                    .apply()
+                            }
                             onChatCreated(chat)
                         }
                     }
 
                     ChatType.THEME -> {
                         if (title.isBlank()) {
-                            errorText = "Введите название темы"
+                            errorText = ochagText("Введите название темы")
                             return@OchagPrimaryButton
                         }
                         coroutineScope.launch {
@@ -486,12 +527,12 @@ private fun TypePill(
             .height(48.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) TerracottaPrimary else CreamBackground
+        color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.background
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = title,
-                color = if (selected) Color.White else BrownTextPrimary,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -507,13 +548,13 @@ private fun SourcePill(
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) TerracottaSoft else CardWhite,
+        color = if (selected) TerracottaSoft else MaterialTheme.colorScheme.surface,
         shadowElevation = if (selected) 0.dp else 2.dp
     ) {
         Text(
             text = title,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            color = if (selected) TerracottaDark else BrownTextSecondary,
+            color = if (selected) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
         )
     }
@@ -552,12 +593,12 @@ private fun MemberCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (online) OnlineGreen else BrownTextSecondary
+                    color = if (online) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -603,17 +644,17 @@ private fun PhoneContactCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = contact.phone,
                     style = MaterialTheme.typography.bodySmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = if (registered) "В Очаге: $registeredName" else "Ещё не в Очаге",
+                    text = if (registered) "В Очаге: $registeredName" else ochagText("Ещё не в Очаге"),
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (registered) OnlineGreen else BrownTextSecondary
+                    color = if (registered) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -625,7 +666,7 @@ private fun PhoneContactCard(
                 )
             } else {
                 TextButton(onClick = onInvite) {
-                    Text("Пригласить", color = TerracottaDark)
+                    Text(ochagText("Пригласить"), color = TerracottaDark)
                 }
             }
         }

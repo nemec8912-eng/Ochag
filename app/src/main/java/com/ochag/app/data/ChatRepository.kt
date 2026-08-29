@@ -19,6 +19,8 @@ import java.util.Locale
 
 object ChatRepository {
 
+    const val FAVORITES_CHAT_ID = 999_999L
+
 
     val chats =
         mutableStateListOf<Chat>()
@@ -89,7 +91,23 @@ object ChatRepository {
                 }
 
 
-                dao.getAllChats()
+                var savedChats = dao.getAllChats()
+
+                if (savedChats.none { it.id == FAVORITES_CHAT_ID }) {
+                    val favorites = Chat(
+                        id = FAVORITES_CHAT_ID,
+                        title = "Избранные",
+                        type = ChatType.PRIVATE,
+                        lastMessage = "Личные сообщения",
+                        lastTime = "",
+                        unreadCount = 0,
+                        members = emptyList()
+                    )
+                    dao.insertChat(favorites.toEntity())
+                    savedChats = dao.getAllChats()
+                }
+
+                savedChats
             }
 
 
@@ -334,6 +352,15 @@ object ChatRepository {
             message = cleanText,
             time = currentTime
         )
+
+        if (chatId == FAVORITES_CHAT_ID) {
+            updateOutgoingStatus(
+                context = context,
+                messageId = messageId,
+                status = MessageStatus.READ
+            )
+            return
+        }
 
 
         val sent =
@@ -1627,36 +1654,29 @@ object ChatRepository {
                 }
             }
 
-        val safeTitle =
-            title
-                .trim()
-                .ifBlank {
-                    current
-                        ?.title
-                        ?: when (
-                            type
-                        ) {
-
-                            ChatType.FAMILY ->
-                                "Семья"
-
-                            ChatType.PRIVATE ->
-                                finalMembers
-                                    .firstOrNull {
-                                        !it.equals(
-                                            currentUser,
-                                            ignoreCase = true
-                                        )
-                                    }
-                                    ?: "Личный чат"
-
-                            ChatType.GROUP ->
-                                "Группа"
-
-                            ChatType.THEME ->
-                                "Тематический чат"
-                        }
+        val privateCompanion =
+            if (type == ChatType.PRIVATE && finalMembers.size > 1) {
+                finalMembers.firstOrNull {
+                    !it.equals(currentUser, ignoreCase = true)
                 }
+            } else {
+                null
+            }
+
+        val safeTitle =
+            privateCompanion
+                ?: title
+                    .trim()
+                    .ifBlank {
+                        current
+                            ?.title
+                            ?: when (type) {
+                                ChatType.FAMILY -> "Семья"
+                                ChatType.PRIVATE -> "Личный чат"
+                                ChatType.GROUP -> "Группа"
+                                ChatType.THEME -> "Тематический чат"
+                            }
+                    }
 
         val merged =
             if (

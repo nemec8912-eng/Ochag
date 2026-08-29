@@ -33,11 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.ochag.app.ui.theme.BorderSoft
-import com.ochag.app.ui.theme.BrownTextPrimary
-import com.ochag.app.ui.theme.BrownTextSecondary
-import com.ochag.app.ui.theme.CardCream
-import com.ochag.app.ui.theme.CardWhite
+import androidx.compose.ui.unit.sp
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.TerracottaPrimary
 import com.ochag.app.ui.theme.TerracottaSoft
@@ -59,7 +55,7 @@ fun OchagCard(
     Card(
         modifier = clickableModifier,
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation)
     ) {
         Box(modifier = Modifier.padding(contentPadding)) {
@@ -116,7 +112,7 @@ fun OchagTextField(
         label = { Text(label) },
         placeholder = {
             if (placeholder.isNotBlank()) {
-                Text(text = placeholder, color = BrownTextSecondary)
+                Text(text = placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         singleLine = singleLine,
@@ -127,12 +123,12 @@ fun OchagTextField(
             focusedBorderColor = TerracottaPrimary.copy(alpha = 0.50f),
             unfocusedBorderColor = Color.Transparent,
             focusedLabelColor = TerracottaPrimary,
-            unfocusedLabelColor = BrownTextSecondary,
-            focusedTextColor = BrownTextPrimary,
-            unfocusedTextColor = BrownTextPrimary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             cursorColor = TerracottaPrimary,
-            focusedContainerColor = CardCream,
-            unfocusedContainerColor = CardCream
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     )
 }
@@ -155,7 +151,7 @@ fun OchagAvatar(
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = name.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
-                    color = BrownTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -168,7 +164,7 @@ fun OchagAvatar(
                     .align(Alignment.BottomEnd)
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(CardWhite)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(3.dp)
             ) {
                 Box(
@@ -193,7 +189,7 @@ fun OchagSectionHeader(
             text = title,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            color = BrownTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         if (subtitle.isNotBlank()) {
@@ -201,7 +197,7 @@ fun OchagSectionHeader(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -219,7 +215,7 @@ fun OchagBottomBar(
             .fillMaxWidth()
             .height(78.dp),
         shape = RoundedCornerShape(30.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 12.dp,
         tonalElevation = 0.dp
     ) {
@@ -243,8 +239,10 @@ fun OchagBottomBar(
                 ) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (selected) TerracottaPrimary else BrownTextSecondary,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
                     )
 

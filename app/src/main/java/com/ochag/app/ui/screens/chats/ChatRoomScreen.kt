@@ -1,5 +1,7 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.calls.OchagWebRtcCallController
+import com.ochag.app.ui.localization.ochagText
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -9,8 +11,11 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
+import android.location.LocationManager
+import android.provider.ContactsContract
 import android.provider.OpenableColumns
 import android.widget.VideoView
+import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -45,11 +50,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,12 +72,6 @@ import com.ochag.app.data.MessageStatus
 import com.ochag.app.data.MessageType
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
-import com.ochag.app.ui.theme.BorderSoft
-import com.ochag.app.ui.theme.BrownTextPrimary
-import com.ochag.app.ui.theme.BrownTextSecondary
-import com.ochag.app.ui.theme.CardCream
-import com.ochag.app.ui.theme.CardWhite
-import com.ochag.app.ui.theme.CreamBackground
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.SoftGreenLight
 import com.ochag.app.ui.theme.TerracottaDark
@@ -87,8 +88,35 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val STICKER_EMOJI_PREFIX = "__STICKER_EMOJI__:"
 private const val STICKER_IMAGE_CAPTION = "__STICKER_IMAGE__"
+private const val POLL_VOTE_PREFIX = "__POLL_VOTE__:"
 
 private enum class MediaButtonMode { AUDIO, VIDEO }
+
+private enum class MessageFontStyle(val title: String, val family: FontFamily) {
+    NORMAL(ochagText("Обычный"), FontFamily.Default),
+    MODERN(ochagText("Современный"), FontFamily.SansSerif),
+    CLASSIC(ochagText("Классический"), FontFamily.Serif),
+    HANDWRITTEN(ochagText("Рукописный"), FontFamily.Cursive),
+    MONO(ochagText("Печатный"), FontFamily.Monospace)
+}
+
+private enum class MessageFontSize(val title: String, val sizeSp: Int) {
+    VERY_SMALL(ochagText("Очень маленький"), 12),
+    SMALL(ochagText("Маленький"), 14),
+    MEDIUM(ochagText("Средний"), 16),
+    LARGE(ochagText("Большой"), 19),
+    VERY_LARGE(ochagText("Очень большой"), 23)
+}
+
+private const val FONT_PREFS = "ochag_message_font"
+private const val FONT_STYLE_KEY = "font_style"
+private const val FONT_SIZE_KEY = "font_size"
+
+private data class PollVote(
+    val pollId: Long,
+    val voter: String,
+    val option: String
+)
 
 private data class PendingAttachment(
     val uri: Uri,
@@ -106,6 +134,7 @@ private data class ActiveVideoRecording(
 fun ChatRoomScreen(
     chatId: Long,
     chatTitle: String,
+    onKeeperClick: () -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -113,9 +142,46 @@ fun ChatRoomScreen(
     val lifecycleOwner = context as LifecycleOwner
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+    var currentGroupAvatarUri by remember(chatId) {
+        mutableStateOf(
+            appContext.getSharedPreferences(
+                "ochag_group_avatars",
+                Context.MODE_PRIVATE
+            ).getString("group_avatar_$chatId", "").orEmpty()
+        )
+    }
 
     var showChatSettings by remember { mutableStateOf(false) }
+    var showFontSettings by remember { mutableStateOf(false) }
     var showStickerPicker by remember { mutableStateOf(false) }
+
+    val fontPreferences = remember {
+        appContext.getSharedPreferences(FONT_PREFS, Context.MODE_PRIVATE)
+    }
+    var messageFontStyle by remember {
+        mutableStateOf(
+            runCatching {
+                MessageFontStyle.valueOf(
+                    fontPreferences.getString(
+                        FONT_STYLE_KEY,
+                        MessageFontStyle.NORMAL.name
+                    ) ?: MessageFontStyle.NORMAL.name
+                )
+            }.getOrDefault(MessageFontStyle.NORMAL)
+        )
+    }
+    var messageFontSize by remember {
+        mutableStateOf(
+            runCatching {
+                MessageFontSize.valueOf(
+                    fontPreferences.getString(
+                        FONT_SIZE_KEY,
+                        MessageFontSize.MEDIUM.name
+                    ) ?: MessageFontSize.MEDIUM.name
+                )
+            }.getOrDefault(MessageFontSize.MEDIUM)
+        )
+    }
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
     val typingUsers by ServerRealtime.typingUsers.collectAsState()
 
@@ -124,11 +190,20 @@ fun ChatRoomScreen(
         .filter { !it.equals(ServerRealtime.userName, ignoreCase = true) }
 
     val currentChat = ChatRepository.findChat(chatId)
+    val currentChatTitle = remember(currentChat, chatTitle, ServerRealtime.userName) {
+        if (currentChat?.type == ChatType.PRIVATE && currentChat.members.size > 1) {
+            currentChat.members.firstOrNull {
+                !it.equals(ServerRealtime.userName, ignoreCase = true)
+            }?.trim()?.takeIf { it.isNotBlank() } ?: currentChat.title
+        } else {
+            currentChat?.title ?: chatTitle
+        }
+    }
 
     val headerStatusText = remember(onlineUsers, typingNames, currentChat, chatId) {
         if (typingNames.isNotEmpty()) {
-            if (typingNames.size == 1) "${typingNames.first()} печатает…"
-            else "${typingNames.size} печатают…"
+            if (typingNames.size == 1) ochagText("${typingNames.first()} печатает…")
+            else ochagText("${typingNames.size} печатают…")
         } else {
             buildChatHeaderPresenceText(currentChat, onlineUsers)
         }
@@ -147,9 +222,14 @@ fun ChatRoomScreen(
     }
 
     var showAttachmentMenu by remember { mutableStateOf(false) }
+    var showPollDialog by remember { mutableStateOf(false) }
+    var pollQuestion by remember { mutableStateOf("") }
+    var pollOptions by remember { mutableStateOf(listOf("", "")) }
+    var attachmentStatus by remember { mutableStateOf("") }
     var pendingAttachment by remember { mutableStateOf<PendingAttachment?>(null) }
     var mediaButtonMode by remember { mutableStateOf(MediaButtonMode.AUDIO) }
     var isRecording by remember { mutableStateOf(false) }
+    var pendingCallVideo by remember { mutableStateOf<Boolean?>(null) }
 
     var microphoneGranted by remember {
         mutableStateOf(
@@ -165,11 +245,88 @@ fun ChatRoomScreen(
         )
     }
 
+    var locationGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
-        result[Manifest.permission.RECORD_AUDIO]?.let { microphoneGranted = it }
-        result[Manifest.permission.CAMERA]?.let { cameraGranted = it }
+        val micAllowed = result[Manifest.permission.RECORD_AUDIO] ?: microphoneGranted
+        val cameraAllowed = result[Manifest.permission.CAMERA] ?: cameraGranted
+        microphoneGranted = micAllowed
+        cameraGranted = cameraAllowed
+        result[Manifest.permission.ACCESS_FINE_LOCATION]?.let { locationGranted = it }
+
+        val requestedVideo = pendingCallVideo
+        if (requestedVideo != null && micAllowed && (!requestedVideo || cameraAllowed)) {
+            val targets = currentChat?.members.orEmpty().filter {
+                !it.equals(ServerRealtime.userName, ignoreCase = true)
+            }
+            OchagWebRtcCallController.startCall(
+                context = context,
+                chatId = chatId,
+                chatTitle = currentChatTitle,
+                targets = targets,
+                video = requestedVideo
+            )
+        }
+        pendingCallVideo = null
+    }
+
+    fun launchChatCall(video: Boolean) {
+        val hasPermissions = microphoneGranted && (!video || cameraGranted)
+        if (!hasPermissions) {
+            pendingCallVideo = video
+            permissionLauncher.launch(
+                if (video) {
+                    arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
+                } else {
+                    arrayOf(Manifest.permission.RECORD_AUDIO)
+                }
+            )
+            return
+        }
+        val targets = currentChat?.members.orEmpty().filter {
+            !it.equals(ServerRealtime.userName, ignoreCase = true)
+        }
+        OchagWebRtcCallController.startCall(
+            context = context,
+            chatId = chatId,
+            chatTitle = currentChat?.title ?: chatTitle,
+            targets = targets,
+            video = video
+        )
+    }
+
+    fun sendCurrentLocation() {
+        if (!locationGranted) {
+            permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+            attachmentStatus = ochagText("Разрешите геолокацию и нажмите «Локация» ещё раз")
+            return
+        }
+        try {
+            val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val location = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (location == null) {
+                attachmentStatus = ochagText("Включите GPS и попробуйте ещё раз")
+                return
+            }
+            coroutineScope.launch {
+                ChatRepository.sendMessage(
+                    context = appContext,
+                    chatId = chatId,
+                    text = "📍 Геолокация\nhttps://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}"
+                )
+            }
+            attachmentStatus = ""
+        } catch (_: SecurityException) {
+            attachmentStatus = ochagText("Нет разрешения на геолокацию")
+        }
     }
 
     var audioRecorder by remember { mutableStateOf<MediaRecorder?>(null) }
@@ -184,6 +341,11 @@ fun ChatRoomScreen(
         context = appContext,
         chatId = chatId
     ).collectAsState(initial = emptyList())
+
+    val pollVotes = remember(messages) { collectPollVotes(messages) }
+    val visibleMessages = remember(messages) {
+        messages.filterNot { isPollVoteMessage(it.text) }
+    }
 
     val serverUsers by ServerRealtime.serverUsers.collectAsState()
 
@@ -225,14 +387,56 @@ fun ChatRoomScreen(
         }
     }
 
+    val contactLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val name = cursor.getString(0).orEmpty()
+                    val number = cursor.getString(1).orEmpty()
+                    coroutineScope.launch {
+                        ChatRepository.sendMessage(
+                            context = appContext,
+                            chatId = chatId,
+                            text = "📇 $name\n$number"
+                        )
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            attachmentStatus = ochagText("Не удалось открыть контакт")
+        }
+    }
+
     LaunchedEffect(chatId) {
         ChatRepository.seedInitialMessages(appContext, chatId)
     }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+    LaunchedEffect(visibleMessages.size) {
+        if (visibleMessages.isNotEmpty()) {
+            listState.animateScrollToItem(visibleMessages.lastIndex)
         }
+    }
+
+    val requestedMessageId = MessageSelectionController.scrollToMessageId
+    LaunchedEffect(requestedMessageId, messages) {
+        val targetId = requestedMessageId ?: return@LaunchedEffect
+        val index = visibleMessages.indexOfFirst { it.id == targetId }
+        if (index >= 0) {
+            listState.animateScrollToItem(index)
+        }
+        MessageSelectionController.clearScrollRequest()
     }
 
     fun startAudioRecording(): Boolean {
@@ -399,6 +603,9 @@ fun ChatRoomScreen(
             chat = currentChat,
             serverUsers = serverUsers,
             onlineUsers = onlineUsers,
+            onAvatarChanged = { uri ->
+                currentGroupAvatarUri = uri
+            },
             onDismiss = { showChatSettings = false },
             onSave = { newTitle, newMembers ->
                 coroutineScope.launch {
@@ -414,13 +621,89 @@ fun ChatRoomScreen(
         )
     }
 
+    if (showFontSettings) {
+        MessageFontSettingsDialog(
+            selectedStyle = messageFontStyle,
+            selectedSize = messageFontSize,
+            onDismiss = { showFontSettings = false },
+            onSave = { style, size ->
+                messageFontStyle = style
+                messageFontSize = size
+                fontPreferences.edit()
+                    .putString(FONT_STYLE_KEY, style.name)
+                    .putString(FONT_SIZE_KEY, size.name)
+                    .apply()
+                showFontSettings = false
+            }
+        )
+    }
+
+    if (showPollDialog) {
+        AlertDialog(
+            onDismissRequest = { showPollDialog = false },
+            title = { Text(ochagText("Создать опрос")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = pollQuestion,
+                        onValueChange = { pollQuestion = it },
+                        label = { Text(ochagText("Название опроса")) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    pollOptions.forEachIndexed { index, option ->
+                        OutlinedTextField(
+                            value = option,
+                            onValueChange = { value ->
+                                pollOptions = pollOptions.toMutableList().also { it[index] = value }
+                            },
+                            label = { Text(ochagText("Вариант ${index + 1}")) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    if (pollOptions.size < 6) {
+                        TextButton(
+                            onClick = { pollOptions = pollOptions + "" }
+                        ) { Text(ochagText("＋ Добавить вариант")) }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = pollQuestion.isNotBlank() &&
+                        pollOptions.count { it.isNotBlank() } >= 2,
+                    onClick = {
+                        val options = pollOptions.filter { it.isNotBlank() }
+                        val pollText = buildString {
+                            append("📊 ОПРОС: ")
+                            append(pollQuestion.trim())
+                            options.forEachIndexed { index, option ->
+                                append("\n${index + 1}. ${option.trim()}")
+                            }
+                        }
+                        coroutineScope.launch {
+                            ChatRepository.sendMessage(appContext, chatId, pollText)
+                        }
+                        pollQuestion = ""
+                        pollOptions = listOf("", "")
+                        showPollDialog = false
+                    }
+                ) { Text(ochagText("Создать")) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPollDialog = false }) { Text(ochagText("Отмена")) }
+            }
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CreamBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ChatHeader(
+                chatId = chatId,
+                avatarUri = currentGroupAvatarUri,
                 chatTitle = currentChat?.title ?: chatTitle,
                 statusText = headerStatusText,
                 canOpenSettings = currentChat != null && currentChat.type != ChatType.PRIVATE,
@@ -428,6 +711,8 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
+                onAudioCallClick = { launchChatCall(false) },
+                onVideoCallClick = { launchChatCall(true) },
                 onBackClick = onBackClick
             )
 
@@ -440,8 +725,13 @@ fun ChatRoomScreen(
                 contentPadding = PaddingValues(top = 18.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(items = messages, key = { it.id }) { message ->
-                    MessageBubble(message)
+                items(items = visibleMessages, key = { it.id }) { message ->
+                    MessageBubble(
+                        message = message,
+                        fontStyle = messageFontStyle,
+                        fontSize = messageFontSize,
+                        pollVotes = pollVotes[message.id].orEmpty()
+                    )
                 }
             }
 
@@ -468,9 +758,9 @@ fun ChatRoomScreen(
                 ) {
                     Text(
                         text = if (mediaButtonMode == MediaButtonMode.AUDIO) {
-                            "● Записывается голосовое…"
+                            ochagText("● Записывается голосовое…")
                         } else {
-                            "● Записывается видеокружок…"
+                            ochagText("● Записывается видеокружок…")
                         },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         color = TerracottaDark,
@@ -484,6 +774,15 @@ fun ChatRoomScreen(
                 PendingAttachmentPreview(
                     attachment = attachment,
                     onRemove = { pendingAttachment = null }
+                )
+            }
+
+            if (attachmentStatus.isNotBlank()) {
+                Text(
+                    text = attachmentStatus,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -520,7 +819,7 @@ fun ChatRoomScreen(
                     .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
                 shape = RoundedCornerShape(30.dp),
-                color = CardWhite,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 14.dp,
                 tonalElevation = 0.dp
             ) {
@@ -553,21 +852,60 @@ fun ChatRoomScreen(
                         DropdownMenu(
                             expanded = showAttachmentMenu,
                             onDismissRequest = { showAttachmentMenu = false },
-                            containerColor = CardWhite,
+                            containerColor = MaterialTheme.colorScheme.surface,
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             DropdownMenuItem(
-                                text = { Text("📷  Фото", color = BrownTextPrimary) },
+                                text = { Text(ochagText("Фото"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     imageLauncher.launch(arrayOf("image/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("📎  Файл", color = BrownTextPrimary) },
+                                text = { Text(ochagText("Файл"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     fileLauncher.launch(arrayOf("*/*"))
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(ochagText("Опрос"), color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    showPollDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(ochagText("Локация"), color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    sendCurrentLocation()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(ochagText("Контакт"), color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    val intent = Intent(
+                                        Intent.ACTION_PICK,
+                                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+                                    )
+                                    contactLauncher.launch(intent)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(ochagText("Шрифт"), color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    showFontSettings = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(ochagText("Хранитель Очага"), color = MaterialTheme.colorScheme.onSurface) },
+                                onClick = {
+                                    showAttachmentMenu = false
+                                    onKeeperClick()
                                 }
                             )
                         }
@@ -583,7 +921,7 @@ fun ChatRoomScreen(
                                 showStickerPicker = !showStickerPicker
                             },
                         shape = CircleShape,
-                        color = if (showStickerPicker) TerracottaLight else CardCream
+                        color = if (showStickerPicker) TerracottaLight else MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("☺", fontSize = 24.sp, color = TerracottaDark)
@@ -598,9 +936,9 @@ fun ChatRoomScreen(
                         modifier = Modifier.weight(1f),
                         placeholder = {
                             Text(
-                                if (pendingAttachment != null) "Добавить подпись…"
-                                else "Сообщение…",
-                                color = BrownTextSecondary
+                                if (pendingAttachment != null) ochagText("Добавить подпись…")
+                                else ochagText("Сообщение…"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         shape = RoundedCornerShape(24.dp),
@@ -608,10 +946,10 @@ fun ChatRoomScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = CardCream,
-                            unfocusedContainerColor = CardCream,
-                            focusedTextColor = BrownTextPrimary,
-                            unfocusedTextColor = BrownTextPrimary,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             cursorColor = TerracottaPrimary
                         )
                     )
@@ -735,9 +1073,9 @@ fun ChatRoomScreen(
                                             }
                                         ),
                                         contentDescription = if (mediaButtonMode == MediaButtonMode.AUDIO) {
-                                            "Аудио"
+                                            ochagText("Аудио")
                                         } else {
-                                            "Видео"
+                                            ochagText("Видео")
                                         },
                                         modifier = Modifier.size(27.dp),
                                         tint = Color.Unspecified
@@ -762,7 +1100,7 @@ private fun StickerPickerPanel(
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 4.dp),
         shape = RoundedCornerShape(28.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         Column(
@@ -773,10 +1111,10 @@ private fun StickerPickerPanel(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Стикеры",
+                text = ochagText("Стикеры"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             LazyColumn(
@@ -788,7 +1126,7 @@ private fun StickerPickerPanel(
                         Text(
                             text = pack.title,
                             style = MaterialTheme.typography.labelLarge,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         if (pack.emojiStickers.isNotEmpty()) {
@@ -804,7 +1142,7 @@ private fun StickerPickerPanel(
                                                 .aspectRatio(1f)
                                                 .clickable { onEmojiClick(emoji) },
                                             shape = RoundedCornerShape(14.dp),
-                                            color = CardCream
+                                            color = MaterialTheme.colorScheme.surfaceVariant
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(emoji, fontSize = 28.sp)
@@ -855,9 +1193,31 @@ private fun ChatGroupSettingsDialog(
     chat: Chat,
     serverUsers: List<String>,
     onlineUsers: Set<String>,
+    onAvatarChanged: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: (String, List<String>) -> Unit
 ) {
+    val context = LocalContext.current
+    val avatarPrefs = remember {
+        context.getSharedPreferences("ochag_group_avatars", Context.MODE_PRIVATE)
+    }
+    var avatarUri by remember(chat.id) {
+        mutableStateOf(
+            avatarPrefs.getString("group_avatar_${chat.id}", "").orEmpty()
+        )
+    }
+    val avatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            takeReadPermission(context, uri)
+            avatarUri = uri.toString()
+            avatarPrefs.edit()
+                .putString("group_avatar_${chat.id}", avatarUri)
+                .apply()
+            onAvatarChanged(avatarUri)
+        }
+    }
     var title by remember(chat.id, chat.title) { mutableStateOf(chat.title) }
     var searchText by remember { mutableStateOf("") }
     val selectedMembers = remember(chat.id, chat.members) {
@@ -882,17 +1242,17 @@ private fun ChatGroupSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardWhite,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
                 when (chat.type) {
-                    ChatType.FAMILY -> "Семья"
-                    ChatType.GROUP -> "Настройки группы"
-                    ChatType.THEME -> "Настройки темы"
-                    ChatType.PRIVATE -> "Чат"
+                    ChatType.FAMILY -> ochagText("Семья")
+                    ChatType.GROUP -> ochagText("Настройки группы")
+                    ChatType.THEME -> ochagText("Настройки темы")
+                    ChatType.PRIVATE -> ochagText("Чат")
                 },
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -907,16 +1267,43 @@ private fun ChatGroupSettingsDialog(
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Название") },
+                    label = { Text(ochagText("Название")) },
                     shape = RoundedCornerShape(18.dp)
                 )
 
                 Spacer(Modifier.height(12.dp))
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (avatarUri.isNotBlank()) {
+                        UriImage(
+                            uri = Uri.parse(avatarUri),
+                            modifier = Modifier.size(56.dp).clip(CircleShape)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    OutlinedButton(
+                        onClick = { avatarLauncher.launch(arrayOf("image/*")) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            if (avatarUri.isBlank()) {
+                                ochagText("Добавить аватарку группы")
+                            } else {
+                                ochagText("Изменить аватарку группы")
+                            }
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
                 Text(
-                    "${selectedMembers.size} участников",
+                    ochagText("${selectedMembers.size} участников"),
                     style = MaterialTheme.typography.titleSmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -926,7 +1313,7 @@ private fun ChatGroupSettingsDialog(
                     onValueChange = { searchText = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Найти участника") },
+                    label = { Text(ochagText("Найти участника")) },
                     shape = RoundedCornerShape(18.dp)
                 )
 
@@ -950,7 +1337,7 @@ private fun ChatGroupSettingsDialog(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            color = CardCream
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Row(
                                 modifier = Modifier
@@ -966,9 +1353,9 @@ private fun ChatGroupSettingsDialog(
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
                                             member.firstOrNull { it.isLetterOrDigit() }
-                                                ?.uppercase() ?: "О",
+                                                ?.uppercase() ?: ochagText("О"),
                                             fontWeight = FontWeight.Bold,
-                                            color = BrownTextPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -977,14 +1364,14 @@ private fun ChatGroupSettingsDialog(
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        if (isMe) "$member • вы" else member,
+                                        if (isMe) ochagText("$member • вы") else member,
                                         maxLines = 1,
-                                        color = BrownTextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        if (isOnline) "● В сети" else "○ Не в сети",
+                                        if (isOnline) ochagText("● В сети") else ochagText("○ Не в сети"),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (isOnline) OnlineGreen else BrownTextSecondary
+                                        color = if (isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
@@ -1028,11 +1415,11 @@ private fun ChatGroupSettingsDialog(
                         onSave(cleanTitle, finalMembers)
                     }
                 }
-            ) { Text("Сохранить", color = TerracottaPrimary) }
+            ) { Text(ochagText("Сохранить"), color = TerracottaPrimary) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -1043,7 +1430,7 @@ private fun buildChatHeaderPresenceText(
     onlineUsers: Set<String>
 ): String {
     if (chat == null) {
-        return if (ServerRealtime.isConnected) "● Подключено" else "○ Нет соединения"
+        return if (ServerRealtime.isConnected) ochagText("● Подключено") else ochagText("○ Нет соединения")
     }
 
     if (chat.type == ChatType.PRIVATE) {
@@ -1054,7 +1441,7 @@ private fun buildChatHeaderPresenceText(
         val isOnline = otherMember != null && onlineUsers.any {
             it.equals(otherMember, ignoreCase = true)
         }
-        return if (isOnline) "● В сети" else "○ Не в сети"
+        return if (isOnline) ochagText("● В сети") else ochagText("○ Не в сети")
     }
 
     val cleanMembers = chat.members
@@ -1067,24 +1454,28 @@ private fun buildChatHeaderPresenceText(
     }
 
     return if (cleanMembers.isNotEmpty()) {
-        "$onlineCount/${cleanMembers.size} в сети"
+        ochagText("$onlineCount/${cleanMembers.size} в сети")
     } else {
-        "0 в сети"
+        ochagText("0 в сети")
     }
 }
 
 @Composable
 private fun ChatHeader(
+    chatId: Long,
+    avatarUri: String,
     chatTitle: String,
     statusText: String,
     canOpenSettings: Boolean,
     onSettingsClick: () -> Unit,
+    onAudioCallClick: () -> Unit,
+    onVideoCallClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 10.dp,
         tonalElevation = 0.dp
     ) {
@@ -1099,31 +1490,38 @@ private fun ChatHeader(
                     .size(44.dp)
                     .clickable(onClick = onBackClick),
                 shape = CircleShape,
-                color = CardCream
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         "‹",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
             Spacer(Modifier.width(10.dp))
 
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                color = SoftGreenLight
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
-                        fontWeight = FontWeight.Bold,
-                        color = BrownTextPrimary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+            if (avatarUri.isNotBlank()) {
+                UriImage(
+                    uri = Uri.parse(avatarUri),
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = SoftGreenLight
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
             }
 
@@ -1141,15 +1539,39 @@ private fun ChatHeader(
                     text = chatTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = statusText,
                     style = MaterialTheme.typography.bodySmall,
                     color = if (
-                        statusText.contains("В сети") || statusText.contains("печатает")
-                    ) OnlineGreen else BrownTextSecondary
+                        statusText.contains(ochagText("В сети")) || statusText.contains(ochagText("печатает"))
+                    ) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
+                onClick = onAudioCallClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_phone_call),
+                    contentDescription = ochagText("Аудиозвонок"),
+                    modifier = Modifier.size(22.dp),
+                    tint = TerracottaDark
+                )
+            }
+
+            IconButton(
+                onClick = onVideoCallClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_video_camera),
+                    contentDescription = ochagText("Видеозвонок"),
+                    modifier = Modifier.size(23.dp),
+                    tint = TerracottaDark
                 )
             }
 
@@ -1159,15 +1581,95 @@ private fun ChatHeader(
                         .size(42.dp)
                         .clickable(onClick = onSettingsClick),
                     shape = CircleShape,
-                    color = CardCream
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("•••", color = BrownTextSecondary)
+                        Text("•••", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun MessageFontSettingsDialog(
+    selectedStyle: MessageFontStyle,
+    selectedSize: MessageFontSize,
+    onDismiss: () -> Unit,
+    onSave: (MessageFontStyle, MessageFontSize) -> Unit
+) {
+    var style by remember(selectedStyle) { mutableStateOf(selectedStyle) }
+    var size by remember(selectedSize) { mutableStateOf(selectedSize) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(ochagText("Шрифт сообщений"), color = MaterialTheme.colorScheme.onSurface) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(ochagText("Стиль"), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                MessageFontStyle.values().forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { style = item }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = style == item,
+                            onClick = { style = item }
+                        )
+                        Text(item.title, fontFamily = item.family, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    ochagText("Размер — ${size.title}"),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Slider(
+                    value = size.ordinal.toFloat(),
+                    onValueChange = { value ->
+                        size = MessageFontSize.values()[value.toInt().coerceIn(0, 4)]
+                    },
+                    valueRange = 0f..4f,
+                    steps = 3
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(ochagText("Маленький"), style = MaterialTheme.typography.labelSmall)
+                    Text(ochagText("Большой"), style = MaterialTheme.typography.labelSmall)
+                }
+
+                Spacer(Modifier.height(10.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    color = TerracottaPrimary
+                ) {
+                    Text(
+                        text = ochagText("Привет! Так будут выглядеть сообщения."),
+                        modifier = Modifier.padding(14.dp),
+                        color = Color.White,
+                        fontFamily = style.family,
+                        fontSize = size.sizeSp.sp
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(style, size) }) { Text(ochagText("Сохранить")) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(ochagText("Отмена")) }
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    )
 }
 
 @Composable
@@ -1234,11 +1736,11 @@ private fun CameraCirclePreview(
                     .size(48.dp)
                     .clickable(enabled = !isRecording, onClick = onSwitchCamera),
                 shape = CircleShape,
-                color = CardWhite,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 5.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("↻", color = BrownTextPrimary)
+                    Text("↻", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -1271,7 +1773,7 @@ private fun PendingAttachmentPreview(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(24.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 5.dp
     ) {
         Row(
@@ -1287,14 +1789,14 @@ private fun PendingAttachmentPreview(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    if (attachment.type == MessageType.IMAGE) "Фото" else "Файл",
-                    color = BrownTextPrimary,
+                    if (attachment.type == MessageType.IMAGE) ochagText("Фото") else ochagText("Файл"),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    attachment.fileName.ifBlank { "Без имени" },
-                    color = BrownTextSecondary,
+                    attachment.fileName.ifBlank { ochagText("Без имени") },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -1304,10 +1806,10 @@ private fun PendingAttachmentPreview(
                     .size(38.dp)
                     .clickable(onClick = onRemove),
                 shape = CircleShape,
-                color = CardCream
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("✕", color = BrownTextSecondary)
+                    Text("✕", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -1316,8 +1818,14 @@ private fun PendingAttachmentPreview(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageBubble(message: Message) {
+private fun MessageBubble(
+    message: Message,
+    fontStyle: MessageFontStyle,
+    fontSize: MessageFontSize,
+    pollVotes: List<PollVote> = emptyList()
+) {
     val context = LocalContext.current
+    val bubbleScope = rememberCoroutineScope()
     val isImage = message.messageType == MessageType.IMAGE.name
     val isFile = message.messageType == MessageType.FILE.name
     val isAudio = message.messageType == MessageType.AUDIO.name
@@ -1325,14 +1833,16 @@ fun MessageBubble(message: Message) {
     val isEmojiSticker = message.messageType == MessageType.TEXT.name &&
         message.text.startsWith(STICKER_EMOJI_PREFIX)
     val isImageSticker = isImage && message.text == STICKER_IMAGE_CAPTION
+    val isPoll = message.messageType == MessageType.TEXT.name &&
+        message.text.startsWith("📊 ОПРОС:")
     val selected = MessageSelectionController.selectedIds.contains(message.id)
     val bubbleColor = when {
         selected && message.isMine -> TerracottaDark
         selected -> TerracottaLight
         message.isMine -> TerracottaPrimary
-        else -> CardWhite
+        else -> MaterialTheme.colorScheme.surface
     }
-    val bubbleText = if (message.isMine) Color.White else BrownTextPrimary
+    val bubbleText = if (message.isMine) Color.White else MaterialTheme.colorScheme.onSurface
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1346,10 +1856,12 @@ fun MessageBubble(message: Message) {
                     .size(26.dp)
                     .clickable { MessageSelectionController.toggle(message.id) },
                 shape = RoundedCornerShape(8.dp),
-                color = if (selected) TerracottaPrimary else CardWhite,
+                color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.surface,
                 border = BorderStroke(
                     width = 1.5.dp,
-                    color = if (selected) TerracottaPrimary else BorderSoft
+                    brush = SolidColor(
+                        if (selected) TerracottaPrimary else MaterialTheme.colorScheme.outline
+                    )
                 )
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -1379,7 +1891,7 @@ fun MessageBubble(message: Message) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             message.sender.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?",
-                            color = BrownTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -1389,7 +1901,7 @@ fun MessageBubble(message: Message) {
 
             Surface(
                 modifier = Modifier
-                    .widthIn(min = 82.dp, max = 292.dp)
+                    .widthIn(min = 48.dp, max = 270.dp)
                     .combinedClickable(
                         onClick = {
                             if (MessageSelectionController.isSelecting) {
@@ -1424,7 +1936,7 @@ fun MessageBubble(message: Message) {
                 shadowElevation = if (message.isMine) 0.dp else 4.dp,
                 tonalElevation = 0.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
                     if (!message.isMine) {
                         Text(
                             message.sender,
@@ -1438,21 +1950,26 @@ fun MessageBubble(message: Message) {
                     if (isEmojiSticker) {
                         Text(
                             text = message.text.removePrefix(STICKER_EMOJI_PREFIX),
-                            fontSize = 64.sp,
-                            lineHeight = 72.sp
+                            fontSize = 48.sp,
+                            lineHeight = 54.sp
                         )
                     } else if (isImage) {
                         UriImage(
                             uri = Uri.parse(message.attachmentUri),
                             modifier = if (isImageSticker) {
-                                Modifier.size(190.dp)
+                                Modifier.size(140.dp)
                             } else {
                                 Modifier.width(240.dp).height(180.dp)
                             }
                         )
                         if (message.text.isNotBlank() && !isImageSticker) {
                             Spacer(Modifier.height(8.dp))
-                            Text(message.text, color = bubbleText)
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
                         }
                     }
 
@@ -1474,14 +1991,14 @@ fun MessageBubble(message: Message) {
                             color = if (message.isMine) {
                                 Color.White.copy(alpha = 0.16f)
                             } else {
-                                CardCream
+                                MaterialTheme.colorScheme.surfaceVariant
                             },
                             contentColor = bubbleText
                         ) {
                             Row(modifier = Modifier.padding(12.dp)) {
                                 Text("📎 ", color = bubbleText)
                                 Text(
-                                    message.fileName.ifBlank { "Файл" },
+                                    message.fileName.ifBlank { ochagText("Файл") },
                                     color = bubbleText,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -1489,7 +2006,12 @@ fun MessageBubble(message: Message) {
                         }
                         if (message.text.isNotBlank()) {
                             Spacer(Modifier.height(8.dp))
-                            Text(message.text, color = bubbleText)
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
                         }
                     }
 
@@ -1497,11 +2019,34 @@ fun MessageBubble(message: Message) {
                     if (isVideo) VideoCirclePlayer(message)
 
                     if (message.messageType == MessageType.TEXT.name && !isEmojiSticker) {
-                        Text(
-                            message.text,
-                            color = bubbleText,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        if (isPoll) {
+                            PollMessageContent(
+                                message = message,
+                                textColor = bubbleText,
+                                votes = pollVotes,
+                                currentUserName = ServerRealtime.userName,
+                                onVote = { option ->
+                                    bubbleScope.launch {
+                                        ChatRepository.sendMessage(
+                                            context = context.applicationContext,
+                                            chatId = message.chatId,
+                                            text = encodePollVote(
+                                                pollId = message.id,
+                                                voter = ServerRealtime.userName,
+                                                option = option
+                                            )
+                                        )
+                                    }
+                                }
+                            )
+                        } else {
+                            Text(
+                                message.text,
+                                color = bubbleText,
+                                fontFamily = fontStyle.family,
+                                fontSize = fontSize.sizeSp.sp
+                            )
+                        }
                     }
 
                     Spacer(Modifier.height(6.dp))
@@ -1513,7 +2058,7 @@ fun MessageBubble(message: Message) {
                             color = if (message.isMine) {
                                 Color.White.copy(alpha = 0.78f)
                             } else {
-                                BrownTextSecondary
+                                MaterialTheme.colorScheme.onSurfaceVariant
                             }
                         )
 
@@ -1545,6 +2090,162 @@ fun MessageBubble(message: Message) {
             }
         }
     }
+}
+
+@Composable
+private fun PollMessageContent(
+    message: Message,
+    textColor: Color,
+    votes: List<PollVote>,
+    currentUserName: String,
+    onVote: (String) -> Unit
+) {
+    val lines = remember(message.text) { message.text.lines() }
+    val question = lines.firstOrNull()
+        ?.removePrefix("📊 ОПРОС:")
+        ?.trim()
+        .orEmpty()
+    val options = remember(message.text) {
+        lines.drop(1)
+            .map { it.replace(Regex("^\\d+\\.\\s*"), "").trim() }
+            .filter { it.isNotBlank() }
+    }
+    val myVote = votes.lastOrNull {
+        it.voter.equals(currentUserName, ignoreCase = true)
+    }?.option
+    var selectedOption by remember(message.id, myVote) {
+        mutableStateOf(myVote)
+    }
+    val voted = myVote != null
+    val totalVotes = votes.map { it.voter.lowercase() }.distinct().size
+
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Text(
+            text = "📊 $question",
+            color = textColor,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        options.forEach { option ->
+            val optionVotes = votes.count { it.option.equals(option, ignoreCase = true) }
+            val percent = if (totalVotes == 0) 0 else (optionVotes * 100 / totalVotes)
+            val selected = selectedOption.equals(option, ignoreCase = true)
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = !voted) { selectedOption = option },
+                shape = RoundedCornerShape(12.dp),
+                color = if (selected) {
+                    TerracottaLight
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.94f)
+                }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(
+                            selected = selected,
+                            enabled = !voted,
+                            onClick = { if (!voted) selectedOption = option }
+                        )
+                        Text(
+                            text = option,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "$percent%",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { percent / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = TerracottaPrimary,
+                        trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = ochagText("Голосов: $optionVotes"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = ochagText("Всего проголосовало: $totalVotes"),
+            color = textColor.copy(alpha = 0.85f),
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Button(
+            onClick = { selectedOption?.let(onVote) },
+            enabled = selectedOption != null && !voted,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (voted) ochagText("Ваш голос учтён") else ochagText("Проголосовать"))
+        }
+    }
+}
+
+private fun isPollVoteMessage(text: String): Boolean =
+    text.startsWith(POLL_VOTE_PREFIX) || text.startsWith("🗳 ")
+
+private fun encodePollVote(pollId: Long, voter: String, option: String): String {
+    fun encode(value: String): String = Base64.encodeToString(
+        value.toByteArray(Charsets.UTF_8),
+        Base64.URL_SAFE or Base64.NO_WRAP
+    )
+    return "$POLL_VOTE_PREFIX$pollId:${encode(voter)}:${encode(option)}"
+}
+
+private fun collectPollVotes(messages: List<Message>): Map<Long, List<PollVote>> {
+    val votesByPoll = linkedMapOf<Long, LinkedHashMap<String, PollVote>>()
+    var lastPollId: Long? = null
+
+    messages.forEach { message ->
+        if (message.text.startsWith("📊 ОПРОС:")) {
+            lastPollId = message.id
+            return@forEach
+        }
+
+        val vote = if (message.text.startsWith(POLL_VOTE_PREFIX)) {
+            val parts = message.text.removePrefix(POLL_VOTE_PREFIX).split(":", limit = 3)
+            if (parts.size == 3) {
+                try {
+                    fun decode(value: String) = String(
+                        Base64.decode(value, Base64.URL_SAFE or Base64.NO_WRAP),
+                        Charsets.UTF_8
+                    )
+                    PollVote(
+                        pollId = parts[0].toLong(),
+                        voter = decode(parts[1]),
+                        option = decode(parts[2])
+                    )
+                } catch (_: Exception) {
+                    null
+                }
+            } else null
+        } else if (message.text.startsWith("🗳 ") && lastPollId != null) {
+            PollVote(
+                pollId = lastPollId!!,
+                voter = message.sender,
+                option = message.text.substringAfter(": ", "").trim()
+            ).takeIf { it.option.isNotBlank() }
+        } else null
+
+        if (vote != null) {
+            val voterKey = vote.voter.trim().lowercase()
+            votesByPoll.getOrPut(vote.pollId) { linkedMapOf() }[voterKey] = vote
+        }
+    }
+
+    return votesByPoll.mapValues { it.value.values.toList() }
 }
 
 @Composable
@@ -1605,14 +2306,14 @@ private fun VoiceMessagePlayer(
 
         Column {
             Text(
-                "Голосовое сообщение",
-                color = if (isMine) Color.White else BrownTextPrimary,
+                ochagText("Голосовое сообщение"),
+                color = if (isMine) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 message.text,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isMine) Color.White.copy(alpha = 0.75f) else BrownTextSecondary
+                color = if (isMine) Color.White.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1673,7 +2374,7 @@ private fun VideoCirclePlayer(message: Message) {
                 Surface(
                     modifier = Modifier.size(54.dp),
                     shape = CircleShape,
-                    color = CardWhite.copy(alpha = 0.88f)
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text("▶", color = TerracottaPrimary)
@@ -1729,7 +2430,7 @@ private fun UriImage(
         Surface(
             modifier = modifier,
             shape = RoundedCornerShape(18.dp),
-            color = CardCream
+            color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -1760,3 +2461,5 @@ private fun getFileName(context: Context, uri: Uri): String {
     }
     return result
 }
+
+

@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.stickers
 
+import com.ochag.app.ui.localization.ochagText
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -49,7 +50,7 @@ fun StickerPacksScreen(
         pendingPackId = null
     }
 
-    Scaffold(containerColor = CreamBackground) { innerPadding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,23 +65,23 @@ fun StickerPacksScreen(
                             .size(44.dp)
                             .clickable(onClick = onBackClick),
                         shape = CircleShape,
-                        color = CardWhite,
+                        color = MaterialTheme.colorScheme.surface,
                         shadowElevation = 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text("‹", fontSize = 30.sp, color = BrownTextPrimary)
+                            Text("‹", fontSize = 30.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     Spacer(Modifier.width(12.dp))
                     OchagSectionHeader(
-                        title = "Стикеры",
-                        subtitle = "Свои стикерпаки для семейных чатов"
+                        title = ochagText("Стикеры"),
+                        subtitle = ochagText("Свои стикерпаки для семейных чатов")
                     )
                 }
             }
 
             item {
-                OchagPrimaryButton(text = "＋ Новый стикерпак") {
+                OchagPrimaryButton(text = ochagText("＋ Новый стикерпак")) {
                     showCreateDialog = true
                 }
             }
@@ -133,25 +134,25 @@ private fun StickerPackCard(
                         text = pack.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (pack.builtIn) {
-                            "Встроенный набор"
+                            ochagText("Встроенный набор")
                         } else {
-                            "${pack.imageUris.size} стикеров"
+                            ochagText("${pack.imageUris.size} стикеров")
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 if (!pack.builtIn) {
                     TextButton(onClick = onAddImages) {
-                        Text("Добавить", color = TerracottaPrimary)
+                        Text(ochagText("Добавить"), color = TerracottaPrimary)
                     }
                     TextButton(onClick = onDelete) {
-                        Text("Удалить", color = TerracottaDark)
+                        Text(ochagText("Удалить"), color = TerracottaDark)
                     }
                 }
             }
@@ -164,12 +165,12 @@ private fun StickerPackCard(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    color = CardCream
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Text(
-                        text = "Добавь PNG, JPG или WEBP — они появятся здесь и в чате.",
+                        text = ochagText("Добавь PNG, JPG или WEBP — они появятся здесь и в чате."),
                         modifier = Modifier.padding(16.dp),
-                        color = BrownTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -215,7 +216,7 @@ private fun StickerEmojiGrid(stickers: List<String>) {
                             .weight(1f)
                             .aspectRatio(1f),
                         shape = RoundedCornerShape(16.dp),
-                        color = CardCream
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(sticker, fontSize = 28.sp)
@@ -239,17 +240,17 @@ private fun CreateStickerPackDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardWhite,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(28.dp),
         title = {
-            Text("Новый стикерпак", color = BrownTextPrimary)
+            Text(ochagText("Новый стикерпак"), color = MaterialTheme.colorScheme.onSurface)
         },
         text = {
             OchagTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = "Название",
-                placeholder = "Например: Наш кот"
+                label = ochagText("Название"),
+                placeholder = ochagText("Например: Наш кот")
             )
         },
         confirmButton = {
@@ -257,12 +258,12 @@ private fun CreateStickerPackDialog(
                 enabled = title.isNotBlank(),
                 onClick = { onCreate(title) }
             ) {
-                Text("Создать", color = TerracottaPrimary)
+                Text(ochagText("Создать"), color = TerracottaPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -287,7 +288,7 @@ private fun StickerImage(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        color = CardCream
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         if (bitmap != null) {
             Image(

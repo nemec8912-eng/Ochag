@@ -1,7 +1,10 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,6 +38,8 @@ import java.util.Locale
 fun ChatListScreen(
     onFilesClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onChatClick: (Long, String) -> Unit = { _, _ -> }
 ) {
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
@@ -52,21 +62,27 @@ fun ChatListScreen(
             val matchesUnread = !unreadOnly || chat.unreadCount > 0
             matchesSearch && matchesUnread
         }
-        .sortedWith(compareByDescending<Chat> { it.lastActivityAt }.thenBy { it.id })
+        .sortedWith(
+            compareByDescending<Chat> { it.id == ChatRepository.FAVORITES_CHAT_ID }
+                .thenByDescending { it.lastActivityAt }
+                .thenBy { it.id }
+        )
 
-    val currentUserName = ServerRealtime.userName.ifBlank { "Очаг" }
+    val currentUserName = ServerRealtime.userName.ifBlank { ochagText("Очаг") }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Файлы", "Профиль"),
+                items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
                 selectedIndex = 0,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
                 when (index) {
-                    1 -> onFilesClick()
-                    2 -> onProfileClick()
+                    1 -> onContactsClick()
+                    2 -> onCallsClick()
+                    3 -> onFilesClick()
+                    4 -> onProfileClick()
                 }
             }
         }
@@ -88,9 +104,9 @@ fun ChatListScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 18.dp)
+                    .padding(horizontal = 12.dp)
             ) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -114,9 +130,9 @@ fun ChatListScreen(
                     Spacer(Modifier.width(10.dp))
 
                     Text(
-                        text = "Очаг",
+                        text = ochagText("Очаг"),
                         style = MaterialTheme.typography.titleMedium,
-                        color = BrownTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
 
@@ -131,45 +147,45 @@ fun ChatListScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
+                                text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 }
 
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "Чаты",
+                    text = ochagText("Чаты"),
                     style = MaterialTheme.typography.displaySmall,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(Modifier.height(4.dp))
 
                 Text(
                     text = when (connectionState) {
-                        ServerRealtime.ConnectionState.ONLINE -> "Только свои люди ♥"
-                        ServerRealtime.ConnectionState.CONNECTING -> "Собираем близких рядом…"
-                        ServerRealtime.ConnectionState.OFFLINE -> "Сообщения останутся рядом"
+                        ServerRealtime.ConnectionState.ONLINE -> ochagText("Только свои люди ♥")
+                        ServerRealtime.ConnectionState.CONNECTING -> ochagText("Собираем близких рядом…")
+                        ServerRealtime.ConnectionState.OFFLINE -> ochagText("Сообщения останутся рядом")
                     },
                     style = MaterialTheme.typography.bodyLarge,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(12.dp))
 
                 OchagTextField(
                     value = searchText,
                     onValueChange = { searchText = it },
-                    label = "Поиск",
-                    placeholder = "Чат, человек или сообщение"
+                    label = ochagText("Поиск"),
+                    placeholder = ochagText("Чат, человек или сообщение")
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -178,14 +194,14 @@ fun ChatListScreen(
                     Surface(
                         onClick = { unreadOnly = !unreadOnly },
                         shape = RoundedCornerShape(18.dp),
-                        color = if (unreadOnly) TerracottaSoft else CardWhite,
-                        border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else BorderSoft)
+                        color = if (unreadOnly) TerracottaSoft else MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else MaterialTheme.colorScheme.outline)
                     ) {
                         Text(
-                            text = if (unreadOnly) "● Непрочитанные" else "Непрочитанные",
+                            text = if (unreadOnly) ochagText("● Непрочитанные") else ochagText("Непрочитанные"),
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                             style = MaterialTheme.typography.labelLarge,
-                            color = if (unreadOnly) TerracottaDark else BrownTextSecondary
+                            color = if (unreadOnly) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -198,29 +214,32 @@ fun ChatListScreen(
                                 unreadOnly = false
                             }
                         ) {
-                            Text("Сбросить", color = TerracottaPrimary)
+                            Text(ochagText("Сбросить"), color = TerracottaPrimary)
                         }
                     }
                 }
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(6.dp))
 
                 if (sortedChats.isEmpty()) {
                     EmptyChatsState(filtered = searchText.isNotBlank() || unreadOnly)
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(13.dp),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 26.dp)
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                        contentPadding = PaddingValues(top = 2.dp, bottom = 16.dp)
                     ) {
                         items(sortedChats, key = { it.id }) { chat ->
-                            val isOnline = isPrivateChatOnline(chat, normalizedOnlineUsers)
-                            val presenceText = buildPresenceText(chat, normalizedOnlineUsers)
+                            val displayChat = chat.copy(
+                                title = privateChatDisplayTitle(chat, currentUserName)
+                            )
+                            val isOnline = isPrivateChatOnline(displayChat, normalizedOnlineUsers)
+                            val presenceText = buildPresenceText(displayChat, normalizedOnlineUsers)
                             ChatCard(
-                                chat = chat,
+                                chat = displayChat,
                                 isOnline = isOnline,
                                 presenceText = presenceText,
-                                onClick = { onChatClick(chat.id, chat.title) }
+                                onClick = { onChatClick(displayChat.id, displayChat.title) }
                             )
                         }
                     }
@@ -249,16 +268,16 @@ private fun EmptyChatsState(filtered: Boolean) {
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = if (filtered) "Ничего не нашли" else "Здесь будут ваши чаты",
+                text = if (filtered) ochagText("Ничего не нашли") else ochagText("Здесь будут ваши чаты"),
                 style = MaterialTheme.typography.titleLarge,
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(5.dp))
             Text(
-                text = if (filtered) "Попробуй изменить поиск" else "Начни разговор с близкими",
+                text = if (filtered) ochagText("Попробуй изменить поиск") else ochagText("Начни разговор с близкими"),
                 style = MaterialTheme.typography.bodyMedium,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -274,20 +293,30 @@ private fun ChatCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 17.dp, vertical = 17.dp),
+                .padding(horizontal = 13.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (chat.type == ChatType.PRIVATE) {
+            if (chat.id == ChatRepository.FAVORITES_CHAT_ID) {
+                Surface(
+                    modifier = Modifier.size(52.dp),
+                    shape = CircleShape,
+                    color = AvatarSand
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("★", fontSize = 24.sp, color = TerracottaPrimary)
+                    }
+                }
+            } else if (chat.type == ChatType.PRIVATE) {
                 OchagAvatar(
                     name = chat.title,
-                    size = 60.dp,
+                    size = 52.dp,
                     online = isOnline,
                     backgroundColor = avatarColor(chat.id)
                 )
@@ -295,7 +324,7 @@ private fun ChatCard(
                 GroupAvatar(chat)
             }
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(11.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -309,7 +338,7 @@ private fun ChatCard(
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = if (chat.unreadCount > 0) FontWeight.Bold else FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (chat.lastTime.isNotBlank()) {
@@ -317,7 +346,7 @@ private fun ChatCard(
                         Text(
                             text = chat.lastTime,
                             style = MaterialTheme.typography.labelMedium,
-                            color = BrownTextMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -329,10 +358,10 @@ private fun ChatCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else BrownTextMuted
+                    color = if (chat.type == ChatType.PRIVATE && isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(Modifier.height(9.dp))
+                Spacer(Modifier.height(5.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -341,17 +370,17 @@ private fun ChatCard(
                     Text(
                         text = chat.lastMessage.ifBlank {
                             when (chat.type) {
-                                ChatType.FAMILY -> "Семейный чат"
-                                ChatType.PRIVATE -> "Личный разговор"
-                                ChatType.GROUP -> "Групповой чат"
-                                ChatType.THEME -> "Тематический чат"
+                                ChatType.FAMILY -> ochagText("Семейный чат")
+                                ChatType.PRIVATE -> ochagText("Личный разговор")
+                                ChatType.GROUP -> ochagText("Групповой чат")
+                                ChatType.THEME -> ochagText("Тематический чат")
                             }
                         },
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     if (chat.unreadCount > 0) {
@@ -374,9 +403,23 @@ private fun ChatCard(
 
 @Composable
 private fun GroupAvatar(chat: Chat) {
+    val context = LocalContext.current
+    val avatarUri = context.getSharedPreferences(
+        "ochag_group_avatars",
+        android.content.Context.MODE_PRIVATE
+    ).getString("group_avatar_${chat.id}", "").orEmpty()
+
+    if (avatarUri.isNotBlank()) {
+        GroupAvatarImage(
+            uri = Uri.parse(avatarUri),
+            modifier = Modifier.size(52.dp)
+        )
+        return
+    }
+
     Surface(
-        modifier = Modifier.size(60.dp),
-        shape = RoundedCornerShape(22.dp),
+        modifier = Modifier.size(52.dp),
+        shape = CircleShape,
         color = when (chat.type) {
             ChatType.FAMILY -> AvatarPeach
             ChatType.GROUP -> AvatarSage
@@ -388,9 +431,39 @@ private fun GroupAvatar(chat: Chat) {
             Text(
                 text = avatarText(chat),
                 style = MaterialTheme.typography.headlineSmall,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+@Composable
+private fun GroupAvatarImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, uri) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = ochagText("Аватар группы"),
+            modifier = modifier.clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Surface(modifier = modifier, shape = CircleShape, color = AvatarSage) {}
     }
 }
 
@@ -402,8 +475,12 @@ private fun avatarColor(id: Long): Color = when ((id % 4).toInt()) {
 }
 
 private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
+    if (chat.id == ChatRepository.FAVORITES_CHAT_ID) {
+        return ochagText("Только для вас")
+    }
+
     if (chat.type == ChatType.PRIVATE) {
-        return if (isPrivateChatOnline(chat, onlineUsers)) "● В сети" else "Не в сети"
+        return if (isPrivateChatOnline(chat, onlineUsers)) ochagText("● В сети") else ochagText("Не в сети")
     }
 
     val normalizedMembers = chat.members
@@ -414,7 +491,7 @@ private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
     val onlineCount = normalizedMembers.count { onlineUsers.contains(it) }
     val totalCount = normalizedMembers.size
 
-    return if (totalCount > 0) "$onlineCount из $totalCount сейчас в сети" else "Пока никого в сети"
+    return if (totalCount > 0) "$onlineCount из $totalCount сейчас в сети" else ochagText("Пока никого в сети")
 }
 
 private fun isPrivateChatOnline(chat: Chat, onlineUsers: Set<String>): Boolean {
@@ -438,5 +515,13 @@ private fun avatarText(chat: Chat): String = when (chat.type) {
     ChatType.FAMILY -> "⌂"
     ChatType.THEME -> "✦"
     ChatType.GROUP -> "👥"
-    ChatType.PRIVATE -> chat.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О"
+    ChatType.PRIVATE -> chat.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О")
+}
+
+
+private fun privateChatDisplayTitle(chat: Chat, currentUserName: String): String {
+    if (chat.type != ChatType.PRIVATE || chat.members.size <= 1) return chat.title
+    return chat.members.firstOrNull {
+        !it.equals(currentUserName, ignoreCase = true)
+    }?.trim()?.takeIf { it.isNotBlank() } ?: chat.title
 }

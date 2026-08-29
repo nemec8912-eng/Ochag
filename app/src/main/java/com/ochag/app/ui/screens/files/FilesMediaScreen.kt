@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.files
 
+import com.ochag.app.ui.localization.ochagText
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -38,6 +39,8 @@ private enum class MediaTab {
 fun FilesMediaScreen(
     onBackClick: () -> Unit = {},
     onChatsClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
 
@@ -46,11 +49,13 @@ fun FilesMediaScreen(
     }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
 
         bottomBar = {
             FilesBottomBar(
                 onChatsClick = onChatsClick,
+                onContactsClick = onContactsClick,
+                onCallsClick = onCallsClick,
                 onProfileClick = onProfileClick
             )
         }
@@ -59,7 +64,7 @@ fun FilesMediaScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CreamBackground)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
         ) {
 
@@ -120,7 +125,7 @@ fun FilesMediaScreen(
                 item {
 
                     SectionTitle(
-                        title = "Недавние фото"
+                        title = ochagText("Недавние фото")
                     )
 
                     Spacer(
@@ -142,7 +147,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Видео и кружки"
+                        title = ochagText("Видео и кружки")
                     )
 
                     Spacer(
@@ -164,7 +169,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Голосовые сообщения"
+                        title = ochagText("Голосовые сообщения")
                     )
 
                     Spacer(
@@ -186,7 +191,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Документы"
+                        title = ochagText("Документы")
                     )
 
                     Spacer(
@@ -208,10 +213,10 @@ fun FilesMediaScreen(
                     )
 
                     Text(
-                        text = "Быстрые действия",
+                        text = ochagText("Быстрые действия"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(
@@ -248,7 +253,7 @@ private fun FilesHeader(
                 shape = RoundedCornerShape(23.dp)
             ),
         shape = RoundedCornerShape(23.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -270,7 +275,7 @@ private fun FilesHeader(
 
                 BackIcon(
                     modifier = Modifier.size(24.dp),
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -299,23 +304,23 @@ private fun FilesHeader(
             ) {
 
                 Text(
-                    text = "Семья",
+                    text = ochagText("Семья"),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
-                    text = "Файлы и медиа",
+                    text = ochagText("Файлы и медиа"),
                     fontSize = 12.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
-                color = CreamBackground
+                color = MaterialTheme.colorScheme.background
             ) {
 
                 Box(
@@ -324,7 +329,7 @@ private fun FilesHeader(
 
                     SearchIcon(
                         modifier = Modifier.size(21.dp),
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -341,7 +346,7 @@ private fun FilesHeader(
                 Text(
                     text = "⋮",
                     fontSize = 27.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -368,7 +373,7 @@ private fun MediaTabs(
                 shape = RoundedCornerShape(20.dp)
             ),
         shape = RoundedCornerShape(20.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -380,7 +385,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Фото",
+                title = ochagText("Фото"),
                 symbol = "▧",
                 selected = selectedTab == MediaTab.PHOTO,
                 onClick = {
@@ -390,7 +395,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Видео",
+                title = ochagText("Видео"),
                 symbol = "▶",
                 selected = selectedTab == MediaTab.VIDEO,
                 onClick = {
@@ -400,7 +405,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Кружки",
+                title = ochagText("Кружки"),
                 symbol = "◌",
                 selected = selectedTab == MediaTab.CIRCLES,
                 onClick = {
@@ -410,7 +415,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Голос",
+                title = ochagText("Голос"),
                 symbol = "♩",
                 selected = selectedTab == MediaTab.VOICE,
                 onClick = {
@@ -420,7 +425,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Файлы",
+                title = ochagText("Файлы"),
                 symbol = "□",
                 selected = selectedTab == MediaTab.DOCUMENTS,
                 onClick = {
@@ -467,7 +472,7 @@ private fun MediaTabButton(
                     if (selected) {
                         TerracottaPrimary
                     } else {
-                        BrownTextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     }
             )
 
@@ -478,7 +483,7 @@ private fun MediaTabButton(
                     if (selected) {
                         TerracottaDark
                     } else {
-                        BrownTextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 maxLines = 1
             )
@@ -506,11 +511,11 @@ private fun SectionTitle(
             modifier = Modifier.weight(1f),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = BrownTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
-            text = "Показать все  ›",
+            text = ochagText("Показать все  ›"),
             fontSize = 12.sp,
             color = TerracottaDark
         )
@@ -646,28 +651,28 @@ private fun VideoGrid() {
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Дочка",
+            title = ochagText("Дочка"),
             duration = "0:06",
             emoji = "👧"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Папа",
+            title = ochagText("Папа"),
             duration = "0:12",
             emoji = "🌅"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Мама",
+            title = ochagText("Мама"),
             duration = "0:09",
             emoji = "👩"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Вечер",
+            title = ochagText("Вечер"),
             duration = "0:15",
             emoji = "✨"
         )
@@ -690,7 +695,7 @@ private fun VideoCard(
                 RoundedCornerShape(15.dp)
             ),
         shape = RoundedCornerShape(15.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Column {
@@ -755,7 +760,7 @@ private fun VideoCard(
                     top = 5.dp
                 ),
                 fontSize = 10.sp,
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -779,19 +784,19 @@ private fun VoiceMessages() {
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:18",
-            subtitle = "Мама • 18:13"
+            subtitle = ochagText("Мама • 18:13")
         )
 
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:22",
-            subtitle = "Папа • Вчера"
+            subtitle = ochagText("Папа • Вчера")
         )
 
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:09",
-            subtitle = "Дочка • 3 дня"
+            subtitle = ochagText("Дочка • 3 дня")
         )
     }
 }
@@ -807,7 +812,7 @@ private fun VoiceCard(
         modifier = modifier
             .height(82.dp),
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.dp
     ) {
 
@@ -855,13 +860,13 @@ private fun VoiceCard(
             Text(
                 text = duration,
                 fontSize = 10.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Text(
                 text = subtitle,
                 fontSize = 8.sp,
-                color = BrownTextSecondary.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                     alpha = 0.75f
                 ),
                 maxLines = 1
@@ -939,16 +944,16 @@ private fun Documents() {
         DocumentCard(
             modifier = Modifier.weight(1f),
             extension = "PDF",
-            fileName = "План_ремонта_ванной.pdf",
-            info = "1.2 МБ • PDF",
+            fileName = ochagText("План_ремонта_ванной.pdf"),
+            info = ochagText("1.2 МБ • PDF"),
             accent = TerracottaPrimary
         )
 
         DocumentCard(
             modifier = Modifier.weight(1f),
             extension = "DOCX",
-            fileName = "Список_покупок.docx",
-            info = "120 КБ • DOCX",
+            fileName = ochagText("Список_покупок.docx"),
+            info = ochagText("120 КБ • DOCX"),
             accent = Color(0xFF6899C7)
         )
     }
@@ -967,7 +972,7 @@ private fun DocumentCard(
         modifier = modifier
             .height(85.dp),
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.dp
     ) {
 
@@ -1010,7 +1015,7 @@ private fun DocumentCard(
                 Text(
                     text = fileName,
                     fontSize = 10.sp,
-                    color = BrownTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1018,14 +1023,14 @@ private fun DocumentCard(
                 Text(
                     text = info,
                     fontSize = 8.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Text(
                 text = "↓",
                 fontSize = 18.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1047,25 +1052,25 @@ private fun QuickActions() {
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "▧",
-            title = "Открыть\nгалерею"
+            title = ochagText("Открыть\nгалерею")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "◉",
-            title = "Снять\nфото"
+            title = ochagText("Снять\nфото")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "◌",
-            title = "Записать\nкружок"
+            title = ochagText("Записать\nкружок")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "⌕",
-            title = "Прикрепить\nфайл"
+            title = ochagText("Прикрепить\nфайл")
         )
     }
 }
@@ -1082,7 +1087,7 @@ private fun QuickAction(
             .height(82.dp)
             .clickable { },
         shape = RoundedCornerShape(17.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
 
@@ -1096,7 +1101,7 @@ private fun QuickAction(
             Text(
                 text = icon,
                 fontSize = 24.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(
@@ -1107,7 +1112,7 @@ private fun QuickAction(
                 text = title,
                 fontSize = 9.sp,
                 lineHeight = 11.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -1121,6 +1126,8 @@ private fun QuickAction(
 @Composable
 private fun FilesBottomBar(
     onChatsClick: () -> Unit,
+    onContactsClick: () -> Unit,
+    onCallsClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
 
@@ -1137,7 +1144,7 @@ private fun FilesBottomBar(
                 shape = RoundedCornerShape(26.dp)
             ),
         shape = RoundedCornerShape(26.dp),
-        color = CardWhite
+        color = MaterialTheme.colorScheme.surface
     ) {
 
         Row(
@@ -1149,21 +1156,35 @@ private fun FilesBottomBar(
         ) {
 
             BottomItem(
-                title = "Чаты",
+                title = ochagText("Чаты"),
                 symbol = "◯",
                 selected = false,
                 onClick = onChatsClick
             )
 
             BottomItem(
-                title = "Файлы",
+                title = ochagText("Контакты"),
+                symbol = "♧",
+                selected = false,
+                onClick = onContactsClick
+            )
+
+            BottomItem(
+                title = ochagText("Звонки"),
+                symbol = "☎",
+                selected = false,
+                onClick = onCallsClick
+            )
+
+            BottomItem(
+                title = ochagText("Файлы"),
                 symbol = "▰",
                 selected = true,
                 onClick = {}
             )
 
             BottomItem(
-                title = "Профиль",
+                title = ochagText("Профиль"),
                 symbol = "♙",
                 selected = false,
                 onClick = onProfileClick
@@ -1184,12 +1205,12 @@ private fun BottomItem(
         if (selected) {
             TerracottaPrimary
         } else {
-            BrownTextSecondary
+            MaterialTheme.colorScheme.onSurfaceVariant
         }
 
     Column(
         modifier = Modifier
-            .width(82.dp)
+            .width(62.dp)
             .clickable {
                 onClick()
             },
@@ -1209,7 +1230,9 @@ private fun BottomItem(
 
         Text(
             text = title,
-            fontSize = 12.sp,
+            fontSize = 10.sp,
+            maxLines = 1,
+            softWrap = false,
             color = color
         )
 
@@ -1321,6 +1344,7 @@ private fun SearchIcon(
 private fun HomeFlameLogo(
     modifier: Modifier
 ) {
+    val logoCutoutColor = MaterialTheme.colorScheme.surface
 
     Canvas(
         modifier = modifier
@@ -1372,7 +1396,7 @@ private fun HomeFlameLogo(
         )
 
         drawCircle(
-            color = CardWhite,
+            color = logoCutoutColor,
             radius = size.width * 0.20f,
             center = Offset(
                 size.width * 0.50f,

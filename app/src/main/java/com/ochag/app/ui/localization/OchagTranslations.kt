@@ -1,0 +1,256 @@
+package com.ochag.app.ui.localization
+
+
+private val en = mapOf(
+    "Очаг" to "Hearth", "Чаты" to "Chats", "Контакты" to "Contacts",
+    "Звонки" to "Calls", "Файлы" to "Files", "Профиль" to "Profile",
+    "Поиск" to "Search", "Сбросить" to "Reset", "Непрочитанные" to "Unread",
+    "Ничего не нашли" to "Nothing found", "Здесь будут ваши чаты" to "Your chats will appear here",
+    "Попробуй изменить поиск" to "Try changing your search", "Начни разговор с близкими" to "Start a conversation with family",
+    "Семейный чат" to "Family chat", "Личный разговор" to "Private conversation",
+    "Групповой чат" to "Group chat", "Тематический чат" to "Topic chat",
+    "Только для вас" to "Only for you", "В сети" to "Online", "Не в сети" to "Offline",
+    "Гость" to "Guest", "Изменить тему" to "Change theme", "Режим приложения" to "App mode",
+    "Светлая" to "Light", "Тёмная" to "Dark", "Стиль приложения и чатов" to "App and chat style",
+    "Тёплая" to "Warm", "Современная" to "Modern", "Классическая" to "Classic",
+    "Готово" to "Done", "Язык приложения" to "App language", "Сохранить" to "Save",
+    "Отмена" to "Cancel", "Блокировка приложения" to "App lock", "Блокировка включена" to "App lock enabled",
+    "Автоматическая блокировка" to "Automatic lock", "Сразу после сворачивания" to "Immediately after minimizing",
+    "Через 1 минуту" to "After 1 minute", "Через 5 минут" to "After 5 minutes",
+    "Через 30 минут" to "After 30 minutes", "Только после полного закрытия" to "Only after fully closing",
+    "Отключить блокировку" to "Disable app lock", "Выберите способ защиты" to "Choose protection method",
+    "Пароль" to "Password", "Графический ключ" to "Pattern", "Нарисуйте ключ" to "Draw pattern",
+    "Повторите ключ" to "Repeat pattern", "Введите код или пароль" to "Enter code or password",
+    "Повторите" to "Repeat", "Минимум 4 точки или символа" to "At least 4 dots or characters",
+    "Включить" to "Enable", "Закрыть" to "Close", "Подключение…" to "Connecting…",
+    "Личное пространство в «Очаге»" to "Your personal space in Hearth",
+    "Владелец «Очага»" to "Hearth owner", "Внешний вид" to "Appearance",
+    "Настрой «Очаг» под себя" to "Personalize Hearth", "Тёмная тема" to "Dark theme",
+    "Светлая тема" to "Light theme", "Стиль шрифта" to "Font style",
+    "Тёплый" to "Warm", "Современный" to "Modern", "Классика" to "Classic",
+    "Размер текста всего приложения" to "Text size throughout the app",
+    "Очень маленький" to "Very small", "Маленький" to "Small", "Средний" to "Medium",
+    "Большой" to "Large", "Очень большой" to "Very large", "Семья" to "Family",
+    "Безопасность" to "Security", "Телефон" to "Phone", "Сохранить номер" to "Save number",
+    "Номер сохранён" to "Number saved", "Включена" to "Enabled", "Не включена" to "Disabled",
+    "Выйти из «Очага»" to "Sign out of Hearth", "Новый чат" to "New chat",
+    "Личный" to "Private", "Группа" to "Group", "Тема" to "Topic",
+    "Название группы" to "Group name", "Название темы" to "Topic name",
+    "Участники" to "Members", "Пригласить" to "Invite", "Создать группу" to "Create group",
+    "Создать тему" to "Create topic", "Создать чат" to "Create chat",
+    "Хранитель Очага" to "Keeper of the Hearth", "Выберите бесплатную нейросеть" to "Choose a free AI service",
+    "В Очаге" to "Inside Hearth", "Открыть отдельно" to "Open separately", "Отдельно" to "External",
+    "Введите PIN-код" to "Enter PIN", "Введите пароль" to "Enter password",
+    "Введите графический ключ" to "Enter pattern", "Код доступа" to "Access code",
+    "Неверный код или пароль" to "Incorrect code or password", "Открыть" to "Unlock",
+    "Сбросить рисунок" to "Reset pattern",
+    "Только свои люди ♥" to "Only your people ♥",
+    "Собираем близких рядом…" to "Bringing loved ones together…",
+    "Сообщения останутся рядом" to "Your messages stay close",
+    "Чат, человек или сообщение" to "Chat, person or message",
+    "● Непрочитанные" to "● Unread",
+    "Аватар группы" to "Group avatar",
+    "● В сети" to "● Online", "○ Не в сети" to "○ Offline",
+    "Обои и дополнительные цвета будут добавлены в следующем этапе." to "Wallpapers and additional colors will be added next.",
+    "Способ: цифровой PIN-код" to "Method: numeric PIN",
+    "Способ: пароль" to "Method: password", "Способ: графический ключ" to "Method: pattern",
+    "Приложение, чаты, сообщения и шрифт" to "App, chats, messages and font",
+    "Мягкая тёмная палитра" to "Soft dark palette", "Тёплая молочная палитра" to "Warm cream palette",
+    "Так будет выглядеть текст во всём приложении" to "This is how text will look throughout the app",
+    "Люди и всё общее" to "People and shared content", "Участники, роли и доступ" to "Members, roles and access",
+    "Стикеры" to "Stickers", "Встроенные и свои стикерпаки" to "Built-in and custom sticker packs",
+    "Пригласить близких" to "Invite family", "Добавить нового участника" to "Add a new member",
+    "Чтобы близкие могли найти тебя" to "So your family can find you",
+    "Сохраняю…" to "Saving…", "Защита личных переписок" to "Protect private conversations",
+    "Аватар профиля" to "Profile avatar",
+    "Выбери человека для личного диалога" to "Choose someone for a private chat",
+    "Собери своё пространство для общения" to "Create your own conversation space",
+    "Например, Поездка летом" to "For example, Summer trip",
+    "Добавить аватарку группы" to "Add group avatar", "Изменить аватарку группы ✓" to "Change group avatar ✓",
+    "Поиск по контактам" to "Search contacts", "Поиск участника" to "Search members",
+    "Имя или номер" to "Name or number", "Нужен доступ к контактам телефона" to "Phone contacts permission required",
+    "Разреши доступ, чтобы находить близких по номеру телефона." to "Allow access to find family by phone number.",
+    "Разрешить доступ" to "Allow access", "Открыть личный чат" to "Open private chat",
+    "Выберите пользователя «Очага»" to "Choose a Hearth user", "Введите название группы" to "Enter group name",
+    "Выберите участников" to "Choose members", "Введите название темы" to "Enter topic name",
+    "Ещё не в Очаге" to "Not in Hearth yet",
+    "Тексты, идеи, объяснения и помощь с задачами" to "Texts, ideas, explanations and task help",
+    "Поиск идей, работа с текстом и изображениями" to "Ideas, text and image assistance",
+    "Ответы, поиск и создание изображений" to "Answers, search and image creation",
+    "Поиск ответов в интернете с источниками" to "Web answers with sources",
+    "Работа с большими текстами и документами" to "Work with long texts and documents",
+    "‹ Назад" to "‹ Back", "‹ Выбор" to "‹ Choose",
+    "Нейросеть можно открыть прямо в «Очаге» или отдельно в браузере/её приложении." to "Open an AI service inside Hearth or separately in its app/browser.",
+    "Тёплое пространство\\nтолько для своих" to "A warm space\\nfor your people",
+    "Логин" to "Login", "Введите логин и пароль" to "Enter login and password",
+    "Неверный логин или пароль" to "Incorrect login or password", "Войти" to "Sign in",
+    "Регистрация по приглашению" to "Registration by invitation",
+    "Новый участник может войти\\nтолько по приглашению владельца" to "A new member can join\\nonly by the owner's invitation",
+    "Переписки и данные семьи защищены" to "Family chats and data are protected",
+    "Присоединиться" to "Join", "Вход в семейный «Очаг»" to "Enter the family Hearth",
+    "Добро пожаловать в «Очаг»" to "Welcome to Hearth",
+    "Регистрация доступна только\\nпо приглашению владельца семьи" to "Registration is available only\\nby the family owner's invitation",
+    "Вернуться ко входу" to "Back to sign in", "Код приглашения" to "Invitation code",
+    "Например: OCHAG-4821" to "Example: OCHAG-4821", "Формат кода правильный" to "Code format is valid",
+    "Код должен выглядеть как OCHAG-4821" to "The code must look like OCHAG-4821",
+    "Ваши данные" to "Your details", "Имя" to "Name", "Придумайте пароль" to "Create a password",
+    "Повторите пароль" to "Repeat password", "Минимум 6 символов" to "At least 6 characters",
+    "Пароли не совпадают" to "Passwords do not match",
+    "После регистрации владелец семьи получит заявку. Войти в «Очаг» получится только после его подтверждения." to "After registration, the family owner will receive a request. You can sign in after approval.",
+    "Отправить заявку" to "Send request",
+    "Никто не получит доступ к семейным чатам без разрешения владельца" to "Nobody can access family chats without the owner's permission",
+    "ЗАЯВКА ОТПРАВЛЕНА" to "REQUEST SENT", "Заявка отправлена" to "Request sent",
+    "Теперь нужно дождаться подтверждения владельца семьи." to "Now wait for the family owner's approval.",
+    "Ожидает подтверждения" to "Awaiting approval",
+    "Недавние фото" to "Recent photos", "Видео и кружки" to "Videos and video circles",
+    "Голосовые сообщения" to "Voice messages", "Документы" to "Documents",
+    "Быстрые действия" to "Quick actions", "Файлы и медиа" to "Files and media",
+    "Фото" to "Photos", "Видео" to "Video", "Кружки" to "Video circles", "Голос" to "Voice",
+    "Показать все  ›" to "Show all  ›", "Открыть\\nгалерею" to "Open\\ngallery",
+    "Снять\\nфото" to "Take\\nphoto", "Записать\\nкружок" to "Record\\ncircle",
+    "Прикрепить\\nфайл" to "Attach\\nfile",
+    "Семья и приглашения" to "Family and invitations",
+    "Только свои люди — доступ под твоим контролем" to "Only your people — access is under your control",
+    "Владелец семьи" to "Family owner", "Участники семьи" to "Family members", "Вы" to "You",
+    "Приглашения" to "Invitations", "Коды приглашения подключим отдельным шагом" to "Invitation codes will be added separately",
+    "Скоро" to "Soon", "Безопасность семьи" to "Family security",
+    "Вход новых участников будет происходить только после приглашения и подтверждения владельца." to "New members can join only after invitation and owner approval.",
+    "Участник семьи" to "Family member",
+    "Личная переписка доступна только внутри вашего семейного «Очага»." to "Private messaging is available only inside your family Hearth.",
+    "Написать сообщение" to "Send message", "Свои стикерпаки для семейных чатов" to "Your sticker packs for family chats",
+    "＋ Новый стикерпак" to "＋ New sticker pack", "Встроенный набор" to "Built-in pack",
+    "Добавить" to "Add", "Удалить" to "Delete",
+    "Добавь PNG, JPG или WEBP — они появятся здесь и в чате." to "Add PNG, JPG or WEBP files — they will appear here and in chat.",
+    "Новый стикерпак" to "New sticker pack", "Название" to "Name",
+    "Например: Наш кот" to "For example: Our cat", "Создать" to "Create"
+,
+    "Обычный" to "Regular", "Классический" to "Classic", "Рукописный" to "Handwritten",
+    "Печатный" to "Print", "Создать опрос" to "Create poll", "Название опроса" to "Poll question",
+    "＋ Добавить вариант" to "＋ Add option", "Создать" to "Create", "● Записывается голосовое…" to "● Recording voice…",
+    "● Записывается видеокружок…" to "● Recording video circle…", "📷  Фото" to "📷  Photo",
+    "📎  Файл" to "📎  File", "📊  Опрос" to "📊  Poll", "📍  Локация" to "📍  Location",
+    "📇  Контакт" to "📇  Contact", "✨  Хранитель Очага" to "✨  Keeper of the Hearth",
+    "Добавить подпись…" to "Add a caption…", "Сообщение…" to "Message…", "Аудио" to "Audio",
+    "Настройки группы" to "Group settings", "Настройки темы" to "Topic settings", "Чат" to "Chat",
+    "Название" to "Name", "Изменить аватарку группы" to "Change group avatar",
+    "Найти участника" to "Find member", "● Подключено" to "● Connected", "○ Нет соединения" to "○ Disconnected",
+    "печатает" to "typing", "Шрифт сообщений" to "Message font", "Стиль" to "Style",
+    "Привет! Так будут выглядеть сообщения." to "Hello! This is how messages will look.",
+    "Без имени" to "Unnamed", "Голос отправлен" to "Vote sent", "Проголосовать" to "Vote",
+    "Закреплённых сообщений нет" to "No pinned messages", "Открепить выбранные" to "Unpin selected",
+    "Ваше сообщение" to "Your message", "Редактировать" to "Edit", "Выделить" to "Select",
+    "Уже закреплено" to "Already pinned", "Закрепить в чате" to "Pin in chat", "Удалить" to "Delete",
+    "Редактировать сообщение" to "Edit message", "Удалить сообщение?" to "Delete message?",
+    "Сообщение будет удалено на этом устройстве. Серверное удаление у второго участника подключим отдельно." to "The message will be deleted on this device.",
+    "Полученное сообщение будет скрыто на этом устройстве." to "The received message will be hidden on this device.",
+    "Удалить выбранные?" to "Delete selected?", "Удалить все сообщения?" to "Delete all messages?",
+    "Вся история этого чата будет удалена с этого устройства." to "All chat history will be deleted from this device.",
+    "Удалить все" to "Delete all", "Нажимай на другие сообщения" to "Tap other messages",
+    "Снять все" to "Clear selection", "Все" to "All", "Очистить" to "Clear"
+,
+    "Выберите близкого человека для звонка" to "Choose a family member to call",
+    "Список контактов пока пуст" to "Your contact list is empty",
+    "Номер телефона не указан" to "Phone number not provided",
+    "Сначала добавьте номер телефона в профиле" to "Add a phone number in the profile first",
+    "Участники вашего семейного Очага" to "Members of your family Hearth",
+    "Поиск контакта" to "Search contacts",
+    "Контакты не найдены" to "No contacts found",
+    "Пока никого в сети" to "Nobody is online yet",
+    "Разрешите геолокацию и нажмите «Локация» ещё раз" to "Allow location access and tap Location again",
+    "Включите GPS и попробуйте ещё раз" to "Turn on GPS and try again",
+    "Нет разрешения на геолокацию" to "Location permission denied",
+    "Не удалось открыть контакт" to "Could not open contact",
+    "0 в сети" to "0 online",
+    "Вечер" to "Evening",
+    "Мама • Вчера" to "Мама • Yesterday",
+    "Настройки" to "Settings",
+    "Тема приложения" to "App theme",
+    "Изменяет оформление всего приложения" to "Changes the appearance of the entire app",
+    "Открыть и настроить стикерпаки" to "Open and manage sticker packs",
+    "Ввод проверяется автоматически" to "Your entry is checked automatically",
+    "Аа  Шрифт" to "Aa  Font",
+    "Файл" to "File",
+    "Опрос" to "Poll",
+    "Локация" to "Location",
+    "Контакт" to "Contact",
+    "Шрифт" to "Font",
+    "Видеозвонок" to "Video call",
+    "Аудиозвонок" to "Audio call",
+    "Подключение к звонку…" to "Connecting call…",
+    "Микрофон включён" to "Microphone on",
+    "Микрофон выключен" to "Microphone off",
+    "Камера включена" to "Camera on",
+    "Камера выключена" to "Camera off",
+    "Завершить звонок" to "End call",
+    "Входящий видеозвонок" to "Incoming video call",
+    "Входящий аудиозвонок" to "Incoming audio call",
+    "Принять" to "Accept",
+    "Отклонить" to "Decline",
+    "Ожидание видео…" to "Waiting for video…",
+    "Соединено" to "Connected"
+)
+
+private val common = mapOf(
+    "de" to mapOf("Чаты" to "Chats", "Контакты" to "Kontakte", "Звонки" to "Anrufe", "Файлы" to "Dateien", "Профиль" to "Profil", "Сохранить" to "Speichern", "Отмена" to "Abbrechen", "Язык приложения" to "App-Sprache", "Хранитель Очага" to "Hüter des Herdes"),
+    "fr" to mapOf("Чаты" to "Discussions", "Контакты" to "Contacts", "Звонки" to "Appels", "Файлы" to "Fichiers", "Профиль" to "Profil", "Сохранить" to "Enregistrer", "Отмена" to "Annuler", "Язык приложения" to "Langue de l’application", "Хранитель Очага" to "Gardien du foyer"),
+    "es" to mapOf("Чаты" to "Chats", "Контакты" to "Contactos", "Звонки" to "Llamadas", "Файлы" to "Archivos", "Профиль" to "Perfil", "Сохранить" to "Guardar", "Отмена" to "Cancelar", "Язык приложения" to "Idioma de la aplicación", "Хранитель Очага" to "Guardián del hogar"),
+    "zh" to mapOf("Чаты" to "聊天", "Контакты" to "联系人", "Звонки" to "通话", "Файлы" to "文件", "Профиль" to "个人资料", "Сохранить" to "保存", "Отмена" to "取消", "Язык приложения" to "应用语言", "Хранитель Очага" to "炉火守护者"),
+    "ja" to mapOf("Чаты" to "チャット", "Контакты" to "連絡先", "Звонки" to "通話", "Файлы" to "ファイル", "Профиль" to "プロフィール", "Сохранить" to "保存", "Отмена" to "キャンセル", "Язык приложения" to "アプリの言語", "Хранитель Очага" to "炉の守護者")
+)
+
+private fun englishDynamic(source: String): String {
+    en[source]?.let { return it }
+
+    return when {
+        source.startsWith("Тёплое пространство") ->
+            source.replace("Тёплое пространство", "A warm space")
+                .replace("только для своих", "for your people")
+        source.startsWith("Новый участник может войти") ->
+            source.replace("Новый участник может войти", "A new member can join")
+                .replace("только по приглашению владельца", "only by the owner's invitation")
+        source.startsWith("Регистрация доступна только") ->
+            source.replace("Регистрация доступна только", "Registration is available only")
+                .replace("по приглашению владельца семьи", "by the family owner's invitation")
+        Regex("""Вариант \\d+""").matches(source) ->
+            source.replace("Вариант", "Option")
+        Regex("""\\d+ участников""").matches(source) ->
+            source.replace("участников", "members")
+        Regex("""\\d+ контактов""").matches(source) ->
+            source.replace("контактов", "contacts")
+        Regex("""\\d+ доступно""").matches(source) ->
+            source.replace("доступно", "available")
+        source.endsWith(" • Вчера") ->
+            source.removeSuffix(" • Вчера") + " • Yesterday"
+        Regex(""".+ • \\d+ дня""").matches(source) ->
+            source.replace(" дня", " days")
+        source.endsWith(" • вы") ->
+            source.removeSuffix(" • вы") + " • you"
+        Regex("""\\d+/\\d+ в сети""").matches(source) ->
+            source.replace("в сети", "online")
+        source.endsWith(" печатает…") ->
+            source.removeSuffix(" печатает…") + " is typing…"
+        source.endsWith(" печатают…") ->
+            source.removeSuffix(" печатают…") + " are typing…"
+        source.startsWith("Размер — ") ->
+            "Size — " + source.removePrefix("Размер — ")
+        source.startsWith("Закреплено сообщений: ") ->
+            "Pinned messages: " + source.removePrefix("Закреплено сообщений: ")
+        source.startsWith("Закреплённые сообщения (") ->
+            source.replace("Закреплённые сообщения", "Pinned messages")
+        source.startsWith("Сообщение от ") ->
+            "Message from " + source.removePrefix("Сообщение от ")
+        source.startsWith("Будет удалено сообщений: ") ->
+            "Messages to delete: " + source.removePrefix("Будет удалено сообщений: ")
+        source.startsWith("Выбрано: ") ->
+            "Selected: " + source.removePrefix("Выбрано: ")
+        else -> source
+    }
+}
+
+fun ochagText(source: String): String {
+    return when (OchagLocaleController.language) {
+        "en" -> englishDynamic(source)
+        "ru" -> source
+        else -> common[OchagLocaleController.language]?.get(source) ?: englishDynamic(source)
+    }
+}

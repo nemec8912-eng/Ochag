@@ -1,6 +1,13 @@
 package com.ochag.app.ui.screens.profile
 
+import com.ochag.app.ui.localization.ochagText
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,7 +18,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,19 +40,19 @@ import com.ochag.app.ui.theme.*
 @Composable
 fun ProfileScreen(
     onChatsClick: () -> Unit = {},
+    onContactsClick: () -> Unit = {},
+    onCallsClick: () -> Unit = {},
     onFilesClick: () -> Unit = {},
     onFamilyClick: () -> Unit = {},
     onInviteClick: () -> Unit = {},
     onStickersClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     val user = OchagAppState.currentUser
-    val userName = user?.name ?: "Гость"
+    val userName = user?.name ?: ochagText("Гость")
     val profiles by ServerRealtime.serverUserProfiles.collectAsState()
     val connectionState by ServerRealtime.connectionState.collectAsState()
-    val darkTheme = OchagThemeController.isDarkTheme
-    val fontStyle = OchagThemeController.fontStyle
-    val messageFontSizeLevel = OchagThemeController.messageFontSizeLevel
 
     val serverPhone = profiles
         .firstOrNull { it.name.equals(userName, ignoreCase = true) }
@@ -51,26 +63,57 @@ fun ProfileScreen(
     var saveStatus by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val profilePreferences = remember(userName) {
+        context.getSharedPreferences(
+            "ochag_profile_settings_$userName",
+            android.content.Context.MODE_PRIVATE
+        )
+    }
+    var profileAvatarUri by remember(userName) {
+        mutableStateOf(
+            profilePreferences.getString("profile_avatar", "").orEmpty()
+        )
+    }
+    val profileAvatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            profileAvatarUri = uri.toString()
+            profilePreferences.edit()
+                .putString("profile_avatar", profileAvatarUri)
+                .apply()
+        }
+    }
+
     LaunchedEffect(Unit) { ServerRealtime.requestServerUsers() }
 
     val online = connectionState == ServerRealtime.ConnectionState.ONLINE
     val statusText = when (connectionState) {
-        ServerRealtime.ConnectionState.ONLINE -> "В сети"
-        ServerRealtime.ConnectionState.CONNECTING -> "Подключение…"
-        ServerRealtime.ConnectionState.OFFLINE -> "Не в сети"
+        ServerRealtime.ConnectionState.ONLINE -> ochagText("В сети")
+        ServerRealtime.ConnectionState.CONNECTING -> ochagText("Подключение…")
+        ServerRealtime.ConnectionState.OFFLINE -> ochagText("Не в сети")
     }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Файлы", "Профиль"),
-                selectedIndex = 2,
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
+                selectedIndex = 4,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
                 when (index) {
                     0 -> onChatsClick()
-                    1 -> onFilesClick()
+                    1 -> onContactsClick()
+                    2 -> onCallsClick()
+                    3 -> onFilesClick()
                 }
             }
         }
@@ -95,16 +138,34 @@ fun ProfileScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
-                Text(
-                    text = "Профиль",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = BrownTextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = ochagText("Профиль"),
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Surface(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clickable(onClick = onSettingsClick),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("⚙", style = MaterialTheme.typography.headlineSmall)
+                        }
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Личное пространство в «Очаге»",
+                    text = ochagText("Личное пространство в «Очаге»"),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(22.dp))
@@ -119,16 +180,26 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Box {
-                            OchagAvatar(
-                                name = userName,
-                                size = 104.dp,
-                                online = online,
-                                backgroundColor = AvatarPeach
-                            )
+                            if (profileAvatarUri.isNotBlank()) {
+                                ProfileAvatarImage(
+                                    uri = Uri.parse(profileAvatarUri),
+                                    modifier = Modifier.size(104.dp)
+                                )
+                            } else {
+                                OchagAvatar(
+                                    name = userName,
+                                    size = 104.dp,
+                                    online = online,
+                                    backgroundColor = AvatarPeach
+                                )
+                            }
                             Surface(
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .size(34.dp),
+                                    .size(34.dp)
+                                    .clickable {
+                                        profileAvatarLauncher.launch(arrayOf("image/*"))
+                                    },
                                 shape = CircleShape,
                                 color = TerracottaPrimary,
                                 shadowElevation = 2.dp
@@ -144,7 +215,7 @@ fun ProfileScreen(
                         Text(
                             text = userName,
                             style = MaterialTheme.typography.headlineMedium,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(Modifier.height(6.dp))
@@ -153,13 +224,13 @@ fun ProfileScreen(
                             Surface(
                                 modifier = Modifier.size(8.dp),
                                 shape = CircleShape,
-                                color = if (online) OnlineGreen else BorderSoft
+                                color = if (online) OnlineGreen else MaterialTheme.colorScheme.outline
                             ) {}
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = statusText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = if (online) OnlineGreen else BrownTextSecondary
+                                color = if (online) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -170,7 +241,7 @@ fun ProfileScreen(
                                 color = TerracottaSoft
                             ) {
                                 Text(
-                                    text = "Владелец «Очага»",
+                                    text = ochagText("Владелец «Очага»"),
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = TerracottaDark,
@@ -182,136 +253,14 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle("Внешний вид", "Настрой «Очаг» под себя")
-                Spacer(Modifier.height(10.dp))
-
-                OchagCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 2.dp,
-                    contentPadding = PaddingValues(18.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(48.dp),
-                                shape = RoundedCornerShape(17.dp),
-                                color = if (darkTheme) TerracottaSoft else SoftGreenLight
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = if (darkTheme) "☾" else "☀",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = BrownTextPrimary
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (darkTheme) "Тёмная тема" else "Светлая тема",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = BrownTextPrimary
-                                )
-                                Text(
-                                    text = if (darkTheme) "Мягкая тёмная палитра" else "Тёплая молочная палитра",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = BrownTextSecondary
-                                )
-                            }
-
-                            ThemeToggle(
-                                checked = darkTheme,
-                                onClick = { OchagThemeController.setDarkTheme(!darkTheme) }
-                            )
-                        }
-
-                        HorizontalDivider(color = DividerSoft)
-
-                        Text(
-                            text = "Стиль шрифта",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = BrownTextPrimary
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)
-                        ) {
-                            FontChoice("Тёплый", fontStyle == OchagFontStyle.WARM, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.WARM)
-                            }
-                            FontChoice("Современный", fontStyle == OchagFontStyle.MODERN, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.MODERN)
-                            }
-                            FontChoice("Классика", fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC)
-                            }
-                        }
-
-                        HorizontalDivider(color = DividerSoft)
-
-                        Text(
-                            text = "Размер текста сообщений",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = BrownTextPrimary
-                        )
-                        Text(
-                            text = when (messageFontSizeLevel) {
-                                1 -> "Очень маленький"
-                                2 -> "Маленький"
-                                3 -> "Средний"
-                                4 -> "Большой"
-                                else -> "Очень большой"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = BrownTextSecondary
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            (1..5).forEach { level ->
-                                FontSizeChoice(
-                                    level = level,
-                                    selected = messageFontSizeLevel == level,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    OchagThemeController.setMessageFontSizeLevel(level)
-                                }
-                            }
-                        }
-
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            color = CardCream
-                        ) {
-                            Text(
-                                text = "Так будет выглядеть сообщение в чате",
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = BrownTextPrimary
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(18.dp))
-                SectionTitle("Семья", "Люди и всё общее")
+                SectionTitle(ochagText("Семья"), ochagText("Люди и всё общее"))
                 Spacer(Modifier.height(8.dp))
 
-                ProfileAction("♡", "Семья", "Участники, роли и доступ", AvatarSage, onFamilyClick)
-                ProfileAction("✦", "Стикеры", "Встроенные и свои стикерпаки", AvatarSand, onStickersClick)
-                ProfileAction("＋", "Пригласить близких", "Добавить нового участника", AvatarRose, onInviteClick)
+                ProfileAction("♡", ochagText("Семья"), ochagText("Участники, роли и доступ"), AvatarSage, onFamilyClick)
+                ProfileAction("＋", ochagText("Пригласить близких"), ochagText("Добавить нового участника"), AvatarRose, onInviteClick)
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle("Контакты", "Чтобы близкие могли найти тебя")
+                SectionTitle(ochagText("Контакты"), ochagText("Чтобы близкие могли найти тебя"))
                 Spacer(Modifier.height(10.dp))
 
                 OchagCard(
@@ -326,15 +275,15 @@ fun ProfileScreen(
                                 phone = it
                                 saveStatus = ""
                             },
-                            label = "Телефон",
+                            label = ochagText("Телефон"),
                             placeholder = "+7 999 123-45-67"
                         )
 
                         Spacer(Modifier.height(12.dp))
 
                         OchagPrimaryButton(
-                            text = if (saving) "Сохраняю…" else "Сохранить номер",
-                            enabled = !saving && userName != "Гость"
+                            text = if (saving) ochagText("Сохраняю…") else ochagText("Сохранить номер"),
+                            enabled = !saving && userName != ochagText("Гость")
                         ) {
                             saving = true
                             saveStatus = ""
@@ -343,7 +292,7 @@ fun ProfileScreen(
                                 phone = phone
                             ) { result ->
                                 saving = false
-                                saveStatus = if (result.success) "Номер сохранён" else result.error
+                                saveStatus = if (result.success) ochagText("Номер сохранён") else result.error
                                 if (result.success) ServerRealtime.requestServerUsers()
                             }
                         }
@@ -353,7 +302,7 @@ fun ProfileScreen(
                             Text(
                                 text = saveStatus,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (saveStatus == "Номер сохранён") OnlineGreen else MaterialTheme.colorScheme.error
+                                color = if (saveStatus == ochagText("Номер сохранён")) OnlineGreen else MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -367,10 +316,10 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(22.dp),
-                    border = BorderStroke(1.dp, BorderSoft),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
                 ) {
-                    Text("Выйти из «Очага»", fontWeight = FontWeight.SemiBold)
+                    Text(ochagText("Выйти из «Очага»"), fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -380,99 +329,49 @@ fun ProfileScreen(
 }
 
 @Composable
+private fun ProfileAvatarImage(
+    uri: Uri,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, uri) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                }
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap!!,
+            contentDescription = ochagText("Аватар профиля"),
+            modifier = modifier.clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Surface(modifier = modifier, shape = CircleShape, color = AvatarPeach) {}
+    }
+}
+
+@Composable
 private fun SectionTitle(title: String, subtitle: String) {
     Column {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
-            color = BrownTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(2.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = BrownTextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-@Composable
-private fun ThemeToggle(
-    checked: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .width(58.dp)
-            .height(34.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        color = if (checked) TerracottaPrimary else CardCream,
-        border = BorderStroke(1.dp, if (checked) TerracottaPrimary else BorderSoft)
-    ) {
-        Box(
-            modifier = Modifier.padding(4.dp),
-            contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
-        ) {
-            Surface(
-                modifier = Modifier.size(24.dp),
-                shape = CircleShape,
-                color = if (checked) Color.White else CardWhite,
-                shadowElevation = 2.dp
-            ) {}
-        }
-    }
-}
-
-@Composable
-private fun FontChoice(
-    title: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .height(46.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(17.dp),
-        color = if (selected) TerracottaSoft else CardCream,
-        border = BorderStroke(1.dp, if (selected) TerracottaSoft else BorderSoft)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = title,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (selected) TerracottaDark else BrownTextSecondary,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun FontSizeChoice(
-    level: Int,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .height(42.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = if (selected) TerracottaPrimary else CardCream,
-        border = BorderStroke(1.dp, if (selected) TerracottaPrimary else BorderSoft)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = level.toString(),
-                color = if (selected) Color.White else BrownTextSecondary,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }
 
@@ -504,7 +403,7 @@ private fun ProfileAction(
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = symbol,
-                        color = BrownTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
@@ -516,20 +415,20 @@ private fun ProfileAction(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Text(
                 text = "›",
                 style = MaterialTheme.typography.headlineSmall,
-                color = BrownTextMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

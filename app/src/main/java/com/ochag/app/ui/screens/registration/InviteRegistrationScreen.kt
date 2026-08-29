@@ -1,6 +1,8 @@
 package com.ochag.app.ui.screens.registration
 
+import com.ochag.app.ui.localization.ochagText
 import com.ochag.app.data.OchagAppState
+import com.ochag.app.data.ServerAccountApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -66,6 +68,14 @@ fun InviteRegistrationScreen(
         mutableStateOf(false)
     }
 
+    var requestSending by remember {
+        mutableStateOf(false)
+    }
+
+    var requestError by remember {
+        mutableStateOf("")
+    }
+
     val codeValid =
         inviteCode.trim().uppercase().startsWith("OCHAG-") &&
                 inviteCode.trim().length >= 10
@@ -87,7 +97,7 @@ fun InviteRegistrationScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CreamBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
 
         DecorativeBranch(
@@ -136,7 +146,7 @@ fun InviteRegistrationScreen(
 
                     BackIcon(
                         modifier = Modifier.size(27.dp),
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -147,16 +157,16 @@ fun InviteRegistrationScreen(
                 Column {
 
                     Text(
-                        text = "Присоединиться",
+                        text = ochagText("Присоединиться"),
                         fontSize = 31.sp,
                         fontWeight = FontWeight.Normal,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(
-                        text = "Вход в семейный «Очаг»",
+                        text = ochagText("Вход в семейный «Очаг»"),
                         fontSize = 13.sp,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -183,7 +193,7 @@ fun InviteRegistrationScreen(
                             shape = RoundedCornerShape(25.dp)
                         ),
                     shape = RoundedCornerShape(25.dp),
-                    color = CardWhite
+                    color = MaterialTheme.colorScheme.surface
                 ) {
 
                     Box(
@@ -201,10 +211,10 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Добро пожаловать в «Очаг»",
+                    text = ochagText("Добро пожаловать в «Очаг»"),
                     fontSize = 21.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(
@@ -212,11 +222,11 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Регистрация доступна только\nпо приглашению владельца семьи",
+                    text = ochagText("Регистрация доступна только\nпо приглашению владельца семьи"),
                     textAlign = TextAlign.Center,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -250,7 +260,7 @@ fun InviteRegistrationScreen(
                 ) {
 
                     Text(
-                        text = "Вернуться ко входу",
+                        text = ochagText("Вернуться ко входу"),
                         fontSize = 15.sp,
                         color = TerracottaDark,
                         fontWeight = FontWeight.Medium
@@ -264,7 +274,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Код приглашения"
+                    title = ochagText("Код приглашения")
                 ) {
 
                     OutlinedTextField(
@@ -276,8 +286,8 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Например: OCHAG-4821",
-                                color = BrownTextSecondary.copy(
+                                text = ochagText("Например: OCHAG-4821"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.65f
                                 )
                             )
@@ -292,12 +302,12 @@ fun InviteRegistrationScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = TerracottaPrimary,
-                            unfocusedBorderColor = BorderSoft,
-                            focusedContainerColor = CardWhite,
-                            unfocusedContainerColor = CardWhite,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                             cursorColor = TerracottaPrimary,
-                            focusedTextColor = BrownTextPrimary,
-                            unfocusedTextColor = BrownTextPrimary
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                         )
                     )
 
@@ -310,9 +320,9 @@ fun InviteRegistrationScreen(
                         Text(
                             text =
                                 if (codeValid) {
-                                    "Формат кода правильный"
+                                    ochagText("Формат кода правильный")
                                 } else {
-                                    "Код должен выглядеть как OCHAG-4821"
+                                    ochagText("Код должен выглядеть как OCHAG-4821")
                                 },
                             fontSize = 11.sp,
                             color =
@@ -335,7 +345,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Ваши данные"
+                    title = ochagText("Ваши данные")
                 ) {
 
                     OutlinedTextField(
@@ -347,8 +357,8 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Имя",
-                                color = BrownTextSecondary.copy(
+                                text = ochagText("Имя"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.65f
                                 )
                             )
@@ -357,7 +367,7 @@ fun InviteRegistrationScreen(
                             Text(
                                 text = "○",
                                 fontSize = 21.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         shape = RoundedCornerShape(16.dp),
@@ -377,8 +387,8 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Логин",
-                                color = BrownTextSecondary.copy(
+                                text = ochagText("Логин"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.65f
                                 )
                             )
@@ -387,7 +397,7 @@ fun InviteRegistrationScreen(
                             Text(
                                 text = "@",
                                 fontSize = 19.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         shape = RoundedCornerShape(16.dp),
@@ -405,7 +415,7 @@ fun InviteRegistrationScreen(
                 // =================================================
 
                 FormCard(
-                    title = "Пароль"
+                    title = ochagText("Пароль")
                 ) {
 
                     OutlinedTextField(
@@ -417,8 +427,8 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Придумайте пароль",
-                                color = BrownTextSecondary.copy(
+                                text = ochagText("Придумайте пароль"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.65f
                                 )
                             )
@@ -427,7 +437,7 @@ fun InviteRegistrationScreen(
                             Text(
                                 text = "□",
                                 fontSize = 19.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingIcon = {
@@ -447,7 +457,7 @@ fun InviteRegistrationScreen(
                                     }
                                     .padding(9.dp),
                                 fontSize = 20.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         visualTransformation =
@@ -476,8 +486,8 @@ fun InviteRegistrationScreen(
                         singleLine = true,
                         placeholder = {
                             Text(
-                                text = "Повторите пароль",
-                                color = BrownTextSecondary.copy(
+                                text = ochagText("Повторите пароль"),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.65f
                                 )
                             )
@@ -486,7 +496,7 @@ fun InviteRegistrationScreen(
                             Text(
                                 text = "□",
                                 fontSize = 19.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingIcon = {
@@ -506,7 +516,7 @@ fun InviteRegistrationScreen(
                                     }
                                     .padding(9.dp),
                                 fontSize = 20.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         visualTransformation =
@@ -527,7 +537,7 @@ fun InviteRegistrationScreen(
                     )
 
                     Text(
-                        text = "Минимум 6 символов",
+                        text = ochagText("Минимум 6 символов"),
                         fontSize = 10.sp,
                         color =
                             if (
@@ -536,7 +546,7 @@ fun InviteRegistrationScreen(
                             ) {
                                 TerracottaDark
                             } else {
-                                BrownTextSecondary
+                                MaterialTheme.colorScheme.onSurfaceVariant
                             }
                     )
 
@@ -550,7 +560,7 @@ fun InviteRegistrationScreen(
                         )
 
                         Text(
-                            text = "Пароли не совпадают",
+                            text = ochagText("Пароли не совпадают"),
                             fontSize = 10.sp,
                             color = TerracottaDark
                         )
@@ -572,7 +582,7 @@ fun InviteRegistrationScreen(
                     color = Color(0xFFF7EFE7),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        BorderSoft
+                        MaterialTheme.colorScheme.outline
                     )
                 ) {
 
@@ -594,11 +604,11 @@ fun InviteRegistrationScreen(
                         )
 
                         Text(
-                            text = "После регистрации владелец семьи получит заявку. Войти в «Очаг» получится только после его подтверждения.",
+                            text = ochagText("После регистрации владелец семьи получит заявку. Войти в «Очаг» получится только после его подтверждения."),
                             modifier = Modifier.weight(1f),
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -615,18 +625,25 @@ fun InviteRegistrationScreen(
                 Button(
                     onClick = {
 
-                        OchagAppState.submitJoinRequest(
+                        requestSending = true
+                        requestError = ""
+
+                        ServerAccountApi.submitJoinRequest(
                             name = name,
                             login = login,
                             inviteCode = inviteCode,
-                            password = password
-                        )
-
-                        requestSent = true
-
-                        onRequestSent()
+                            pin = password
+                        ) { result ->
+                            requestSending = false
+                            if (result.success) {
+                                requestSent = true
+                                onRequestSent()
+                            } else {
+                                requestError = result.error
+                            }
+                        }
                     },
-                    enabled = formValid,
+                    enabled = formValid && !requestSending,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(58.dp),
@@ -634,14 +651,25 @@ fun InviteRegistrationScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = TerracottaPrimary,
                         contentColor = Color.White,
-                        disabledContainerColor = BorderSoft,
-                        disabledContentColor = BrownTextSecondary
+                        disabledContainerColor = MaterialTheme.colorScheme.outline,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Text(
-                        text = "Отправить заявку",
+                        text = if (requestSending) ochagText("Отправляю…") else ochagText("Отправить заявку"),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                if (requestError.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = requestError,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
 
@@ -650,12 +678,12 @@ fun InviteRegistrationScreen(
                 )
 
                 Text(
-                    text = "Никто не получит доступ к семейным чатам без разрешения владельца",
+                    text = ochagText("Никто не получит доступ к семейным чатам без разрешения владельца"),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontSize = 10.sp,
                     lineHeight = 14.sp,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -682,7 +710,7 @@ private fun FormCard(
             ),
         shape = RoundedCornerShape(23.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardWhite
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
 
@@ -697,7 +725,7 @@ private fun FormCard(
                 text = title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(
@@ -711,7 +739,7 @@ private fun FormCard(
 
 
 // ============================================================
-// КАРТОЧКА "ЗАЯВКА ОТПРАВЛЕНА"
+// КАРТОЧКА ochagText("ЗАЯВКА ОТПРАВЛЕНА")
 // ============================================================
 
 @Composable
@@ -726,7 +754,7 @@ private fun SuccessCard() {
             ),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardWhite
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
 
@@ -764,10 +792,10 @@ private fun SuccessCard() {
             )
 
             Text(
-                text = "Заявка отправлена",
+                text = ochagText("Заявка отправлена"),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(
@@ -775,11 +803,11 @@ private fun SuccessCard() {
             )
 
             Text(
-                text = "Теперь нужно дождаться подтверждения владельца семьи.",
+                text = ochagText("Теперь нужно дождаться подтверждения владельца семьи."),
                 textAlign = TextAlign.Center,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(
@@ -794,7 +822,7 @@ private fun SuccessCard() {
             ) {
 
                 Text(
-                    text = "Ожидает подтверждения",
+                    text = ochagText("Ожидает подтверждения"),
                     modifier = Modifier.padding(
                         horizontal = 15.dp,
                         vertical = 7.dp
@@ -816,12 +844,12 @@ private fun SuccessCard() {
 private fun fieldColors() =
     OutlinedTextFieldDefaults.colors(
         focusedBorderColor = TerracottaPrimary,
-        unfocusedBorderColor = BorderSoft,
-        focusedContainerColor = CardWhite,
-        unfocusedContainerColor = CardWhite,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
         cursorColor = TerracottaPrimary,
-        focusedTextColor = BrownTextPrimary,
-        unfocusedTextColor = BrownTextPrimary
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
     )
 
 
@@ -876,6 +904,7 @@ private fun BackIcon(
 private fun HomeFlameLogo(
     modifier: Modifier
 ) {
+    val logoCutoutColor = MaterialTheme.colorScheme.surface
 
     Canvas(
         modifier = modifier
@@ -927,7 +956,7 @@ private fun HomeFlameLogo(
         )
 
         drawCircle(
-            color = CardWhite,
+            color = logoCutoutColor,
             radius = size.width * 0.20f,
             center = Offset(
                 size.width * 0.50f,

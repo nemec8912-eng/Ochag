@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.login
 
+import com.ochag.app.ui.localization.ochagText
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ochag.app.data.OchagAppState
+import com.ochag.app.data.ServerAccountApi
+import android.os.Handler
+import android.os.Looper
 import com.ochag.app.ui.theme.*
 
 @Composable
@@ -36,11 +40,13 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
+    var loggingIn by remember { mutableStateOf(false) }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CreamBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         DecorativeLeaves(
             modifier = Modifier
@@ -70,7 +76,7 @@ fun LoginScreen(
                     .size(126.dp)
                     .shadow(10.dp, RoundedCornerShape(34.dp)),
                 shape = RoundedCornerShape(34.dp),
-                color = CardWhite
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     HomeFlameLogo(Modifier.size(86.dp))
@@ -80,20 +86,20 @@ fun LoginScreen(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "Очаг",
+                text = ochagText("Очаг"),
                 fontSize = 52.sp,
                 fontWeight = FontWeight.Light,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Тёплое пространство\nтолько для своих",
+                text = ochagText("Тёплое пространство\nтолько для своих"),
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 lineHeight = 22.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(30.dp))
@@ -103,7 +109,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .shadow(8.dp, RoundedCornerShape(30.dp)),
                 shape = RoundedCornerShape(30.dp),
-                colors = CardDefaults.cardColors(containerColor = CardWhite)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp)
@@ -116,9 +122,9 @@ fun LoginScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text("Логин") },
+                        placeholder = { Text(ochagText("Логин")) },
                         leadingIcon = {
-                            Text("○", fontSize = 20.sp, color = BrownTextSecondary)
+                            Text("○", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         shape = RoundedCornerShape(18.dp),
                         colors = loginFieldColors()
@@ -134,9 +140,9 @@ fun LoginScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text("Пароль") },
+                        placeholder = { Text(ochagText("Пароль")) },
                         leadingIcon = {
-                            Text("□", fontSize = 18.sp, color = BrownTextSecondary)
+                            Text("□", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         trailingIcon = {
                             Text(
@@ -146,7 +152,7 @@ fun LoginScreen(
                                     .clickable { passwordVisible = !passwordVisible }
                                     .padding(8.dp),
                                 fontSize = 20.sp,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         visualTransformation = if (passwordVisible) {
@@ -173,22 +179,36 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (login.isBlank() || password.isBlank()) {
-                                errorText = "Введите логин и пароль"
+                                errorText = ochagText("Введите логин и пароль")
                                 return@Button
                             }
 
-                            val result = OchagAppState.login(
-                                login = login.trim(),
-                                password = password
-                            )
+                            loggingIn = true
+                            errorText = ""
 
-                            if (result) {
-                                errorText = ""
-                                onLoginSuccess()
-                            } else {
-                                errorText = "Неверный логин или пароль"
+                            ServerAccountApi.login(
+                                login = login.trim(),
+                                pin = password
+                            ) { result ->
+                                mainHandler.post {
+                                    loggingIn = false
+                                    val account = result.account
+                                    if (result.success && account != null) {
+                                        OchagAppState.restoreUser(
+                                            login = account.login,
+                                            name = account.name,
+                                            isOwner = account.isOwner
+                                        )
+                                        onLoginSuccess()
+                                    } else {
+                                        errorText = result.error.ifBlank {
+                                            ochagText("Неверный логин или пароль")
+                                        }
+                                    }
+                                }
                             }
                         },
+                        enabled = !loggingIn,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(58.dp),
@@ -199,7 +219,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            text = "Войти",
+                            text = if (loggingIn) ochagText("Вхожу…") else ochagText("Войти"),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -216,7 +236,7 @@ fun LoginScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, TerracottaDark)
                     ) {
                         Text(
-                            text = "Регистрация по приглашению",
+                            text = ochagText("Регистрация по приглашению"),
                             color = TerracottaDark,
                             fontWeight = FontWeight.Medium
                         )
@@ -227,19 +247,19 @@ fun LoginScreen(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "Новый участник может войти\nтолько по приглашению владельца",
+                text = ochagText("Новый участник может войти\nтолько по приглашению владельца"),
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
-                color = BrownTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(14.dp))
 
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = CardWhite.copy(alpha = 0.72f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, BorderSoft)
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -248,9 +268,9 @@ fun LoginScreen(
                     Text("♡", fontSize = 22.sp, color = TerracottaDark)
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        text = "Переписки и данные семьи защищены",
+                        text = ochagText("Переписки и данные семьи защищены"),
                         fontSize = 11.sp,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -261,18 +281,19 @@ fun LoginScreen(
 @Composable
 private fun loginFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = TerracottaPrimary,
-    unfocusedBorderColor = BorderSoft,
-    focusedContainerColor = CardWhite,
-    unfocusedContainerColor = CardWhite,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
     cursorColor = TerracottaPrimary,
-    focusedTextColor = BrownTextPrimary,
-    unfocusedTextColor = BrownTextPrimary,
-    focusedPlaceholderColor = BrownTextSecondary,
-    unfocusedPlaceholderColor = BrownTextSecondary
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
 
 @Composable
 private fun HomeFlameLogo(modifier: Modifier) {
+    val logoCutoutColor = MaterialTheme.colorScheme.surface
     Canvas(modifier = modifier) {
         val house = Path().apply {
             moveTo(size.width * 0.14f, size.height * 0.43f)
@@ -287,7 +308,7 @@ private fun HomeFlameLogo(modifier: Modifier) {
 
         drawPath(house, color = TerracottaPrimary)
         drawCircle(
-            color = CardWhite,
+            color = logoCutoutColor,
             radius = size.width * 0.20f,
             center = Offset(size.width * 0.50f, size.height * 0.60f)
         )

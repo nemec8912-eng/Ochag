@@ -12,10 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ochag.app.data.OchagAppState
+import com.ochag.app.data.ServerAccountApi
+import com.ochag.app.data.ServerJoinRequest
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.ui.components.OchagAvatar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagSectionHeader
+import com.ochag.app.ui.localization.ochagText
 import com.ochag.app.ui.theme.*
 import java.util.Locale
 
@@ -23,255 +26,235 @@ import java.util.Locale
 fun FamilyManagementScreen(
     onMemberClick: (String) -> Unit
 ) {
-    val members = listOf(
-        "Михаил",
-        "Анна",
-        "Дочь",
-        "Сын",
-        "Бабушка"
-    )
-
-    val currentUserName = OchagAppState.currentUser?.name.orEmpty()
+    val currentUser = OchagAppState.currentUser
+    val currentUserName = currentUser?.name.orEmpty()
+    val isOwner = currentUser?.isOwner == true
     val onlineUsers by ServerRealtime.onlineUsers.collectAsState()
+    val profiles by ServerRealtime.serverUserProfiles.collectAsState()
+
+    var requests by remember { mutableStateOf<List<ServerJoinRequest>>(emptyList()) }
+    var requestsLoading by remember { mutableStateOf(false) }
+    var requestsError by remember { mutableStateOf("") }
+    var processingId by remember { mutableStateOf<Long?>(null) }
 
     val normalizedOnlineUsers = remember(onlineUsers) {
-        onlineUsers
-            .map(::normalizePresenceName)
+        onlineUsers.map(::normalizePresenceName).filter { it.isNotBlank() }.toSet()
+    }
+
+    val members = remember(profiles, currentUserName) {
+        (profiles.map { it.name } + currentUserName)
             .filter { it.isNotBlank() }
-            .toSet()
+            .distinctBy { it.lowercase(Locale.getDefault()) }
+    }
+
+    fun reloadRequests() {
+        if (!isOwner || currentUserName.isBlank()) return
+        requestsLoading = true
+        requestsError = ""
+        ServerAccountApi.loadJoinRequests(currentUserName) { result ->
+            requestsLoading = false
+            if (result.success) requests = result.requests else requestsError = result.error
+        }
+    }
+
+    LaunchedEffect(currentUserName, isOwner) {
+        ServerRealtime.requestServerUsers()
+        reloadRequests()
     }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 18.dp,
-                end = 18.dp,
-                top = 20.dp,
-                bottom = 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            contentPadding = PaddingValues(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 OchagSectionHeader(
-                    title = "Семья и приглашения",
-                    subtitle = "Только свои люди — доступ под твоим контролем"
+                    title = ochagText("Семья и приглашения"),
+                    subtitle = ochagText("Только свои люди — доступ под твоим контролем")
                 )
-            }
-
-            item {
-                val owner = currentUserName.ifBlank { "Михаил" }
-                val ownerOnline = normalizedOnlineUsers.contains(normalizePresenceName(owner))
-
-                OchagCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 5.dp,
-                    contentPadding = PaddingValues(18.dp),
-                    onClick = { onMemberClick(owner) }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OchagAvatar(
-                            name = owner,
-                            size = 72.dp,
-                            online = ownerOnline,
-                            backgroundColor = TerracottaSoft
-                        )
-
-                        Spacer(Modifier.width(16.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = owner,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = BrownTextPrimary
-                            )
-
-                            Spacer(Modifier.height(4.dp))
-
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = TerracottaSoft
-                            ) {
-                                Text(
-                                    text = "Владелец семьи",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = TerracottaDark
-                                )
-                            }
-
-                            Spacer(Modifier.height(6.dp))
-
-                            Text(
-                                text = if (ownerOnline) "В сети" else "Не в сети",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (ownerOnline) OnlineGreen else BrownTextSecondary
-                            )
-                        }
-
-                        Text(
-                            text = "›",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = BrownTextSecondary
-                        )
-                    }
-                }
             }
 
             item {
                 Text(
-                    text = "Участники семьи",
+                    text = ochagText("Участники семьи"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            items(
-                items = members,
-                key = { it }
-            ) { member ->
-                val isOnline = normalizedOnlineUsers.contains(normalizePresenceName(member))
-                val isOwner = member.equals(currentUserName, ignoreCase = true)
-
-                OchagCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp,
-                    contentPadding = PaddingValues(horizontal = 15.dp, vertical = 13.dp),
-                    onClick = { onMemberClick(member) }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OchagAvatar(
-                            name = member,
-                            size = 54.dp,
-                            online = isOnline,
-                            backgroundColor = if (isOwner) TerracottaSoft else SoftGreenLight
-                        )
-
-                        Spacer(Modifier.width(13.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = member,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = BrownTextPrimary
-                                )
-
-                                if (isOwner) {
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        text = "Вы",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = TerracottaDark
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(3.dp))
-
-                            Text(
-                                text = if (isOnline) "В сети" else "Не в сети",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isOnline) OnlineGreen else BrownTextSecondary
-                            )
-                        }
-
-                        Text(
-                            text = "⋮",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = BrownTextSecondary
-                        )
-                    }
+            if (members.isEmpty()) {
+                item {
+                    Text(
+                        text = ochagText("Участники пока не найдены"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
-            item {
-                Text(
-                    text = "Приглашения",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
-                )
-            }
-
-            item {
-                OchagCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp,
-                    contentPadding = PaddingValues(18.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OchagAvatar(
-                            name = "+",
-                            size = 52.dp,
-                            backgroundColor = TerracottaSoft
-                        )
-
-                        Spacer(Modifier.width(14.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Пригласить близких",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = BrownTextPrimary
-                            )
-                            Text(
-                                text = "Коды приглашения подключим отдельным шагом",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = BrownTextSecondary
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = TerracottaSoft
-                        ) {
-                            Text(
-                                text = "Скоро",
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = TerracottaDark
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
+            items(members, key = { "member_$it" }) { member ->
+                val online = normalizedOnlineUsers.contains(normalizePresenceName(member))
+                val owner = member.equals(currentUserName, ignoreCase = true) && isOwner
                 OchagCard(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 3.dp,
-                    contentPadding = PaddingValues(18.dp)
+                    contentPadding = PaddingValues(15.dp),
+                    onClick = { onMemberClick(member) }
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OchagAvatar(
+                            name = member,
+                            size = 54.dp,
+                            online = online,
+                            backgroundColor = if (owner) TerracottaSoft else SoftGreenLight
+                        )
+                        Spacer(Modifier.width(13.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = member,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = when {
+                                    owner -> ochagText("Владелец семьи")
+                                    online -> ochagText("В сети")
+                                    else -> ochagText("Не в сети")
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (online) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text("›", style = MaterialTheme.typography.headlineSmall)
+                    }
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = ochagText("Заявки на вступление"),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (isOwner) {
+                        TextButton(onClick = { reloadRequests() }, enabled = !requestsLoading) {
+                            Text(if (requestsLoading) ochagText("Загрузка…") else ochagText("Обновить"))
+                        }
+                    }
+                }
+            }
+
+            if (!isOwner) {
+                item {
+                    Text(
+                        text = ochagText("Подтверждать заявки может только владелец семьи"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else if (requestsError.isNotBlank()) {
+                item {
+                    Text(
+                        text = requestsError,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else if (!requestsLoading && requests.isEmpty()) {
+                item {
+                    OchagCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(18.dp)
+                    ) {
+                        Text(
+                            text = ochagText("Новых заявок пока нет"),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            items(requests, key = { "request_${it.requestId}" }) { request ->
+                OchagCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 4.dp,
+                    contentPadding = PaddingValues(16.dp)
                 ) {
                     Column {
-                        Text(
-                            text = "Безопасность семьи",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = BrownTextPrimary
-                        )
-                        Spacer(Modifier.height(7.dp))
-                        Text(
-                            text = "Вход новых участников будет происходить только после приглашения и подтверждения владельца.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = BrownTextSecondary
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OchagAvatar(
+                                name = request.name,
+                                size = 52.dp,
+                                backgroundColor = TerracottaSoft
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = request.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "@${request.login}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(13.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = {
+                                    processingId = request.requestId
+                                    requestsError = ""
+                                    ServerAccountApi.approveJoinRequest(
+                                        request.requestId,
+                                        currentUserName
+                                    ) { result ->
+                                        processingId = null
+                                        if (result.success) {
+                                            requests = requests.filterNot { it.requestId == request.requestId }
+                                            ServerRealtime.requestServerUsers()
+                                        } else requestsError = result.error
+                                    }
+                                },
+                                enabled = processingId == null,
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = TerracottaPrimary)
+                            ) {
+                                Text(ochagText("Принять"))
+                            }
+                            OutlinedButton(
+                                onClick = {
+                                    processingId = request.requestId
+                                    requestsError = ""
+                                    ServerAccountApi.declineJoinRequest(
+                                        request.requestId,
+                                        currentUserName
+                                    ) { result ->
+                                        processingId = null
+                                        if (result.success) {
+                                            requests = requests.filterNot { it.requestId == request.requestId }
+                                        } else requestsError = result.error
+                                    }
+                                },
+                                enabled = processingId == null,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Text(ochagText("Отклонить"))
+                            }
+                        }
                     }
                 }
             }
@@ -280,14 +263,7 @@ fun FamilyManagementScreen(
 }
 
 private fun normalizePresenceName(value: String): String {
-    val decoded = try {
-        Uri.decode(value)
-    } catch (_: Exception) {
-        value
-    }
-
-    return decoded
-        .trim()
-        .lowercase(Locale.getDefault())
+    val decoded = try { Uri.decode(value) } catch (_: Exception) { value }
+    return decoded.trim().lowercase(Locale.getDefault())
         .replace(Regex("[^\\p{L}\\p{N}]+"), "")
 }

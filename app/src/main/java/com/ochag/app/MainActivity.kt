@@ -1,20 +1,34 @@
 package com.ochag.app
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import com.ochag.app.calls.OchagCallOverlay
+import com.ochag.app.calls.OchagWebRtcCallController
 import com.ochag.app.data.DataStoreManager
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
+import com.ochag.app.ui.localization.OchagLocaleController
 import com.ochag.app.ui.navigation.AppNavigation
+import com.ochag.app.ui.security.AppLockController
+import com.ochag.app.ui.security.AppLockGate
 import com.ochag.app.ui.theme.OchagTheme
 import com.ochag.app.ui.theme.OchagThemeController
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(OchagLocaleController.apply(newBase))
+    }
 
     companion object {
         private const val TAG = "MainActivity"
@@ -27,6 +41,7 @@ class MainActivity : ComponentActivity() {
 
         OchagAppState.init(this)
         OchagThemeController.init(this)
+        AppLockController.init(this)
         StickerStore.init(this)
 
         lifecycleScope.launch {
@@ -60,18 +75,33 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OchagTheme {
-                AppNavigation()
+                LaunchedEffect(Unit) {
+                    ServerRealtime.callSignals.collect { signal ->
+                        OchagWebRtcCallController.handleSignal(
+                            applicationContext,
+                            signal
+                        )
+                    }
+                }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AppLockGate {
+                        AppNavigation()
+                    }
+                    OchagCallOverlay()
+                }
             }
         }
     }
 
     override fun onStart() {
         super.onStart()
+        AppLockController.onAppForeground()
         Log.d(TAG, "ON_START: Подключить к WebSocket")
         ServerRealtime.ensureConnected(applicationContext)
     }
 
     override fun onStop() {
+        AppLockController.onAppBackground()
         Log.d(TAG, "ON_STOP: WebSocket не отключаем")
         super.onStop()
     }

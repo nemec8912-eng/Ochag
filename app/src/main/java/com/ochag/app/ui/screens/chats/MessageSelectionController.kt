@@ -15,6 +15,9 @@ object MessageSelectionController {
     var activeChatId by mutableStateOf<Long?>(null)
         private set
 
+    var scrollToMessageId by mutableStateOf<Long?>(null)
+        private set
+
     val isSelecting: Boolean
         get() = selectedIds.isNotEmpty()
 
@@ -40,6 +43,14 @@ object MessageSelectionController {
         actionMessage = null
     }
 
+    fun requestScrollTo(messageId: Long) {
+        scrollToMessageId = messageId
+    }
+
+    fun clearScrollRequest() {
+        scrollToMessageId = null
+    }
+
     fun startSelection(messageId: Long) {
         actionMessage = null
         selectedIds.clear()
@@ -62,5 +73,6 @@ object MessageSelectionController {
     fun clear() {
         selectedIds.clear()
         actionMessage = null
+        scrollToMessageId = null
     }
 }
