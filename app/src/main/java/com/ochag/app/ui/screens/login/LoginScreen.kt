@@ -26,6 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ochag.app.data.OchagAppState
+import com.ochag.app.data.ServerAccountApi
+import android.os.Handler
+import android.os.Looper
 import com.ochag.app.ui.theme.*
 
 @Composable
@@ -37,6 +40,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf("") }
+    var loggingIn by remember { mutableStateOf(false) }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
 
     Box(
         modifier = Modifier
@@ -178,18 +183,32 @@ fun LoginScreen(
                                 return@Button
                             }
 
-                            val result = OchagAppState.login(
-                                login = login.trim(),
-                                password = password
-                            )
+                            loggingIn = true
+                            errorText = ""
 
-                            if (result) {
-                                errorText = ""
-                                onLoginSuccess()
-                            } else {
-                                errorText = ochagText("Неверный логин или пароль")
+                            ServerAccountApi.login(
+                                login = login.trim(),
+                                pin = password
+                            ) { result ->
+                                mainHandler.post {
+                                    loggingIn = false
+                                    val account = result.account
+                                    if (result.success && account != null) {
+                                        OchagAppState.restoreUser(
+                                            login = account.login,
+                                            name = account.name,
+                                            isOwner = account.isOwner
+                                        )
+                                        onLoginSuccess()
+                                    } else {
+                                        errorText = result.error.ifBlank {
+                                            ochagText("Неверный логин или пароль")
+                                        }
+                                    }
+                                }
                             }
                         },
+                        enabled = !loggingIn,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(58.dp),
@@ -200,7 +219,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            text = ochagText("Войти"),
+                            text = if (loggingIn) ochagText("Вхожу…") else ochagText("Войти"),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold
                         )
