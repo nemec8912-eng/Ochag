@@ -200,8 +200,8 @@ fun AppLockGate(content: @Composable () -> Unit) {
 @Composable
 fun PatternPad(
     value: String,
-    onValueChange: (String) -> Unit,
-    isError: Boolean = false
+    isError: Boolean = false,
+    onValueChange: (String) -> Unit
 ) {
     var fingerPosition by remember { mutableStateOf<Offset?>(null) }
     val primaryColor = if (isError) MaterialTheme.colorScheme.error
