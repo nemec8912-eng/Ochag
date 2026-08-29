@@ -173,7 +173,15 @@ private val en = mapOf(
     "Опрос" to "Poll",
     "Локация" to "Location",
     "Контакт" to "Contact",
-    "Шрифт" to "Font"
+    "Шрифт" to "Font",
+    "Видеозвонок" to "Video call",
+    "Аудиозвонок" to "Audio call",
+    "Подключение к звонку…" to "Connecting call…",
+    "Микрофон включён" to "Microphone on",
+    "Микрофон выключен" to "Microphone off",
+    "Камера включена" to "Camera on",
+    "Камера выключена" to "Camera off",
+    "Завершить звонок" to "End call"
 )
 
 private val common = mapOf(
