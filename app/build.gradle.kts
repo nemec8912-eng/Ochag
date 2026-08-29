@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.webrtc:google-webrtc:1.0.32006")
 
 
     // =========================
