@@ -160,7 +160,9 @@ private val en = mapOf(
     "Включите GPS и попробуйте ещё раз" to "Turn on GPS and try again",
     "Нет разрешения на геолокацию" to "Location permission denied",
     "Не удалось открыть контакт" to "Could not open contact",
-    "0 в сети" to "0 online"
+    "0 в сети" to "0 online",
+    "Вечер" to "Evening",
+    "Мама • Вчера" to "Мама • Yesterday"
 )
 
 private val common = mapOf(
@@ -188,6 +190,14 @@ private fun englishDynamic(source: String): String {
             source.replace("Вариант", "Option")
         Regex("""\\d+ участников""").matches(source) ->
             source.replace("участников", "members")
+        Regex("""\\d+ контактов""").matches(source) ->
+            source.replace("контактов", "contacts")
+        Regex("""\\d+ доступно""").matches(source) ->
+            source.replace("доступно", "available")
+        source.endsWith(" • Вчера") ->
+            source.removeSuffix(" • Вчера") + " • Yesterday"
+        Regex(""".+ • \\d+ дня""").matches(source) ->
+            source.replace(" дня", " days")
         source.endsWith(" • вы") ->
             source.removeSuffix(" • вы") + " • you"
         Regex("""\\d+/\\d+ в сети""").matches(source) ->
