@@ -5,7 +5,13 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import com.ochag.app.calls.OchagCallOverlay
+import com.ochag.app.calls.OchagWebRtcCallController
 import com.ochag.app.data.DataStoreManager
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
@@ -69,8 +75,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OchagTheme {
-                AppLockGate {
-                    AppNavigation()
+                LaunchedEffect(Unit) {
+                    ServerRealtime.callSignals.collect { signal ->
+                        OchagWebRtcCallController.handleSignal(
+                            applicationContext,
+                            signal
+                        )
+                    }
+                }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AppLockGate {
+                        AppNavigation()
+                    }
+                    OchagCallOverlay()
                 }
             }
         }
