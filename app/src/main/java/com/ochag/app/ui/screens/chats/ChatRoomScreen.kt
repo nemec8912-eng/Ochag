@@ -190,6 +190,15 @@ fun ChatRoomScreen(
         .filter { !it.equals(ServerRealtime.userName, ignoreCase = true) }
 
     val currentChat = ChatRepository.findChat(chatId)
+    val currentChatTitle = remember(currentChat, chatTitle, ServerRealtime.userName) {
+        if (currentChat?.type == ChatType.PRIVATE && currentChat.members.size > 1) {
+            currentChat.members.firstOrNull {
+                !it.equals(ServerRealtime.userName, ignoreCase = true)
+            }?.trim()?.takeIf { it.isNotBlank() } ?: currentChat.title
+        } else {
+            currentChat?.title ?: chatTitle
+        }
+    }
 
     val headerStatusText = remember(onlineUsers, typingNames, currentChat, chatId) {
         if (typingNames.isNotEmpty()) {
@@ -260,7 +269,7 @@ fun ChatRoomScreen(
             OchagWebRtcCallController.startCall(
                 context = context,
                 chatId = chatId,
-                chatTitle = currentChat?.title ?: chatTitle,
+                chatTitle = currentChatTitle,
                 targets = targets,
                 video = requestedVideo
             )
