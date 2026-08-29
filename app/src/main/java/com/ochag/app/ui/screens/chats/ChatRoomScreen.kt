@@ -212,6 +212,7 @@ fun ChatRoomScreen(
     var pendingAttachment by remember { mutableStateOf<PendingAttachment?>(null) }
     var mediaButtonMode by remember { mutableStateOf(MediaButtonMode.AUDIO) }
     var isRecording by remember { mutableStateOf(false) }
+    var pendingCallVideo by remember { mutableStateOf<Boolean?>(null) }
 
     var microphoneGranted by remember {
         mutableStateOf(
@@ -237,9 +238,51 @@ fun ChatRoomScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
-        result[Manifest.permission.RECORD_AUDIO]?.let { microphoneGranted = it }
-        result[Manifest.permission.CAMERA]?.let { cameraGranted = it }
+        val micAllowed = result[Manifest.permission.RECORD_AUDIO] ?: microphoneGranted
+        val cameraAllowed = result[Manifest.permission.CAMERA] ?: cameraGranted
+        microphoneGranted = micAllowed
+        cameraGranted = cameraAllowed
         result[Manifest.permission.ACCESS_FINE_LOCATION]?.let { locationGranted = it }
+
+        val requestedVideo = pendingCallVideo
+        if (requestedVideo != null && micAllowed && (!requestedVideo || cameraAllowed)) {
+            val targets = currentChat?.members.orEmpty().filter {
+                !it.equals(ServerRealtime.userName, ignoreCase = true)
+            }
+            OchagWebRtcCallController.startCall(
+                context = context,
+                chatId = chatId,
+                chatTitle = currentChat?.title ?: chatTitle,
+                targets = targets,
+                video = requestedVideo
+            )
+        }
+        pendingCallVideo = null
+    }
+
+    fun launchChatCall(video: Boolean) {
+        val hasPermissions = microphoneGranted && (!video || cameraGranted)
+        if (!hasPermissions) {
+            pendingCallVideo = video
+            permissionLauncher.launch(
+                if (video) {
+                    arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
+                } else {
+                    arrayOf(Manifest.permission.RECORD_AUDIO)
+                }
+            )
+            return
+        }
+        val targets = currentChat?.members.orEmpty().filter {
+            !it.equals(ServerRealtime.userName, ignoreCase = true)
+        }
+        OchagWebRtcCallController.startCall(
+            context = context,
+            chatId = chatId,
+            chatTitle = currentChat?.title ?: chatTitle,
+            targets = targets,
+            video = video
+        )
     }
 
     fun sendCurrentLocation() {
@@ -646,30 +689,8 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
-                onAudioCallClick = {
-                    val targets = currentChat?.members.orEmpty().filter {
-                        !it.equals(ServerRealtime.userName, ignoreCase = true)
-                    }
-                    OchagWebRtcCallController.startCall(
-                        context = context,
-                        chatId = chatId,
-                        chatTitle = currentChat?.title ?: chatTitle,
-                        targets = targets,
-                        video = false
-                    )
-                },
-                onVideoCallClick = {
-                    val targets = currentChat?.members.orEmpty().filter {
-                        !it.equals(ServerRealtime.userName, ignoreCase = true)
-                    }
-                    OchagWebRtcCallController.startCall(
-                        context = context,
-                        chatId = chatId,
-                        chatTitle = currentChat?.title ?: chatTitle,
-                        targets = targets,
-                        video = true
-                    )
-                },
+                onAudioCallClick = { launchChatCall(false) },
+                onVideoCallClick = { launchChatCall(true) },
                 onBackClick = onBackClick
             )
 
