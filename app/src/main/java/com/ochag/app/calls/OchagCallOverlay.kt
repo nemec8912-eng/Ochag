@@ -16,12 +16,31 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.ochag.app.ui.localization.ochagText
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
+import kotlinx.coroutines.delay
 
 @Composable
 fun OchagCallOverlay() {
     val call = OchagWebRtcCallController.state ?: return
     var microphoneEnabled by remember(call.callId) { mutableStateOf(true) }
     var cameraEnabled by remember(call.callId) { mutableStateOf(call.video) }
+    var elapsedSeconds by remember(call.callId) { mutableLongStateOf(0L) }
+
+    LaunchedEffect(call.callId, call.connected, call.connectedAtMillis) {
+        if (!call.connected) {
+            delay(45_000L)
+            val active = OchagWebRtcCallController.state
+            if (active?.callId == call.callId && !active.connected) {
+                OchagWebRtcCallController.endCall()
+            }
+        } else {
+            while (OchagWebRtcCallController.state?.callId == call.callId) {
+                elapsedSeconds =
+                    ((System.currentTimeMillis() - call.connectedAtMillis) / 1000L)
+                        .coerceAtLeast(0L)
+                delay(1_000L)
+            }
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -95,6 +114,20 @@ fun OchagCallOverlay() {
         color = Color.Black
     ) {
         Box(Modifier.fillMaxSize()) {
+            Text(
+                text = if (call.connected) {
+                    formatCallDuration(elapsedSeconds)
+                } else {
+                    ochagText("Соединение…")
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 18.dp),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium
+            )
+
             if (call.video) {
                 val remote = OchagWebRtcCallController.remoteVideoTrack
                 if (remote != null) {
@@ -222,4 +255,11 @@ private fun WebRtcVideoView(
             }
         }
     }
+}
+
+
+private fun formatCallDuration(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return "%02d:%02d".format(minutes, seconds)
 }
