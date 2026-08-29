@@ -50,7 +50,7 @@ fun StickerPacksScreen(
         pendingPackId = null
     }
 
-    Scaffold(containerColor = CreamBackground) { innerPadding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,11 +65,11 @@ fun StickerPacksScreen(
                             .size(44.dp)
                             .clickable(onClick = onBackClick),
                         shape = CircleShape,
-                        color = CardWhite,
+                        color = MaterialTheme.colorScheme.surface,
                         shadowElevation = 4.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text("‹", fontSize = 30.sp, color = BrownTextPrimary)
+                            Text("‹", fontSize = 30.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     Spacer(Modifier.width(12.dp))
@@ -134,7 +134,7 @@ private fun StickerPackCard(
                         text = pack.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (pack.builtIn) {
@@ -143,7 +143,7 @@ private fun StickerPackCard(
                             ochagText("${pack.imageUris.size} стикеров")
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -165,12 +165,12 @@ private fun StickerPackCard(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
-                    color = CardCream
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Text(
                         text = ochagText("Добавь PNG, JPG или WEBP — они появятся здесь и в чате."),
                         modifier = Modifier.padding(16.dp),
-                        color = BrownTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -216,7 +216,7 @@ private fun StickerEmojiGrid(stickers: List<String>) {
                             .weight(1f)
                             .aspectRatio(1f),
                         shape = RoundedCornerShape(16.dp),
-                        color = CardCream
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(sticker, fontSize = 28.sp)
@@ -240,10 +240,10 @@ private fun CreateStickerPackDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardWhite,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(28.dp),
         title = {
-            Text(ochagText("Новый стикерпак"), color = BrownTextPrimary)
+            Text(ochagText("Новый стикерпак"), color = MaterialTheme.colorScheme.onSurface)
         },
         text = {
             OchagTextField(
@@ -263,7 +263,7 @@ private fun CreateStickerPackDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(ochagText("Отмена"), color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -288,7 +288,7 @@ private fun StickerImage(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(18.dp),
-        color = CardCream
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         if (bitmap != null) {
             Image(
