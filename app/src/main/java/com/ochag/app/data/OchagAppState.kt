@@ -181,6 +181,7 @@ object OchagAppState {
 
             )
 
+        saveUser()
     }
 
 
