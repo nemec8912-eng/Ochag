@@ -654,6 +654,8 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
+                onAudioCallClick = { activeCallType = "audio" },
+                onVideoCallClick = { activeCallType = "video" },
                 onBackClick = onBackClick
             )
 
@@ -883,37 +885,6 @@ fun ChatRoomScreen(
                         },
                         shape = RoundedCornerShape(24.dp),
                         maxLines = 4,
-                        trailingIcon = {
-                            if (messageText.isBlank() && pendingAttachment == null) {
-                                Row(
-                                    modifier = Modifier.padding(end = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(
-                                        onClick = { activeCallType = "audio" },
-                                        modifier = Modifier.size(34.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_phone_call),
-                                            contentDescription = ochagText("Аудиозвонок"),
-                                            modifier = Modifier.size(21.dp),
-                                            tint = TerracottaDark
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = { activeCallType = "video" },
-                                        modifier = Modifier.size(34.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_video_camera),
-                                            contentDescription = ochagText("Видеозвонок"),
-                                            modifier = Modifier.size(22.dp),
-                                            tint = TerracottaDark
-                                        )
-                                    }
-                                }
-                            }
-                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent,
@@ -1439,6 +1410,8 @@ private fun ChatHeader(
     statusText: String,
     canOpenSettings: Boolean,
     onSettingsClick: () -> Unit,
+    onAudioCallClick: () -> Unit,
+    onVideoCallClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Surface(
@@ -1517,6 +1490,30 @@ private fun ChatHeader(
                     color = if (
                         statusText.contains(ochagText("В сети")) || statusText.contains(ochagText("печатает"))
                     ) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
+                onClick = onAudioCallClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_phone_call),
+                    contentDescription = ochagText("Аудиозвонок"),
+                    modifier = Modifier.size(22.dp),
+                    tint = TerracottaDark
+                )
+            }
+
+            IconButton(
+                onClick = onVideoCallClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_video_camera),
+                    contentDescription = ochagText("Видеозвонок"),
+                    modifier = Modifier.size(23.dp),
+                    tint = TerracottaDark
                 )
             }
 
