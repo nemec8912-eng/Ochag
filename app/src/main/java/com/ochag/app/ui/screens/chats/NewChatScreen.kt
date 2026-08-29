@@ -197,7 +197,7 @@ fun NewChatScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -210,11 +210,11 @@ fun NewChatScreen(
                         .size(44.dp)
                         .clickable(onClick = onBackClick),
                     shape = CircleShape,
-                    color = CardWhite,
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 3.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("←", color = BrownTextPrimary)
+                        Text("←", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -343,7 +343,7 @@ fun NewChatScreen(
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
@@ -353,7 +353,7 @@ fun NewChatScreen(
                         ochagText("${availableMembers.size} доступно")
                     },
                     style = MaterialTheme.typography.labelMedium,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -388,12 +388,12 @@ fun NewChatScreen(
                             Text(
                                 text = ochagText("Нужен доступ к контактам телефона"),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 text = ochagText("Разреши доступ, чтобы находить близких по номеру телефона."),
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(Modifier.height(12.dp))
                             OchagPrimaryButton(text = ochagText("Разрешить доступ")) {
@@ -527,12 +527,12 @@ private fun TypePill(
             .height(48.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) TerracottaPrimary else CreamBackground
+        color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.background
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = title,
-                color = if (selected) Color.White else BrownTextPrimary,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -548,13 +548,13 @@ private fun SourcePill(
     Surface(
         modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) TerracottaSoft else CardWhite,
+        color = if (selected) TerracottaSoft else MaterialTheme.colorScheme.surface,
         shadowElevation = if (selected) 0.dp else 2.dp
     ) {
         Text(
             text = title,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            color = if (selected) TerracottaDark else BrownTextSecondary,
+            color = if (selected) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
         )
     }
@@ -593,12 +593,12 @@ private fun MemberCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (online) OnlineGreen else BrownTextSecondary
+                    color = if (online) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -644,17 +644,17 @@ private fun PhoneContactCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = contact.phone,
                     style = MaterialTheme.typography.bodySmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = if (registered) "В Очаге: $registeredName" else ochagText("Ещё не в Очаге"),
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (registered) OnlineGreen else BrownTextSecondary
+                    color = if (registered) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
