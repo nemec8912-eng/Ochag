@@ -17,7 +17,8 @@ data class CallUiState(
     val incoming: Boolean = false,
     val caller: String = "",
     val targets: List<String> = emptyList(),
-    val connected: Boolean = false
+    val connected: Boolean = false,
+    val connectedAtMillis: Long = 0L
 )
 
 object OchagWebRtcCallController {
@@ -76,7 +77,10 @@ object OchagWebRtcCallController {
             video = video,
             targets = targets
         )
-        prepareLocalMedia(video)
+        if (!prepareLocalMedia(video)) {
+            closeCall(false)
+            return
+        }
         ServerRealtime.sendCallSignal(
             type = "call_invite",
             callId = callId,
@@ -130,7 +134,14 @@ object OchagWebRtcCallController {
     fun acceptIncoming() {
         val current = state ?: return
         if (!current.incoming) return
-        prepareLocalMedia(current.video)
+        if (!prepareLocalMedia(current.video)) {
+            ServerRealtime.sendCallSignal(
+                "call_reject", current.callId, current.chatId,
+                listOf(current.caller), current.video
+            )
+            closeCall(false)
+            return
+        }
         state = current.copy(incoming = false)
         ServerRealtime.sendCallSignal(
             "call_accept", current.callId, current.chatId,
@@ -172,35 +183,58 @@ object OchagWebRtcCallController {
     fun eglContext(): EglBase.Context? = eglBase?.eglBaseContext
     fun localVideoTrack(): VideoTrack? = videoTrack
 
-    private fun prepareLocalMedia(video: Boolean) {
-        val context = appContext ?: return
-        val currentFactory = factory ?: return
-        if (audioTrack == null) {
-            audioSource = currentFactory.createAudioSource(MediaConstraints())
-            audioTrack = currentFactory.createAudioTrack("ochag_audio", audioSource)
-            audioTrack?.setEnabled(microphoneEnabled)
+    private fun prepareLocalMedia(video: Boolean): Boolean {
+        val context = appContext ?: return false
+        val currentFactory = factory ?: return false
+
+        return runCatching {
+            if (audioTrack == null) {
+                audioSource = currentFactory.createAudioSource(MediaConstraints())
+                audioTrack = currentFactory.createAudioTrack("ochag_audio", audioSource)
+                audioTrack?.setEnabled(microphoneEnabled)
+            }
+
+            if (video && videoTrack == null) {
+                val capturer = createCameraCapturer(context)
+                    ?: throw IllegalStateException("Камера недоступна")
+                videoCapturer = capturer
+                videoSource = currentFactory.createVideoSource(false)
+                surfaceTextureHelper = SurfaceTextureHelper.create(
+                    "OchagVideoCapture",
+                    eglBase?.eglBaseContext
+                )
+                capturer.initialize(
+                    surfaceTextureHelper,
+                    context,
+                    videoSource?.capturerObserver
+                )
+                capturer.startCapture(640, 480, 24)
+                videoTrack = currentFactory.createVideoTrack("ochag_video", videoSource)
+                videoTrack?.setEnabled(cameraEnabled)
+            }
+            audioTrack != null
+        }.getOrElse {
+            releaseLocalMedia()
+            false
         }
-        if (video && videoTrack == null) {
-            val enumerator = Camera2Enumerator(context)
-            val deviceName = enumerator.deviceNames.firstOrNull {
-                enumerator.isFrontFacing(it)
-            } ?: enumerator.deviceNames.firstOrNull()
-            videoCapturer = deviceName?.let { enumerator.createCapturer(it, null) }
-            val capturer = videoCapturer ?: return
-            videoSource = currentFactory.createVideoSource(false)
-            surfaceTextureHelper = SurfaceTextureHelper.create(
-                "OchagVideoCapture",
-                eglBase?.eglBaseContext
-            )
-            capturer.initialize(
-                surfaceTextureHelper,
-                context,
-                videoSource?.capturerObserver
-            )
-            runCatching { capturer.startCapture(640, 480, 24) }
-            videoTrack = currentFactory.createVideoTrack("ochag_video", videoSource)
-            videoTrack?.setEnabled(cameraEnabled)
+    }
+
+    private fun createCameraCapturer(context: Context): VideoCapturer? {
+        val enumerators = buildList<CameraEnumerator> {
+            if (Camera2Enumerator.isSupported(context)) add(Camera2Enumerator(context))
+            add(Camera1Enumerator(true))
         }
+        enumerators.forEach { enumerator ->
+            val names = enumerator.deviceNames
+            val preferred = names.filter { enumerator.isFrontFacing(it) } +
+                names.filterNot { enumerator.isFrontFacing(it) }
+            preferred.forEach { name ->
+                runCatching { enumerator.createCapturer(name, null) }
+                    .getOrNull()
+                    ?.let { return it }
+            }
+        }
+        return null
     }
 
     private fun createPeer(remoteName: String): PeerConnection? {
@@ -222,7 +256,17 @@ object OchagWebRtcCallController {
                     if (newState == PeerConnection.IceConnectionState.CONNECTED ||
                         newState == PeerConnection.IceConnectionState.COMPLETED
                     ) {
-                        state = state?.copy(connected = true)
+                        val now = System.currentTimeMillis()
+                        state = state?.let {
+                            it.copy(
+                                connected = true,
+                                connectedAtMillis = if (it.connectedAtMillis > 0L) {
+                                    it.connectedAtMillis
+                                } else {
+                                    now
+                                }
+                            )
+                        }
                     }
                 }
                 override fun onIceConnectionReceivingChange(receiving: Boolean) {}
@@ -318,24 +362,28 @@ object OchagWebRtcCallController {
         mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", state?.video.toString()))
     }
 
-    private fun closeCall(clearSignal: Boolean) {
-        peers.values.forEach { it.close() }
-        peers.clear()
+    private fun releaseLocalMedia() {
         runCatching { videoCapturer?.stopCapture() }
-        videoCapturer?.dispose()
+        runCatching { videoCapturer?.dispose() }
         videoCapturer = null
-        videoTrack?.dispose()
+        runCatching { videoTrack?.dispose() }
         videoTrack = null
-        videoSource?.dispose()
+        runCatching { videoSource?.dispose() }
         videoSource = null
-        surfaceTextureHelper?.dispose()
+        runCatching { surfaceTextureHelper?.dispose() }
         surfaceTextureHelper = null
-        audioTrack?.dispose()
+        runCatching { audioTrack?.dispose() }
         audioTrack = null
-        audioSource?.dispose()
+        runCatching { audioSource?.dispose() }
         audioSource = null
-        remoteVideoTrack = null
+    }
+
+    private fun closeCall(clearSignal: Boolean) {
         state = null
+        remoteVideoTrack = null
+        peers.values.forEach { runCatching { it.close() } }
+        peers.clear()
+        releaseLocalMedia()
     }
 
     private open class SimpleSdpObserver : SdpObserver {
