@@ -1,5 +1,6 @@
 package com.ochag.app
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -9,6 +10,7 @@ import com.ochag.app.data.DataStoreManager
 import com.ochag.app.data.OchagAppState
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
+import com.ochag.app.ui.localization.OchagLocaleController
 import com.ochag.app.ui.navigation.AppNavigation
 import com.ochag.app.ui.security.AppLockController
 import com.ochag.app.ui.security.AppLockGate
@@ -17,6 +19,10 @@ import com.ochag.app.ui.theme.OchagThemeController
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(OchagLocaleController.apply(newBase))
+    }
 
     companion object {
         private const val TAG = "MainActivity"
