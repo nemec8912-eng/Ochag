@@ -15,6 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ochag.app.ui.localization.OchagLocaleController
 import com.ochag.app.ui.localization.ochagText
+import com.ochag.app.ui.security.AppLockController
+import com.ochag.app.ui.security.AppLockMode
+import com.ochag.app.ui.security.PatternPad
 import com.ochag.app.ui.theme.OchagFontStyle
 import com.ochag.app.ui.theme.OchagThemeController
 
@@ -28,6 +31,7 @@ fun SettingsScreen(
     val fontStyle = OchagThemeController.fontStyle
     val fontSize = OchagThemeController.messageFontSizeLevel
     var languageExpanded by remember { mutableStateOf(false) }
+    var showSecurityDialog by remember { mutableStateOf(false) }
 
     val languages = listOf(
         "ru" to "Русский",
@@ -41,6 +45,112 @@ fun SettingsScreen(
     val currentLanguageName = languages
         .firstOrNull { it.first == OchagLocaleController.language }
         ?.second ?: "Русский"
+
+    if (showSecurityDialog) {
+        var lockMode by remember { mutableStateOf(AppLockController.mode) }
+        var secret by remember { mutableStateOf("") }
+        var repeatSecret by remember { mutableStateOf("") }
+        val valid = secret.length >= 4 && secret == repeatSecret
+
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            title = { Text(ochagText("Блокировка приложения")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (AppLockController.enabled) {
+                        Text(ochagText("Блокировка включена"))
+                        Text(
+                            when (AppLockController.mode) {
+                                AppLockMode.PIN -> ochagText("Способ: цифровой PIN-код")
+                                AppLockMode.PASSWORD -> ochagText("Способ: пароль")
+                                AppLockMode.PATTERN -> ochagText("Способ: графический ключ")
+                            }
+                        )
+                        OutlinedButton(
+                            onClick = {
+                                AppLockController.disable()
+                                showSecurityDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(ochagText("Отключить блокировку"))
+                        }
+                    } else {
+                        Text(ochagText("Выберите способ защиты"), fontWeight = FontWeight.Bold)
+                        AppLockMode.values().forEach { mode ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { lockMode = mode },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = lockMode == mode,
+                                    onClick = { lockMode = mode }
+                                )
+                                Text(
+                                    when (mode) {
+                                        AppLockMode.PIN -> ochagText("PIN-код")
+                                        AppLockMode.PASSWORD -> ochagText("Пароль")
+                                        AppLockMode.PATTERN -> ochagText("Графический ключ")
+                                    }
+                                )
+                            }
+                        }
+
+                        if (lockMode == AppLockMode.PATTERN) {
+                            Text(ochagText("Нарисуйте ключ"))
+                            PatternPad(value = secret) { secret = it }
+                            Text(ochagText("Повторите ключ"))
+                            PatternPad(value = repeatSecret) { repeatSecret = it }
+                        } else {
+                            OutlinedTextField(
+                                value = secret,
+                                onValueChange = {
+                                    secret = if (lockMode == AppLockMode.PIN) {
+                                        it.filter(Char::isDigit).take(12)
+                                    } else it
+                                },
+                                label = { Text(ochagText("Введите код или пароль")) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = repeatSecret,
+                                onValueChange = {
+                                    repeatSecret = if (lockMode == AppLockMode.PIN) {
+                                        it.filter(Char::isDigit).take(12)
+                                    } else it
+                                },
+                                label = { Text(ochagText("Повторите")) },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        Text(ochagText("Минимум 4 точки или символа"))
+                    }
+                }
+            },
+            confirmButton = {
+                if (!AppLockController.enabled) {
+                    Button(
+                        enabled = valid,
+                        onClick = {
+                            AppLockController.enable(lockMode, secret)
+                            showSecurityDialog = false
+                        }
+                    ) {
+                        Text(ochagText("Включить"))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSecurityDialog = false }) {
+                    Text(ochagText("Закрыть"))
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -173,6 +283,30 @@ fun SettingsScreen(
                 },
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        SettingsCard(title = ochagText("Безопасность")) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showSecurityDialog = true }
+                    .padding(vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("🔒", style = MaterialTheme.typography.headlineMedium)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(ochagText("Блокировка приложения"), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (AppLockController.enabled) ochagText("Включена")
+                        else ochagText("Не включена"),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Text("›", style = MaterialTheme.typography.headlineSmall)
+            }
         }
 
         Spacer(Modifier.height(12.dp))
