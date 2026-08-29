@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -580,13 +581,13 @@ fun ChatRoomScreen(
     if (showPollDialog) {
         AlertDialog(
             onDismissRequest = { showPollDialog = false },
-            title = { Text("Создать опрос") },
+            title = { Text(ochagText("Создать опрос")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = pollQuestion,
                         onValueChange = { pollQuestion = it },
-                        label = { Text("Название опроса") },
+                        label = { Text(ochagText("Название опроса")) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     pollOptions.forEachIndexed { index, option ->
@@ -602,7 +603,7 @@ fun ChatRoomScreen(
                     if (pollOptions.size < 6) {
                         TextButton(
                             onClick = { pollOptions = pollOptions + "" }
-                        ) { Text("＋ Добавить вариант") }
+                        ) { Text(ochagText("＋ Добавить вариант")) }
                     }
                 }
             },
@@ -626,10 +627,10 @@ fun ChatRoomScreen(
                         pollOptions = listOf("", "")
                         showPollDialog = false
                     }
-                ) { Text("Создать") }
+                ) { Text(ochagText("Создать")) }
             },
             dismissButton = {
-                TextButton(onClick = { showPollDialog = false }) { Text("Отмена") }
+                TextButton(onClick = { showPollDialog = false }) { Text(ochagText("Отмена")) }
             }
         )
     }
@@ -1197,7 +1198,7 @@ private fun ChatGroupSettingsDialog(
                     onValueChange = { title = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Название") },
+                    label = { Text(ochagText("Название")) },
                     shape = RoundedCornerShape(18.dp)
                 )
 
@@ -1243,7 +1244,7 @@ private fun ChatGroupSettingsDialog(
                     onValueChange = { searchText = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Найти участника") },
+                    label = { Text(ochagText("Найти участника")) },
                     shape = RoundedCornerShape(18.dp)
                 )
 
@@ -1587,10 +1588,10 @@ private fun MessageFontSettingsDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onSave(style, size) }) { Text("Сохранить") }
+            Button(onClick = { onSave(style, size) }) { Text(ochagText("Сохранить")) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) { Text(ochagText("Отмена")) }
         },
         containerColor = CreamBackground
     )
