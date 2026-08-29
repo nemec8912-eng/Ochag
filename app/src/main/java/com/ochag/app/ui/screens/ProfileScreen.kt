@@ -351,7 +351,7 @@ fun ProfileScreen(
     }
 
     Scaffold(
-        containerColor = CreamBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             OchagBottomBar(
                 items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
@@ -394,7 +394,7 @@ fun ProfileScreen(
                     Text(
                         text = ochagText("Профиль"),
                         style = MaterialTheme.typography.displaySmall,
-                        color = BrownTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                     Surface(
@@ -402,8 +402,8 @@ fun ProfileScreen(
                             .size(48.dp)
                             .clickable(onClick = onSettingsClick),
                         shape = CircleShape,
-                        color = CardCream,
-                        border = BorderStroke(1.dp, BorderSoft)
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("⚙", style = MaterialTheme.typography.headlineSmall)
@@ -414,7 +414,7 @@ fun ProfileScreen(
                 Text(
                     text = ochagText("Личное пространство в «Очаге»"),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(22.dp))
@@ -464,7 +464,7 @@ fun ProfileScreen(
                         Text(
                             text = userName,
                             style = MaterialTheme.typography.headlineMedium,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(Modifier.height(6.dp))
@@ -473,13 +473,13 @@ fun ProfileScreen(
                             Surface(
                                 modifier = Modifier.size(8.dp),
                                 shape = CircleShape,
-                                color = if (online) OnlineGreen else BorderSoft
+                                color = if (online) OnlineGreen else MaterialTheme.colorScheme.outline
                             ) {}
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = statusText,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = if (online) OnlineGreen else BrownTextSecondary
+                                color = if (online) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -542,7 +542,7 @@ fun ProfileScreen(
                                     Text(
                                         text = if (darkTheme) "☾" else "☀",
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = BrownTextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -553,12 +553,12 @@ fun ProfileScreen(
                                 Text(
                                     text = if (darkTheme) ochagText("Тёмная тема") else ochagText("Светлая тема"),
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = BrownTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = if (darkTheme) ochagText("Мягкая тёмная палитра") else ochagText("Тёплая молочная палитра"),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = BrownTextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -568,12 +568,12 @@ fun ProfileScreen(
                             )
                         }
 
-                        HorizontalDivider(color = DividerSoft)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                         Text(
                             text = ochagText("Стиль шрифта"),
                             style = MaterialTheme.typography.titleMedium,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Row(
@@ -591,12 +591,12 @@ fun ProfileScreen(
                             }
                         }
 
-                        HorizontalDivider(color = DividerSoft)
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                         Text(
                             text = ochagText("Размер текста всего приложения"),
                             style = MaterialTheme.typography.titleMedium,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = when (messageFontSizeLevel) {
@@ -607,7 +607,7 @@ fun ProfileScreen(
                                 else -> ochagText("Очень большой")
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Row(
@@ -628,13 +628,13 @@ fun ProfileScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            color = CardCream
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Text(
                                 text = ochagText("Так будет выглядеть текст во всём приложении"),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -716,7 +716,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(22.dp),
-                    border = BorderStroke(1.dp, BorderSoft),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
                 ) {
                     Text(ochagText("Выйти из «Очага»"), fontWeight = FontWeight.SemiBold)
@@ -764,13 +764,13 @@ private fun SectionTitle(title: String, subtitle: String) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
-            color = BrownTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(2.dp))
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodyMedium,
-            color = BrownTextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -786,8 +786,8 @@ private fun ThemeToggle(
             .height(34.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        color = if (checked) TerracottaPrimary else CardCream,
-        border = BorderStroke(1.dp, if (checked) TerracottaPrimary else BorderSoft)
+        color = if (checked) TerracottaPrimary else MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, if (checked) TerracottaPrimary else MaterialTheme.colorScheme.outline)
     ) {
         Box(
             modifier = Modifier.padding(4.dp),
@@ -796,7 +796,7 @@ private fun ThemeToggle(
             Surface(
                 modifier = Modifier.size(24.dp),
                 shape = CircleShape,
-                color = if (checked) Color.White else CardWhite,
+                color = if (checked) Color.White else MaterialTheme.colorScheme.surface,
                 shadowElevation = 2.dp
             ) {}
         }
@@ -815,15 +815,15 @@ private fun FontChoice(
             .height(46.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(17.dp),
-        color = if (selected) TerracottaSoft else CardCream,
-        border = BorderStroke(1.dp, if (selected) TerracottaSoft else BorderSoft)
+        color = if (selected) TerracottaSoft else MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, if (selected) TerracottaSoft else MaterialTheme.colorScheme.outline)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = title,
                 maxLines = 1,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (selected) TerracottaDark else BrownTextSecondary,
+                color = if (selected) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
             )
         }
@@ -842,13 +842,13 @@ private fun FontSizeChoice(
             .height(42.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(14.dp),
-        color = if (selected) TerracottaPrimary else CardCream,
-        border = BorderStroke(1.dp, if (selected) TerracottaPrimary else BorderSoft)
+        color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, if (selected) TerracottaPrimary else MaterialTheme.colorScheme.outline)
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = level.toString(),
-                color = if (selected) Color.White else BrownTextSecondary,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -883,7 +883,7 @@ private fun ProfileAction(
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = symbol,
-                        color = BrownTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
@@ -895,20 +895,20 @@ private fun ProfileAction(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Text(
                 text = "›",
                 style = MaterialTheme.typography.headlineSmall,
-                color = BrownTextMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
