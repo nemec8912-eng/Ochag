@@ -1,5 +1,6 @@
 package com.ochag.app.ui.security
 
+import com.ochag.app.ui.localization.ochagText
 import android.content.Context
 import java.security.MessageDigest
 import androidx.compose.foundation.clickable
@@ -126,13 +127,13 @@ fun AppLockGate(content: @Composable () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Очаг", style = MaterialTheme.typography.displaySmall)
+            Text(ochagText("Очаг"), style = MaterialTheme.typography.displaySmall)
             Spacer(Modifier.height(12.dp))
             Text(
                 when (AppLockController.mode) {
-                    AppLockMode.PIN -> "Введите PIN-код"
-                    AppLockMode.PASSWORD -> "Введите пароль"
-                    AppLockMode.PATTERN -> "Введите графический ключ"
+                    AppLockMode.PIN -> ochagText("Введите PIN-код")
+                    AppLockMode.PASSWORD -> ochagText("Введите пароль")
+                    AppLockMode.PATTERN -> ochagText("Введите графический ключ")
                 },
                 style = MaterialTheme.typography.titleLarge
             )
@@ -155,7 +156,7 @@ fun AppLockGate(content: @Composable () -> Unit) {
                         error = false
                     },
                     singleLine = true,
-                    label = { Text("Код доступа") },
+                    label = { Text(ochagText("Код доступа")) },
                     visualTransformation = PasswordVisualTransformation(),
                     isError = error,
                     modifier = Modifier.fillMaxWidth(),
@@ -163,14 +164,14 @@ fun AppLockGate(content: @Composable () -> Unit) {
                 )
             }
             if (error) {
-                Text("Неверный код или пароль", color = MaterialTheme.colorScheme.error)
+                Text(ochagText("Неверный код или пароль"), color = MaterialTheme.colorScheme.error)
             }
             Spacer(Modifier.height(16.dp))
             Button(
                 onClick = { error = !AppLockController.verify(secret) },
                 enabled = secret.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Открыть") }
+            ) { Text(ochagText("Открыть")) }
         }
     }
 }
@@ -267,7 +268,7 @@ fun PatternPad(
             }
         }
         TextButton(onClick = { onValueChange("") }) {
-            Text("Сбросить рисунок")
+            Text(ochagText("Сбросить рисунок"))
         }
     }
 }
