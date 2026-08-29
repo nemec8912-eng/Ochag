@@ -123,6 +123,30 @@ private val en = mapOf(
     "Добавь PNG, JPG или WEBP — они появятся здесь и в чате." to "Add PNG, JPG or WEBP files — they will appear here and in chat.",
     "Новый стикерпак" to "New sticker pack", "Название" to "Name",
     "Например: Наш кот" to "For example: Our cat", "Создать" to "Create"
+,
+    "Обычный" to "Regular", "Классический" to "Classic", "Рукописный" to "Handwritten",
+    "Печатный" to "Print", "Создать опрос" to "Create poll", "Название опроса" to "Poll question",
+    "＋ Добавить вариант" to "＋ Add option", "Создать" to "Create", "● Записывается голосовое…" to "● Recording voice…",
+    "● Записывается видеокружок…" to "● Recording video circle…", "📷  Фото" to "📷  Photo",
+    "📎  Файл" to "📎  File", "📊  Опрос" to "📊  Poll", "📍  Локация" to "📍  Location",
+    "📇  Контакт" to "📇  Contact", "✨  Хранитель Очага" to "✨  Keeper of the Hearth",
+    "Добавить подпись…" to "Add a caption…", "Сообщение…" to "Message…", "Аудио" to "Audio",
+    "Настройки группы" to "Group settings", "Настройки темы" to "Topic settings", "Чат" to "Chat",
+    "Название" to "Name", "Изменить аватарку группы" to "Change group avatar",
+    "Найти участника" to "Find member", "● Подключено" to "● Connected", "○ Нет соединения" to "○ Disconnected",
+    "печатает" to "typing", "Шрифт сообщений" to "Message font", "Стиль" to "Style",
+    "Привет! Так будут выглядеть сообщения." to "Hello! This is how messages will look.",
+    "Без имени" to "Unnamed", "Голос отправлен" to "Vote sent", "Проголосовать" to "Vote",
+    "Закреплённых сообщений нет" to "No pinned messages", "Открепить выбранные" to "Unpin selected",
+    "Ваше сообщение" to "Your message", "Редактировать" to "Edit", "Выделить" to "Select",
+    "Уже закреплено" to "Already pinned", "Закрепить в чате" to "Pin in chat", "Удалить" to "Delete",
+    "Редактировать сообщение" to "Edit message", "Удалить сообщение?" to "Delete message?",
+    "Сообщение будет удалено на этом устройстве. Серверное удаление у второго участника подключим отдельно." to "The message will be deleted on this device.",
+    "Полученное сообщение будет скрыто на этом устройстве." to "The received message will be hidden on this device.",
+    "Удалить выбранные?" to "Delete selected?", "Удалить все сообщения?" to "Delete all messages?",
+    "Вся история этого чата будет удалена с этого устройства." to "All chat history will be deleted from this device.",
+    "Удалить все" to "Delete all", "Нажимай на другие сообщения" to "Tap other messages",
+    "Снять все" to "Clear selection", "Все" to "All", "Очистить" to "Clear"
 
 )
 
