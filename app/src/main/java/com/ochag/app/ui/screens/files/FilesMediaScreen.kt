@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.files
 
+import com.ochag.app.ui.localization.ochagText
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -124,7 +125,7 @@ fun FilesMediaScreen(
                 item {
 
                     SectionTitle(
-                        title = "Недавние фото"
+                        title = ochagText("Недавние фото")
                     )
 
                     Spacer(
@@ -146,7 +147,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Видео и кружки"
+                        title = ochagText("Видео и кружки")
                     )
 
                     Spacer(
@@ -168,7 +169,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Голосовые сообщения"
+                        title = ochagText("Голосовые сообщения")
                     )
 
                     Spacer(
@@ -190,7 +191,7 @@ fun FilesMediaScreen(
                     )
 
                     SectionTitle(
-                        title = "Документы"
+                        title = ochagText("Документы")
                     )
 
                     Spacer(
@@ -212,7 +213,7 @@ fun FilesMediaScreen(
                     )
 
                     Text(
-                        text = "Быстрые действия",
+                        text = ochagText("Быстрые действия"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = BrownTextPrimary
@@ -303,14 +304,14 @@ private fun FilesHeader(
             ) {
 
                 Text(
-                    text = "Семья",
+                    text = ochagText("Семья"),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = BrownTextPrimary
                 )
 
                 Text(
-                    text = "Файлы и медиа",
+                    text = ochagText("Файлы и медиа"),
                     fontSize = 12.sp,
                     color = BrownTextSecondary
                 )
@@ -384,7 +385,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Фото",
+                title = ochagText("Фото"),
                 symbol = "▧",
                 selected = selectedTab == MediaTab.PHOTO,
                 onClick = {
@@ -394,7 +395,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Видео",
+                title = ochagText("Видео"),
                 symbol = "▶",
                 selected = selectedTab == MediaTab.VIDEO,
                 onClick = {
@@ -404,7 +405,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Кружки",
+                title = ochagText("Кружки"),
                 symbol = "◌",
                 selected = selectedTab == MediaTab.CIRCLES,
                 onClick = {
@@ -414,7 +415,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Голос",
+                title = ochagText("Голос"),
                 symbol = "♩",
                 selected = selectedTab == MediaTab.VOICE,
                 onClick = {
@@ -424,7 +425,7 @@ private fun MediaTabs(
 
             MediaTabButton(
                 modifier = Modifier.weight(1f),
-                title = "Файлы",
+                title = ochagText("Файлы"),
                 symbol = "□",
                 selected = selectedTab == MediaTab.DOCUMENTS,
                 onClick = {
@@ -514,7 +515,7 @@ private fun SectionTitle(
         )
 
         Text(
-            text = "Показать все  ›",
+            text = ochagText("Показать все  ›"),
             fontSize = 12.sp,
             color = TerracottaDark
         )
@@ -650,28 +651,28 @@ private fun VideoGrid() {
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Дочка",
+            title = ochagText("Дочка"),
             duration = "0:06",
             emoji = "👧"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Папа",
+            title = ochagText("Папа"),
             duration = "0:12",
             emoji = "🌅"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Мама",
+            title = ochagText("Мама"),
             duration = "0:09",
             emoji = "👩"
         )
 
         VideoCard(
             modifier = Modifier.weight(1f),
-            title = "Вечер",
+            title = ochagText("Вечер"),
             duration = "0:15",
             emoji = "✨"
         )
@@ -783,19 +784,19 @@ private fun VoiceMessages() {
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:18",
-            subtitle = "Мама • 18:13"
+            subtitle = ochagText("Мама • 18:13")
         )
 
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:22",
-            subtitle = "Папа • Вчера"
+            subtitle = ochagText("Папа • Вчера")
         )
 
         VoiceCard(
             modifier = Modifier.weight(1f),
             duration = "0:09",
-            subtitle = "Дочка • 3 дня"
+            subtitle = ochagText("Дочка • 3 дня")
         )
     }
 }
@@ -943,16 +944,16 @@ private fun Documents() {
         DocumentCard(
             modifier = Modifier.weight(1f),
             extension = "PDF",
-            fileName = "План_ремонта_ванной.pdf",
-            info = "1.2 МБ • PDF",
+            fileName = ochagText("План_ремонта_ванной.pdf"),
+            info = ochagText("1.2 МБ • PDF"),
             accent = TerracottaPrimary
         )
 
         DocumentCard(
             modifier = Modifier.weight(1f),
             extension = "DOCX",
-            fileName = "Список_покупок.docx",
-            info = "120 КБ • DOCX",
+            fileName = ochagText("Список_покупок.docx"),
+            info = ochagText("120 КБ • DOCX"),
             accent = Color(0xFF6899C7)
         )
     }
@@ -1051,25 +1052,25 @@ private fun QuickActions() {
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "▧",
-            title = "Открыть\nгалерею"
+            title = ochagText("Открыть\nгалерею")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "◉",
-            title = "Снять\nфото"
+            title = ochagText("Снять\nфото")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "◌",
-            title = "Записать\nкружок"
+            title = ochagText("Записать\nкружок")
         )
 
         QuickAction(
             modifier = Modifier.weight(1f),
             icon = "⌕",
-            title = "Прикрепить\nфайл"
+            title = ochagText("Прикрепить\nфайл")
         )
     }
 }
@@ -1155,35 +1156,35 @@ private fun FilesBottomBar(
         ) {
 
             BottomItem(
-                title = "Чаты",
+                title = ochagText("Чаты"),
                 symbol = "◯",
                 selected = false,
                 onClick = onChatsClick
             )
 
             BottomItem(
-                title = "Контакты",
+                title = ochagText("Контакты"),
                 symbol = "♧",
                 selected = false,
                 onClick = onContactsClick
             )
 
             BottomItem(
-                title = "Звонки",
+                title = ochagText("Звонки"),
                 symbol = "☎",
                 selected = false,
                 onClick = onCallsClick
             )
 
             BottomItem(
-                title = "Файлы",
+                title = ochagText("Файлы"),
                 symbol = "▰",
                 selected = true,
                 onClick = {}
             )
 
             BottomItem(
-                title = "Профиль",
+                title = ochagText("Профиль"),
                 symbol = "♙",
                 selected = false,
                 onClick = onProfileClick
