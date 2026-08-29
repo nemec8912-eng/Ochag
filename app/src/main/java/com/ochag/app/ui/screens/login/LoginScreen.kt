@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.login
 
+import com.ochag.app.ui.localization.ochagText
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -80,7 +81,7 @@ fun LoginScreen(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "Очаг",
+                text = ochagText("Очаг"),
                 fontSize = 52.sp,
                 fontWeight = FontWeight.Light,
                 color = BrownTextPrimary
@@ -89,7 +90,7 @@ fun LoginScreen(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "Тёплое пространство\nтолько для своих",
+                text = ochagText("Тёплое пространство\nтолько для своих"),
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 lineHeight = 22.sp,
@@ -116,7 +117,7 @@ fun LoginScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text("Логин") },
+                        placeholder = { Text(ochagText("Логин")) },
                         leadingIcon = {
                             Text("○", fontSize = 20.sp, color = BrownTextSecondary)
                         },
@@ -134,7 +135,7 @@ fun LoginScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text("Пароль") },
+                        placeholder = { Text(ochagText("Пароль")) },
                         leadingIcon = {
                             Text("□", fontSize = 18.sp, color = BrownTextSecondary)
                         },
@@ -173,7 +174,7 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (login.isBlank() || password.isBlank()) {
-                                errorText = "Введите логин и пароль"
+                                errorText = ochagText("Введите логин и пароль")
                                 return@Button
                             }
 
@@ -186,7 +187,7 @@ fun LoginScreen(
                                 errorText = ""
                                 onLoginSuccess()
                             } else {
-                                errorText = "Неверный логин или пароль"
+                                errorText = ochagText("Неверный логин или пароль")
                             }
                         },
                         modifier = Modifier
@@ -199,7 +200,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            text = "Войти",
+                            text = ochagText("Войти"),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -216,7 +217,7 @@ fun LoginScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, TerracottaDark)
                     ) {
                         Text(
-                            text = "Регистрация по приглашению",
+                            text = ochagText("Регистрация по приглашению"),
                             color = TerracottaDark,
                             fontWeight = FontWeight.Medium
                         )
@@ -227,7 +228,7 @@ fun LoginScreen(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "Новый участник может войти\nтолько по приглашению владельца",
+                text = ochagText("Новый участник может войти\nтолько по приглашению владельца"),
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
@@ -248,7 +249,7 @@ fun LoginScreen(
                     Text("♡", fontSize = 22.sp, color = TerracottaDark)
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        text = "Переписки и данные семьи защищены",
+                        text = ochagText("Переписки и данные семьи защищены"),
                         fontSize = 11.sp,
                         color = BrownTextSecondary
                     )
