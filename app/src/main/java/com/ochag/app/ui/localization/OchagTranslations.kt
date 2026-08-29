@@ -162,7 +162,11 @@ private val en = mapOf(
     "Не удалось открыть контакт" to "Could not open contact",
     "0 в сети" to "0 online",
     "Вечер" to "Evening",
-    "Мама • Вчера" to "Мама • Yesterday"
+    "Мама • Вчера" to "Мама • Yesterday",
+    "Настройки" to "Settings",
+    "Тема приложения" to "App theme",
+    "Изменяет оформление всего приложения" to "Changes the appearance of the entire app",
+    "Открыть и настроить стикерпаки" to "Open and manage sticker packs"
 )
 
 private val common = mapOf(
