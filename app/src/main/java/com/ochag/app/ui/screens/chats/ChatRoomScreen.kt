@@ -145,6 +145,7 @@ fun ChatRoomScreen(
     var showChatSettings by remember { mutableStateOf(false) }
     var showFontSettings by remember { mutableStateOf(false) }
     var showStickerPicker by remember { mutableStateOf(false) }
+    var activeCallType by remember { mutableStateOf<String?>(null) }
 
     val fontPreferences = remember {
         appContext.getSharedPreferences(FONT_PREFS, Context.MODE_PRIVATE)
@@ -555,6 +556,14 @@ fun ChatRoomScreen(
         )
     }
 
+    if (activeCallType != null) {
+        ChatCallDialog(
+            chatTitle = currentChat?.title ?: chatTitle,
+            video = activeCallType == "video",
+            onDismiss = { activeCallType = null }
+        )
+    }
+
     if (showFontSettings) {
         MessageFontSettingsDialog(
             selectedStyle = messageFontStyle,
@@ -645,7 +654,8 @@ fun ChatRoomScreen(
                     ServerRealtime.requestServerUsers()
                     showChatSettings = true
                 },
-                onFontSettingsClick = { showFontSettings = true },
+                onAudioCallClick = { activeCallType = "audio" },
+                onVideoCallClick = { activeCallType = "video" },
                 onBackClick = onBackClick
             )
 
@@ -1400,7 +1410,8 @@ private fun ChatHeader(
     statusText: String,
     canOpenSettings: Boolean,
     onSettingsClick: () -> Unit,
-    onFontSettingsClick: () -> Unit,
+    onAudioCallClick: () -> Unit,
+    onVideoCallClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Surface(
@@ -1484,22 +1495,32 @@ private fun ChatHeader(
 
             Surface(
                 modifier = Modifier
-                    .padding(start = 6.dp)
-                    .size(42.dp)
-                    .clickable(onClick = onFontSettingsClick),
+                    .padding(start = 4.dp)
+                    .size(40.dp)
+                    .clickable(onClick = onAudioCallClick),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = ochagText("Аа"),
-                        color = TerracottaDark,
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    )
+                    Text("☎", color = TerracottaDark, fontSize = 18.sp)
                 }
             }
+
+            Spacer(Modifier.width(4.dp))
+
+            Surface(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(onClick = onVideoCallClick),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("▰", color = TerracottaDark, fontSize = 17.sp)
+                }
+            }
+
+            Spacer(Modifier.width(4.dp))
 
             if (canOpenSettings) {
                 Surface(
@@ -2291,4 +2312,84 @@ private fun getFileName(context: Context, uri: Uri): String {
         }
     }
     return result
+}
+
+
+@Composable
+private fun ChatCallDialog(
+    chatTitle: String,
+    video: Boolean,
+    onDismiss: () -> Unit
+) {
+    var microphoneEnabled by remember { mutableStateOf(true) }
+    var cameraEnabled by remember { mutableStateOf(video) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                if (video) ochagText("Видеозвонок")
+                else ochagText("Аудиозвонок")
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.size(88.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            chatTitle.firstOrNull()?.uppercase() ?: "О",
+                            style = MaterialTheme.typography.displaySmall
+                        )
+                    }
+                }
+                Text(chatTitle, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    ochagText("Подключение к звонку…"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    FilterChip(
+                        selected = microphoneEnabled,
+                        onClick = { microphoneEnabled = !microphoneEnabled },
+                        label = {
+                            Text(
+                                if (microphoneEnabled) ochagText("Микрофон включён")
+                                else ochagText("Микрофон выключен")
+                            )
+                        }
+                    )
+                    if (video) {
+                        FilterChip(
+                            selected = cameraEnabled,
+                            onClick = { cameraEnabled = !cameraEnabled },
+                            label = {
+                                Text(
+                                    if (cameraEnabled) ochagText("Камера включена")
+                                    else ochagText("Камера выключена")
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(ochagText("Завершить звонок"))
+            }
+        }
+    )
 }
