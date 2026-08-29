@@ -1654,36 +1654,29 @@ object ChatRepository {
                 }
             }
 
-        val safeTitle =
-            title
-                .trim()
-                .ifBlank {
-                    current
-                        ?.title
-                        ?: when (
-                            type
-                        ) {
-
-                            ChatType.FAMILY ->
-                                "Семья"
-
-                            ChatType.PRIVATE ->
-                                finalMembers
-                                    .firstOrNull {
-                                        !it.equals(
-                                            currentUser,
-                                            ignoreCase = true
-                                        )
-                                    }
-                                    ?: "Личный чат"
-
-                            ChatType.GROUP ->
-                                "Группа"
-
-                            ChatType.THEME ->
-                                "Тематический чат"
-                        }
+        val privateCompanion =
+            if (type == ChatType.PRIVATE && finalMembers.size > 1) {
+                finalMembers.firstOrNull {
+                    !it.equals(currentUser, ignoreCase = true)
                 }
+            } else {
+                null
+            }
+
+        val safeTitle =
+            privateCompanion
+                ?: title
+                    .trim()
+                    .ifBlank {
+                        current
+                            ?.title
+                            ?: when (type) {
+                                ChatType.FAMILY -> "Семья"
+                                ChatType.PRIVATE -> "Личный чат"
+                                ChatType.GROUP -> "Группа"
+                                ChatType.THEME -> "Тематический чат"
+                            }
+                    }
 
         val merged =
             if (
