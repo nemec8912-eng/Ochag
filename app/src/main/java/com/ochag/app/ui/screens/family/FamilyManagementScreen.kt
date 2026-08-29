@@ -44,7 +44,7 @@ fun FamilyManagementScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -91,7 +91,7 @@ fun FamilyManagementScreen(
                                 text = owner,
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(Modifier.height(4.dp))
@@ -113,14 +113,14 @@ fun FamilyManagementScreen(
                             Text(
                                 text = if (ownerOnline) ochagText("В сети") else ochagText("Не в сети"),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (ownerOnline) OnlineGreen else BrownTextSecondary
+                                color = if (ownerOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
                         Text(
                             text = "›",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -131,7 +131,7 @@ fun FamilyManagementScreen(
                     text = ochagText("Участники семьи"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -167,7 +167,7 @@ fun FamilyManagementScreen(
                                     text = member,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = BrownTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
 
                                 if (isOwner) {
@@ -185,14 +185,14 @@ fun FamilyManagementScreen(
                             Text(
                                 text = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (isOnline) OnlineGreen else BrownTextSecondary
+                                color = if (isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
                         Text(
                             text = "⋮",
                             style = MaterialTheme.typography.titleLarge,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -203,7 +203,7 @@ fun FamilyManagementScreen(
                     text = ochagText("Приглашения"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -230,12 +230,12 @@ fun FamilyManagementScreen(
                                 text = ochagText("Пригласить близких"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = BrownTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = ochagText("Коды приглашения подключим отдельным шагом"),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
@@ -265,13 +265,13 @@ fun FamilyManagementScreen(
                             text = ochagText("Безопасность семьи"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.height(7.dp))
                         Text(
                             text = ochagText("Вход новых участников будет происходить только после приглашения и подтверждения владельца."),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
