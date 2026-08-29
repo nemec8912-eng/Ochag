@@ -3,6 +3,7 @@
 
     <!-- Интернет / подключение к серверу -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Камера: фото и видеокружки -->
     <uses-permission android:name="android.permission.CAMERA" />
