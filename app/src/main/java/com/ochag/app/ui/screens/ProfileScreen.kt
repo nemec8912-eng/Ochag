@@ -35,10 +35,6 @@ import com.ochag.app.ui.components.OchagBottomBar
 import com.ochag.app.ui.components.OchagCard
 import com.ochag.app.ui.components.OchagPrimaryButton
 import com.ochag.app.ui.components.OchagTextField
-import com.ochag.app.ui.localization.OchagLocaleController
-import com.ochag.app.ui.security.AppLockController
-import com.ochag.app.ui.security.AppLockMode
-import com.ochag.app.ui.security.PatternPad
 import com.ochag.app.ui.theme.*
 
 @Composable
@@ -57,9 +53,6 @@ fun ProfileScreen(
     val userName = user?.name ?: ochagText("Гость")
     val profiles by ServerRealtime.serverUserProfiles.collectAsState()
     val connectionState by ServerRealtime.connectionState.collectAsState()
-    val darkTheme = OchagThemeController.isDarkTheme
-    val fontStyle = OchagThemeController.fontStyle
-    val messageFontSizeLevel = OchagThemeController.messageFontSizeLevel
 
     val serverPhone = profiles
         .firstOrNull { it.name.equals(userName, ignoreCase = true) }
@@ -69,9 +62,6 @@ fun ProfileScreen(
     var phone by remember(serverPhone) { mutableStateOf(serverPhone) }
     var saveStatus by remember { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
-    var showThemeDialog by remember { mutableStateOf(false) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showSecurityDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val profilePreferences = remember(userName) {
@@ -79,18 +69,6 @@ fun ProfileScreen(
             "ochag_profile_settings_$userName",
             android.content.Context.MODE_PRIVATE
         )
-    }
-    val languageNames = mapOf(
-        "ru" to ochagText("Русский"),
-        "en" to "English",
-        "de" to "Deutsch",
-        "fr" to "Français",
-        "es" to "Español",
-        "zh" to "中文",
-        "ja" to "日本語"
-    )
-    var selectedLanguage by remember {
-        mutableStateOf(OchagLocaleController.currentLanguage(context))
     }
     var profileAvatarUri by remember(userName) {
         mutableStateOf(
@@ -112,233 +90,6 @@ fun ProfileScreen(
                 .putString("profile_avatar", profileAvatarUri)
                 .apply()
         }
-    }
-
-    if (showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = { Text(ochagText("Изменить тему")) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(ochagText("Режим приложения"), fontWeight = FontWeight.Bold)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(
-                            selected = !darkTheme,
-                            onClick = { OchagThemeController.setDarkTheme(false) }
-                        )
-                        Text(ochagText("Светлая"))
-                        Spacer(Modifier.width(14.dp))
-                        RadioButton(
-                            selected = darkTheme,
-                            onClick = { OchagThemeController.setDarkTheme(true) }
-                        )
-                        Text(ochagText("Тёмная"))
-                    }
-
-                    HorizontalDivider()
-                    Text(ochagText("Стиль приложения и чатов"), fontWeight = FontWeight.Bold)
-                    OchagFontStyle.values().forEach { style ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { OchagThemeController.setFontStyle(style) },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = fontStyle == style,
-                                onClick = { OchagThemeController.setFontStyle(style) }
-                            )
-                            Text(
-                                when (style) {
-                                    OchagFontStyle.WARM -> ochagText("Тёплая")
-                                    OchagFontStyle.MODERN -> ochagText("Современная")
-                                    OchagFontStyle.CLASSIC -> ochagText("Классическая")
-                                }
-                            )
-                        }
-                    }
-
-                    Text(ochagText("Обои и дополнительные цвета будут добавлены в следующем этапе."))
-                }
-            },
-            confirmButton = {
-                Button(onClick = { showThemeDialog = false }) { Text(ochagText("Готово")) }
-            }
-        )
-    }
-
-    if (showLanguageDialog) {
-        val languages = languageNames.toList()
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(ochagText("Язык приложения")) },
-            text = {
-                Column {
-                    languages.forEach { (languageCode, languageName) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedLanguage = languageCode }
-                                .padding(vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedLanguage == languageCode,
-                                onClick = { selectedLanguage = languageCode }
-                            )
-                            Text(languageName)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        OchagLocaleController.saveLanguage(context, selectedLanguage)
-                        profilePreferences.edit()
-                            .putString("app_language", selectedLanguage)
-                            .apply()
-                        showLanguageDialog = false
-                        selectedLanguage = OchagLocaleController.language
-                    }
-                ) { Text(ochagText("Сохранить")) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text(ochagText("Отмена"))
-                }
-            }
-        )
-    }
-
-    if (showSecurityDialog) {
-        var lockMode by remember { mutableStateOf(AppLockController.mode) }
-        var lockSecret by remember { mutableStateOf("") }
-        var lockSecretRepeat by remember { mutableStateOf("") }
-        val validSecret = lockSecret.length >= 4 && lockSecret == lockSecretRepeat
-
-        AlertDialog(
-            onDismissRequest = { showSecurityDialog = false },
-            title = { Text(ochagText("Блокировка приложения")) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (AppLockController.enabled) {
-                        Text(ochagText("Блокировка включена"))
-                        Text(
-                            when (AppLockController.mode) {
-                                AppLockMode.PIN -> ochagText("Способ: цифровой PIN-код")
-                                AppLockMode.PASSWORD -> ochagText("Способ: пароль")
-                                AppLockMode.PATTERN -> ochagText("Способ: графический ключ")
-                            }
-                        )
-                        Text(ochagText("Автоматическая блокировка"), fontWeight = FontWeight.Bold)
-                        listOf(
-                            0L to ochagText("Сразу после сворачивания"),
-                            60_000L to ochagText("Через 1 минуту"),
-                            300_000L to ochagText("Через 5 минут"),
-                            1_800_000L to ochagText("Через 30 минут"),
-                            AppLockController.NEVER_TIMEOUT to ochagText("Только после полного закрытия")
-                        ).forEach { (timeout, title) ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { AppLockController.setTimeout(timeout) },
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = AppLockController.timeoutMs == timeout,
-                                    onClick = { AppLockController.setTimeout(timeout) }
-                                )
-                                Text(title)
-                            }
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                AppLockController.disable()
-                                showSecurityDialog = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text(ochagText("Отключить блокировку")) }
-                    } else {
-                        Text(ochagText("Выберите способ защиты"), fontWeight = FontWeight.Bold)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = lockMode == AppLockMode.PIN,
-                                onClick = { lockMode = AppLockMode.PIN }
-                            )
-                            Text(ochagText("PIN-код"))
-                            Spacer(Modifier.width(14.dp))
-                            RadioButton(
-                                selected = lockMode == AppLockMode.PASSWORD,
-                                onClick = { lockMode = AppLockMode.PASSWORD }
-                            )
-                            Text(ochagText("Пароль"))
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { lockMode = AppLockMode.PATTERN },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = lockMode == AppLockMode.PATTERN,
-                                onClick = { lockMode = AppLockMode.PATTERN }
-                            )
-                            Text(ochagText("Графический ключ"))
-                        }
-
-                        if (lockMode == AppLockMode.PATTERN) {
-                            Text(ochagText("Нарисуйте ключ"))
-                            PatternPad(lockSecret) { lockSecret = it }
-                            Text(ochagText("Повторите ключ"))
-                            PatternPad(lockSecretRepeat) { lockSecretRepeat = it }
-                        } else {
-                            OutlinedTextField(
-                                value = lockSecret,
-                                onValueChange = {
-                                    lockSecret = if (lockMode == AppLockMode.PIN) {
-                                        it.filter(Char::isDigit).take(12)
-                                    } else it
-                                },
-                                label = { Text(ochagText("Введите код или пароль")) },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            OutlinedTextField(
-                                value = lockSecretRepeat,
-                                onValueChange = {
-                                    lockSecretRepeat = if (lockMode == AppLockMode.PIN) {
-                                        it.filter(Char::isDigit).take(12)
-                                    } else it
-                                },
-                                label = { Text(ochagText("Повторите")) },
-                                singleLine = true,
-                                isError = lockSecretRepeat.isNotBlank() &&
-                                    lockSecretRepeat != lockSecret,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Text(ochagText("Минимум 4 точки или символа"))
-                    }
-                }
-            },
-            confirmButton = {
-                if (!AppLockController.enabled) {
-                    Button(
-                        enabled = validSecret,
-                        onClick = {
-                            AppLockController.enable(lockMode, lockSecret)
-                            showSecurityDialog = false
-                        }
-                    ) { Text(ochagText("Включить")) }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSecurityDialog = false }) {
-                    Text(ochagText("Закрыть"))
-                }
-            }
-        )
     }
 
     LaunchedEffect(Unit) { ServerRealtime.requestServerUsers() }
@@ -502,145 +253,6 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle(ochagText("Внешний вид"), ochagText("Настрой «Очаг» под себя"))
-                Spacer(Modifier.height(10.dp))
-
-                ProfileAction(
-                    "◐",
-                    ochagText("Изменить тему"),
-                    ochagText("Приложение, чаты, сообщения и шрифт"),
-                    AvatarPeach
-                ) { showThemeDialog = true }
-
-                Spacer(Modifier.height(8.dp))
-
-                ProfileAction(
-                    "文",
-                    ochagText("Язык приложения"),
-                    languageNames[selectedLanguage] ?: ochagText("Русский"),
-                    AvatarSage
-                ) { showLanguageDialog = true }
-
-                Spacer(Modifier.height(10.dp))
-
-                OchagCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 2.dp,
-                    contentPadding = PaddingValues(18.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(48.dp),
-                                shape = RoundedCornerShape(17.dp),
-                                color = if (darkTheme) TerracottaSoft else SoftGreenLight
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = if (darkTheme) "☾" else "☀",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (darkTheme) ochagText("Тёмная тема") else ochagText("Светлая тема"),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = if (darkTheme) ochagText("Мягкая тёмная палитра") else ochagText("Тёплая молочная палитра"),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            ThemeToggle(
-                                checked = darkTheme,
-                                onClick = { OchagThemeController.setDarkTheme(!darkTheme) }
-                            )
-                        }
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        Text(
-                            text = ochagText("Стиль шрифта"),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)
-                        ) {
-                            FontChoice(ochagText("Тёплый"), fontStyle == OchagFontStyle.WARM, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.WARM)
-                            }
-                            FontChoice(ochagText("Современный"), fontStyle == OchagFontStyle.MODERN, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.MODERN)
-                            }
-                            FontChoice(ochagText("Классика"), fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
-                                OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC)
-                            }
-                        }
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                        Text(
-                            text = ochagText("Размер текста всего приложения"),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = when (messageFontSizeLevel) {
-                                1 -> ochagText("Очень маленький")
-                                2 -> ochagText("Маленький")
-                                3 -> ochagText("Средний")
-                                4 -> ochagText("Большой")
-                                else -> ochagText("Очень большой")
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            (1..5).forEach { level ->
-                                FontSizeChoice(
-                                    level = level,
-                                    selected = messageFontSizeLevel == level,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    OchagThemeController.setMessageFontSizeLevel(level)
-                                }
-                            }
-                        }
-
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(18.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant
-                        ) {
-                            Text(
-                                text = ochagText("Так будет выглядеть текст во всём приложении"),
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(18.dp))
                 SectionTitle(ochagText("Семья"), ochagText("Люди и всё общее"))
                 Spacer(Modifier.height(8.dp))
 
@@ -696,17 +308,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-
-                Spacer(Modifier.height(18.dp))
-
-                SectionTitle(ochagText("Безопасность"), ochagText("Защита личных переписок"))
-                Spacer(Modifier.height(8.dp))
-                ProfileAction(
-                    "🔒",
-                    ochagText("Блокировка приложения"),
-                    if (AppLockController.enabled) ochagText("Включена") else ochagText("Не включена"),
-                    AvatarSand
-                ) { showSecurityDialog = true }
 
                 Spacer(Modifier.height(18.dp))
 
@@ -772,86 +373,6 @@ private fun SectionTitle(title: String, subtitle: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-@Composable
-private fun ThemeToggle(
-    checked: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .width(58.dp)
-            .height(34.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
-        color = if (checked) TerracottaPrimary else MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, if (checked) TerracottaPrimary else MaterialTheme.colorScheme.outline)
-    ) {
-        Box(
-            modifier = Modifier.padding(4.dp),
-            contentAlignment = if (checked) Alignment.CenterEnd else Alignment.CenterStart
-        ) {
-            Surface(
-                modifier = Modifier.size(24.dp),
-                shape = CircleShape,
-                color = if (checked) Color.White else MaterialTheme.colorScheme.surface,
-                shadowElevation = 2.dp
-            ) {}
-        }
-    }
-}
-
-@Composable
-private fun FontChoice(
-    title: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .height(46.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(17.dp),
-        color = if (selected) TerracottaSoft else MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, if (selected) TerracottaSoft else MaterialTheme.colorScheme.outline)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = title,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (selected) TerracottaDark else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun FontSizeChoice(
-    level: Int,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .height(42.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, if (selected) TerracottaPrimary else MaterialTheme.colorScheme.outline)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = level.toString(),
-                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }
 
