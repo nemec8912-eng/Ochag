@@ -70,12 +70,12 @@ import com.ochag.app.data.MessageStatus
 import com.ochag.app.data.MessageType
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
-import com.ochag.app.ui.theme.BorderSoft
-import com.ochag.app.ui.theme.BrownTextPrimary
-import com.ochag.app.ui.theme.BrownTextSecondary
-import com.ochag.app.ui.theme.CardCream
-import com.ochag.app.ui.theme.CardWhite
-import com.ochag.app.ui.theme.CreamBackground
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.outline
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurface
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurfaceVariant
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surfaceVariant
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surface
+import com.ochag.app.ui.theme.MaterialTheme.colorScheme.background
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.SoftGreenLight
 import com.ochag.app.ui.theme.TerracottaDark
@@ -638,7 +638,7 @@ fun ChatRoomScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CreamBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ChatHeader(
@@ -757,7 +757,7 @@ fun ChatRoomScreen(
                     .fillMaxWidth()
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
                 shape = RoundedCornerShape(30.dp),
-                color = CardWhite,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 14.dp,
                 tonalElevation = 0.dp
             ) {
@@ -790,39 +790,39 @@ fun ChatRoomScreen(
                         DropdownMenu(
                             expanded = showAttachmentMenu,
                             onDismissRequest = { showAttachmentMenu = false },
-                            containerColor = CardWhite,
+                            containerColor = MaterialTheme.colorScheme.surface,
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(ochagText("📷  Фото"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("📷  Фото"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     imageLauncher.launch(arrayOf("image/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📎  Файл"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("📎  Файл"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     fileLauncher.launch(arrayOf("*/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📊  Опрос"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("📊  Опрос"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     showPollDialog = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📍  Локация"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("📍  Локация"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     sendCurrentLocation()
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📇  Контакт"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("📇  Контакт"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     val intent = Intent(
@@ -833,14 +833,14 @@ fun ChatRoomScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("Аа  Шрифт"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("Аа  Шрифт"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     showFontSettings = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("✨  Хранитель Очага"), color = BrownTextPrimary) },
+                                text = { Text(ochagText("✨  Хранитель Очага"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     onKeeperClick()
@@ -859,7 +859,7 @@ fun ChatRoomScreen(
                                 showStickerPicker = !showStickerPicker
                             },
                         shape = CircleShape,
-                        color = if (showStickerPicker) TerracottaLight else CardCream
+                        color = if (showStickerPicker) TerracottaLight else MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text("☺", fontSize = 24.sp, color = TerracottaDark)
@@ -876,7 +876,7 @@ fun ChatRoomScreen(
                             Text(
                                 if (pendingAttachment != null) ochagText("Добавить подпись…")
                                 else ochagText("Сообщение…"),
-                                color = BrownTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         shape = RoundedCornerShape(24.dp),
@@ -884,10 +884,10 @@ fun ChatRoomScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Transparent,
                             unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = CardCream,
-                            unfocusedContainerColor = CardCream,
-                            focusedTextColor = BrownTextPrimary,
-                            unfocusedTextColor = BrownTextPrimary,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             cursorColor = TerracottaPrimary
                         )
                     )
@@ -1038,7 +1038,7 @@ private fun StickerPickerPanel(
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 4.dp),
         shape = RoundedCornerShape(28.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp
     ) {
         Column(
@@ -1052,7 +1052,7 @@ private fun StickerPickerPanel(
                 text = ochagText("Стикеры"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = BrownTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             LazyColumn(
@@ -1064,7 +1064,7 @@ private fun StickerPickerPanel(
                         Text(
                             text = pack.title,
                             style = MaterialTheme.typography.labelLarge,
-                            color = BrownTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         if (pack.emojiStickers.isNotEmpty()) {
@@ -1080,7 +1080,7 @@ private fun StickerPickerPanel(
                                                 .aspectRatio(1f)
                                                 .clickable { onEmojiClick(emoji) },
                                             shape = RoundedCornerShape(14.dp),
-                                            color = CardCream
+                                            color = MaterialTheme.colorScheme.surfaceVariant
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 Text(emoji, fontSize = 28.sp)
@@ -1180,7 +1180,7 @@ private fun ChatGroupSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardWhite,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(28.dp),
         title = {
             Text(
@@ -1190,7 +1190,7 @@ private fun ChatGroupSettingsDialog(
                     ChatType.THEME -> ochagText("Настройки темы")
                     ChatType.PRIVATE -> ochagText("Чат")
                 },
-                color = BrownTextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -1241,7 +1241,7 @@ private fun ChatGroupSettingsDialog(
                 Text(
                     ochagText("${selectedMembers.size} участников"),
                     style = MaterialTheme.typography.titleSmall,
-                    color = BrownTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -1275,7 +1275,7 @@ private fun ChatGroupSettingsDialog(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            color = CardCream
+                            color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Row(
                                 modifier = Modifier
@@ -1293,7 +1293,7 @@ private fun ChatGroupSettingsDialog(
                                             member.firstOrNull { it.isLetterOrDigit() }
                                                 ?.uppercase() ?: ochagText("О"),
                                             fontWeight = FontWeight.Bold,
-                                            color = BrownTextPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -1304,12 +1304,12 @@ private fun ChatGroupSettingsDialog(
                                     Text(
                                         if (isMe) ochagText("$member • вы") else member,
                                         maxLines = 1,
-                                        color = BrownTextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
                                         if (isOnline) ochagText("● В сети") else ochagText("○ Не в сети"),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = if (isOnline) OnlineGreen else BrownTextSecondary
+                                        color = if (isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
@@ -1357,7 +1357,7 @@ private fun ChatGroupSettingsDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(ochagText("Отмена"), color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -1412,7 +1412,7 @@ private fun ChatHeader(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 10.dp,
         tonalElevation = 0.dp
     ) {
@@ -1427,13 +1427,13 @@ private fun ChatHeader(
                     .size(44.dp)
                     .clickable(onClick = onBackClick),
                 shape = CircleShape,
-                color = CardCream
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         "‹",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -1455,7 +1455,7 @@ private fun ChatHeader(
                         Text(
                             chatTitle.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
                             fontWeight = FontWeight.Bold,
-                            color = BrownTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -1476,7 +1476,7 @@ private fun ChatHeader(
                     text = chatTitle,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -1484,7 +1484,7 @@ private fun ChatHeader(
                     style = MaterialTheme.typography.bodySmall,
                     color = if (
                         statusText.contains(ochagText("В сети")) || statusText.contains(ochagText("печатает"))
-                    ) OnlineGreen else BrownTextSecondary
+                    ) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -1494,7 +1494,7 @@ private fun ChatHeader(
                     .size(42.dp)
                     .clickable(onClick = onFontSettingsClick),
                 shape = CircleShape,
-                color = CardCream
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
@@ -1513,10 +1513,10 @@ private fun ChatHeader(
                         .size(42.dp)
                         .clickable(onClick = onSettingsClick),
                     shape = CircleShape,
-                    color = CardCream
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("•••", color = BrownTextSecondary)
+                        Text("•••", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -1536,10 +1536,10 @@ private fun MessageFontSettingsDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(ochagText("Шрифт сообщений"), color = BrownTextPrimary) },
+        title = { Text(ochagText("Шрифт сообщений"), color = MaterialTheme.colorScheme.onSurface) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(ochagText("Стиль"), fontWeight = FontWeight.Bold, color = BrownTextPrimary)
+                Text(ochagText("Стиль"), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 MessageFontStyle.values().forEach { item ->
                     Row(
                         modifier = Modifier
@@ -1552,7 +1552,7 @@ private fun MessageFontSettingsDialog(
                             selected = style == item,
                             onClick = { style = item }
                         )
-                        Text(item.title, fontFamily = item.family, color = BrownTextPrimary)
+                        Text(item.title, fontFamily = item.family, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
 
@@ -1560,7 +1560,7 @@ private fun MessageFontSettingsDialog(
                 Text(
                     ochagText("Размер — ${size.title}"),
                     fontWeight = FontWeight.Bold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Slider(
                     value = size.ordinal.toFloat(),
@@ -1600,7 +1600,7 @@ private fun MessageFontSettingsDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(ochagText("Отмена")) }
         },
-        containerColor = CreamBackground
+        containerColor = MaterialTheme.colorScheme.background
     )
 }
 
@@ -1668,11 +1668,11 @@ private fun CameraCirclePreview(
                     .size(48.dp)
                     .clickable(enabled = !isRecording, onClick = onSwitchCamera),
                 shape = CircleShape,
-                color = CardWhite,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 5.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("↻", color = BrownTextPrimary)
+                    Text("↻", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
@@ -1705,7 +1705,7 @@ private fun PendingAttachmentPreview(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(24.dp),
-        color = CardWhite,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 5.dp
     ) {
         Row(
@@ -1722,13 +1722,13 @@ private fun PendingAttachmentPreview(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     if (attachment.type == MessageType.IMAGE) ochagText("Фото") else ochagText("Файл"),
-                    color = BrownTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     attachment.fileName.ifBlank { ochagText("Без имени") },
-                    color = BrownTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -1738,10 +1738,10 @@ private fun PendingAttachmentPreview(
                     .size(38.dp)
                     .clickable(onClick = onRemove),
                 shape = CircleShape,
-                color = CardCream
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text("✕", color = BrownTextSecondary)
+                    Text("✕", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -1771,9 +1771,9 @@ private fun MessageBubble(
         selected && message.isMine -> TerracottaDark
         selected -> TerracottaLight
         message.isMine -> TerracottaPrimary
-        else -> CardWhite
+        else -> MaterialTheme.colorScheme.surface
     }
-    val bubbleText = if (message.isMine) Color.White else BrownTextPrimary
+    val bubbleText = if (message.isMine) Color.White else MaterialTheme.colorScheme.onSurface
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1787,11 +1787,11 @@ private fun MessageBubble(
                     .size(26.dp)
                     .clickable { MessageSelectionController.toggle(message.id) },
                 shape = RoundedCornerShape(8.dp),
-                color = if (selected) TerracottaPrimary else CardWhite,
+                color = if (selected) TerracottaPrimary else MaterialTheme.colorScheme.surface,
                 border = BorderStroke(
                     width = 1.5.dp,
                     brush = SolidColor(
-                        if (selected) TerracottaPrimary else BorderSoft
+                        if (selected) TerracottaPrimary else MaterialTheme.colorScheme.outline
                     )
                 )
             ) {
@@ -1822,7 +1822,7 @@ private fun MessageBubble(
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             message.sender.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "?",
-                            color = BrownTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -1922,7 +1922,7 @@ private fun MessageBubble(
                             color = if (message.isMine) {
                                 Color.White.copy(alpha = 0.16f)
                             } else {
-                                CardCream
+                                MaterialTheme.colorScheme.surfaceVariant
                             },
                             contentColor = bubbleText
                         ) {
@@ -1983,7 +1983,7 @@ private fun MessageBubble(
                             color = if (message.isMine) {
                                 Color.White.copy(alpha = 0.78f)
                             } else {
-                                BrownTextSecondary
+                                MaterialTheme.colorScheme.onSurfaceVariant
                             }
                         )
 
@@ -2053,7 +2053,7 @@ private fun PollMessageContent(
                 color = if (selectedOption == option) {
                     TerracottaLight
                 } else {
-                    CardCream.copy(alpha = 0.9f)
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
                 }
             ) {
                 Row(
@@ -2065,7 +2065,7 @@ private fun PollMessageContent(
                         enabled = !voted,
                         onClick = { selectedOption = option }
                     )
-                    Text(option, color = BrownTextPrimary)
+                    Text(option, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -2144,13 +2144,13 @@ private fun VoiceMessagePlayer(
         Column {
             Text(
                 ochagText("Голосовое сообщение"),
-                color = if (isMine) Color.White else BrownTextPrimary,
+                color = if (isMine) Color.White else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 message.text,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isMine) Color.White.copy(alpha = 0.75f) else BrownTextSecondary
+                color = if (isMine) Color.White.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -2211,7 +2211,7 @@ private fun VideoCirclePlayer(message: Message) {
                 Surface(
                     modifier = Modifier.size(54.dp),
                     shape = CircleShape,
-                    color = CardWhite.copy(alpha = 0.88f)
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text("▶", color = TerracottaPrimary)
@@ -2267,7 +2267,7 @@ private fun UriImage(
         Surface(
             modifier = modifier,
             shape = RoundedCornerShape(18.dp),
-            color = CardCream
+            color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
