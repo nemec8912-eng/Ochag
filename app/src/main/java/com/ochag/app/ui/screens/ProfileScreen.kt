@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.profile
 
+import com.ochag.app.ui.localization.ochagText
 import android.app.Activity
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -53,7 +54,7 @@ fun ProfileScreen(
     onLogoutClick: () -> Unit = {}
 ) {
     val user = OchagAppState.currentUser
-    val userName = user?.name ?: "Гость"
+    val userName = user?.name ?: ochagText("Гость")
     val profiles by ServerRealtime.serverUserProfiles.collectAsState()
     val connectionState by ServerRealtime.connectionState.collectAsState()
     val darkTheme = OchagThemeController.isDarkTheme
@@ -80,7 +81,7 @@ fun ProfileScreen(
         )
     }
     val languageNames = mapOf(
-        "ru" to "Русский",
+        "ru" to ochagText("Русский"),
         "en" to "English",
         "de" to "Deutsch",
         "fr" to "Français",
@@ -116,26 +117,26 @@ fun ProfileScreen(
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text("Изменить тему") },
+            title = { Text(ochagText("Изменить тему")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Режим приложения", fontWeight = FontWeight.Bold)
+                    Text(ochagText("Режим приложения"), fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(
                             selected = !darkTheme,
                             onClick = { OchagThemeController.setDarkTheme(false) }
                         )
-                        Text("Светлая")
+                        Text(ochagText("Светлая"))
                         Spacer(Modifier.width(14.dp))
                         RadioButton(
                             selected = darkTheme,
                             onClick = { OchagThemeController.setDarkTheme(true) }
                         )
-                        Text("Тёмная")
+                        Text(ochagText("Тёмная"))
                     }
 
                     HorizontalDivider()
-                    Text("Стиль приложения и чатов", fontWeight = FontWeight.Bold)
+                    Text(ochagText("Стиль приложения и чатов"), fontWeight = FontWeight.Bold)
                     OchagFontStyle.values().forEach { style ->
                         Row(
                             modifier = Modifier
@@ -149,19 +150,19 @@ fun ProfileScreen(
                             )
                             Text(
                                 when (style) {
-                                    OchagFontStyle.WARM -> "Тёплая"
-                                    OchagFontStyle.MODERN -> "Современная"
-                                    OchagFontStyle.CLASSIC -> "Классическая"
+                                    OchagFontStyle.WARM -> ochagText("Тёплая")
+                                    OchagFontStyle.MODERN -> ochagText("Современная")
+                                    OchagFontStyle.CLASSIC -> ochagText("Классическая")
                                 }
                             )
                         }
                     }
 
-                    Text("Обои и дополнительные цвета будут добавлены в следующем этапе.")
+                    Text(ochagText("Обои и дополнительные цвета будут добавлены в следующем этапе."))
                 }
             },
             confirmButton = {
-                Button(onClick = { showThemeDialog = false }) { Text("Готово") }
+                Button(onClick = { showThemeDialog = false }) { Text(ochagText("Готово")) }
             }
         )
     }
@@ -170,7 +171,7 @@ fun ProfileScreen(
         val languages = languageNames.toList()
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text("Язык приложения") },
+            title = { Text(ochagText("Язык приложения")) },
             text = {
                 Column {
                     languages.forEach { (languageCode, languageName) ->
@@ -200,11 +201,11 @@ fun ProfileScreen(
                         showLanguageDialog = false
                         (context as? Activity)?.recreate()
                     }
-                ) { Text("Сохранить") }
+                ) { Text(ochagText("Сохранить")) }
             },
             dismissButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Отмена")
+                    Text(ochagText("Отмена"))
                 }
             }
         )
@@ -218,25 +219,25 @@ fun ProfileScreen(
 
         AlertDialog(
             onDismissRequest = { showSecurityDialog = false },
-            title = { Text("Блокировка приложения") },
+            title = { Text(ochagText("Блокировка приложения")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (AppLockController.enabled) {
-                        Text("Блокировка включена")
+                        Text(ochagText("Блокировка включена"))
                         Text(
                             when (AppLockController.mode) {
-                                AppLockMode.PIN -> "Способ: цифровой PIN-код"
-                                AppLockMode.PASSWORD -> "Способ: пароль"
-                                AppLockMode.PATTERN -> "Способ: графический ключ"
+                                AppLockMode.PIN -> ochagText("Способ: цифровой PIN-код")
+                                AppLockMode.PASSWORD -> ochagText("Способ: пароль")
+                                AppLockMode.PATTERN -> ochagText("Способ: графический ключ")
                             }
                         )
-                        Text("Автоматическая блокировка", fontWeight = FontWeight.Bold)
+                        Text(ochagText("Автоматическая блокировка"), fontWeight = FontWeight.Bold)
                         listOf(
-                            0L to "Сразу после сворачивания",
-                            60_000L to "Через 1 минуту",
-                            300_000L to "Через 5 минут",
-                            1_800_000L to "Через 30 минут",
-                            AppLockController.NEVER_TIMEOUT to "Только после полного закрытия"
+                            0L to ochagText("Сразу после сворачивания"),
+                            60_000L to ochagText("Через 1 минуту"),
+                            300_000L to ochagText("Через 5 минут"),
+                            1_800_000L to ochagText("Через 30 минут"),
+                            AppLockController.NEVER_TIMEOUT to ochagText("Только после полного закрытия")
                         ).forEach { (timeout, title) ->
                             Row(
                                 modifier = Modifier
@@ -257,21 +258,21 @@ fun ProfileScreen(
                                 showSecurityDialog = false
                             },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text("Отключить блокировку") }
+                        ) { Text(ochagText("Отключить блокировку")) }
                     } else {
-                        Text("Выберите способ защиты", fontWeight = FontWeight.Bold)
+                        Text(ochagText("Выберите способ защиты"), fontWeight = FontWeight.Bold)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
                                 selected = lockMode == AppLockMode.PIN,
                                 onClick = { lockMode = AppLockMode.PIN }
                             )
-                            Text("PIN-код")
+                            Text(ochagText("PIN-код"))
                             Spacer(Modifier.width(14.dp))
                             RadioButton(
                                 selected = lockMode == AppLockMode.PASSWORD,
                                 onClick = { lockMode = AppLockMode.PASSWORD }
                             )
-                            Text("Пароль")
+                            Text(ochagText("Пароль"))
                         }
                         Row(
                             modifier = Modifier
@@ -283,13 +284,13 @@ fun ProfileScreen(
                                 selected = lockMode == AppLockMode.PATTERN,
                                 onClick = { lockMode = AppLockMode.PATTERN }
                             )
-                            Text("Графический ключ")
+                            Text(ochagText("Графический ключ"))
                         }
 
                         if (lockMode == AppLockMode.PATTERN) {
-                            Text("Нарисуйте ключ")
+                            Text(ochagText("Нарисуйте ключ"))
                             PatternPad(lockSecret) { lockSecret = it }
-                            Text("Повторите ключ")
+                            Text(ochagText("Повторите ключ"))
                             PatternPad(lockSecretRepeat) { lockSecretRepeat = it }
                         } else {
                             OutlinedTextField(
@@ -299,7 +300,7 @@ fun ProfileScreen(
                                         it.filter(Char::isDigit).take(12)
                                     } else it
                                 },
-                                label = { Text("Введите код или пароль") },
+                                label = { Text(ochagText("Введите код или пароль")) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -310,14 +311,14 @@ fun ProfileScreen(
                                         it.filter(Char::isDigit).take(12)
                                     } else it
                                 },
-                                label = { Text("Повторите") },
+                                label = { Text(ochagText("Повторите")) },
                                 singleLine = true,
                                 isError = lockSecretRepeat.isNotBlank() &&
                                     lockSecretRepeat != lockSecret,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        Text("Минимум 4 точки или символа")
+                        Text(ochagText("Минимум 4 точки или символа"))
                     }
                 }
             },
@@ -329,12 +330,12 @@ fun ProfileScreen(
                             AppLockController.enable(lockMode, lockSecret)
                             showSecurityDialog = false
                         }
-                    ) { Text("Включить") }
+                    ) { Text(ochagText("Включить")) }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSecurityDialog = false }) {
-                    Text("Закрыть")
+                    Text(ochagText("Закрыть"))
                 }
             }
         )
@@ -344,16 +345,16 @@ fun ProfileScreen(
 
     val online = connectionState == ServerRealtime.ConnectionState.ONLINE
     val statusText = when (connectionState) {
-        ServerRealtime.ConnectionState.ONLINE -> "В сети"
-        ServerRealtime.ConnectionState.CONNECTING -> "Подключение…"
-        ServerRealtime.ConnectionState.OFFLINE -> "Не в сети"
+        ServerRealtime.ConnectionState.ONLINE -> ochagText("В сети")
+        ServerRealtime.ConnectionState.CONNECTING -> ochagText("Подключение…")
+        ServerRealtime.ConnectionState.OFFLINE -> ochagText("Не в сети")
     }
 
     Scaffold(
         containerColor = CreamBackground,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Контакты", "Звонки", "Файлы", "Профиль"),
+                items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
                 selectedIndex = 4,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
@@ -387,13 +388,13 @@ fun ProfileScreen(
                     .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Профиль",
+                    text = ochagText("Профиль"),
                     style = MaterialTheme.typography.displaySmall,
                     color = BrownTextPrimary
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Личное пространство в «Очаге»",
+                    text = ochagText("Личное пространство в «Очаге»"),
                     style = MaterialTheme.typography.bodyLarge,
                     color = BrownTextSecondary
                 )
@@ -471,7 +472,7 @@ fun ProfileScreen(
                                 color = TerracottaSoft
                             ) {
                                 Text(
-                                    text = "Владелец «Очага»",
+                                    text = ochagText("Владелец «Очага»"),
                                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = TerracottaDark,
@@ -483,13 +484,13 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle("Внешний вид", "Настрой «Очаг» под себя")
+                SectionTitle(ochagText("Внешний вид"), ochagText("Настрой «Очаг» под себя"))
                 Spacer(Modifier.height(10.dp))
 
                 ProfileAction(
                     "◐",
-                    "Изменить тему",
-                    "Приложение, чаты, сообщения и шрифт",
+                    ochagText("Изменить тему"),
+                    ochagText("Приложение, чаты, сообщения и шрифт"),
                     AvatarPeach
                 ) { showThemeDialog = true }
 
@@ -497,8 +498,8 @@ fun ProfileScreen(
 
                 ProfileAction(
                     "文",
-                    "Язык приложения",
-                    languageNames[selectedLanguage] ?: "Русский",
+                    ochagText("Язык приложения"),
+                    languageNames[selectedLanguage] ?: ochagText("Русский"),
                     AvatarSage
                 ) { showLanguageDialog = true }
 
@@ -532,12 +533,12 @@ fun ProfileScreen(
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = if (darkTheme) "Тёмная тема" else "Светлая тема",
+                                    text = if (darkTheme) ochagText("Тёмная тема") else ochagText("Светлая тема"),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = BrownTextPrimary
                                 )
                                 Text(
-                                    text = if (darkTheme) "Мягкая тёмная палитра" else "Тёплая молочная палитра",
+                                    text = if (darkTheme) ochagText("Мягкая тёмная палитра") else ochagText("Тёплая молочная палитра"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = BrownTextSecondary
                                 )
@@ -552,7 +553,7 @@ fun ProfileScreen(
                         HorizontalDivider(color = DividerSoft)
 
                         Text(
-                            text = "Стиль шрифта",
+                            text = ochagText("Стиль шрифта"),
                             style = MaterialTheme.typography.titleMedium,
                             color = BrownTextPrimary
                         )
@@ -561,13 +562,13 @@ fun ProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(7.dp)
                         ) {
-                            FontChoice("Тёплый", fontStyle == OchagFontStyle.WARM, Modifier.weight(1f)) {
+                            FontChoice(ochagText("Тёплый"), fontStyle == OchagFontStyle.WARM, Modifier.weight(1f)) {
                                 OchagThemeController.setFontStyle(OchagFontStyle.WARM)
                             }
-                            FontChoice("Современный", fontStyle == OchagFontStyle.MODERN, Modifier.weight(1f)) {
+                            FontChoice(ochagText("Современный"), fontStyle == OchagFontStyle.MODERN, Modifier.weight(1f)) {
                                 OchagThemeController.setFontStyle(OchagFontStyle.MODERN)
                             }
-                            FontChoice("Классика", fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
+                            FontChoice(ochagText("Классика"), fontStyle == OchagFontStyle.CLASSIC, Modifier.weight(1f)) {
                                 OchagThemeController.setFontStyle(OchagFontStyle.CLASSIC)
                             }
                         }
@@ -575,17 +576,17 @@ fun ProfileScreen(
                         HorizontalDivider(color = DividerSoft)
 
                         Text(
-                            text = "Размер текста всего приложения",
+                            text = ochagText("Размер текста всего приложения"),
                             style = MaterialTheme.typography.titleMedium,
                             color = BrownTextPrimary
                         )
                         Text(
                             text = when (messageFontSizeLevel) {
-                                1 -> "Очень маленький"
-                                2 -> "Маленький"
-                                3 -> "Средний"
-                                4 -> "Большой"
-                                else -> "Очень большой"
+                                1 -> ochagText("Очень маленький")
+                                2 -> ochagText("Маленький")
+                                3 -> ochagText("Средний")
+                                4 -> ochagText("Большой")
+                                else -> ochagText("Очень большой")
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = BrownTextSecondary
@@ -612,7 +613,7 @@ fun ProfileScreen(
                             color = CardCream
                         ) {
                             Text(
-                                text = "Так будет выглядеть текст во всём приложении",
+                                text = ochagText("Так будет выглядеть текст во всём приложении"),
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = BrownTextPrimary
@@ -622,15 +623,15 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle("Семья", "Люди и всё общее")
+                SectionTitle(ochagText("Семья"), ochagText("Люди и всё общее"))
                 Spacer(Modifier.height(8.dp))
 
-                ProfileAction("♡", "Семья", "Участники, роли и доступ", AvatarSage, onFamilyClick)
-                ProfileAction("✦", "Стикеры", "Встроенные и свои стикерпаки", AvatarSand, onStickersClick)
-                ProfileAction("＋", "Пригласить близких", "Добавить нового участника", AvatarRose, onInviteClick)
+                ProfileAction("♡", ochagText("Семья"), ochagText("Участники, роли и доступ"), AvatarSage, onFamilyClick)
+                ProfileAction("✦", ochagText("Стикеры"), ochagText("Встроенные и свои стикерпаки"), AvatarSand, onStickersClick)
+                ProfileAction("＋", ochagText("Пригласить близких"), ochagText("Добавить нового участника"), AvatarRose, onInviteClick)
 
                 Spacer(Modifier.height(18.dp))
-                SectionTitle("Контакты", "Чтобы близкие могли найти тебя")
+                SectionTitle(ochagText("Контакты"), ochagText("Чтобы близкие могли найти тебя"))
                 Spacer(Modifier.height(10.dp))
 
                 OchagCard(
@@ -645,15 +646,15 @@ fun ProfileScreen(
                                 phone = it
                                 saveStatus = ""
                             },
-                            label = "Телефон",
+                            label = ochagText("Телефон"),
                             placeholder = "+7 999 123-45-67"
                         )
 
                         Spacer(Modifier.height(12.dp))
 
                         OchagPrimaryButton(
-                            text = if (saving) "Сохраняю…" else "Сохранить номер",
-                            enabled = !saving && userName != "Гость"
+                            text = if (saving) ochagText("Сохраняю…") else ochagText("Сохранить номер"),
+                            enabled = !saving && userName != ochagText("Гость")
                         ) {
                             saving = true
                             saveStatus = ""
@@ -662,7 +663,7 @@ fun ProfileScreen(
                                 phone = phone
                             ) { result ->
                                 saving = false
-                                saveStatus = if (result.success) "Номер сохранён" else result.error
+                                saveStatus = if (result.success) ochagText("Номер сохранён") else result.error
                                 if (result.success) ServerRealtime.requestServerUsers()
                             }
                         }
@@ -672,7 +673,7 @@ fun ProfileScreen(
                             Text(
                                 text = saveStatus,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (saveStatus == "Номер сохранён") OnlineGreen else MaterialTheme.colorScheme.error
+                                color = if (saveStatus == ochagText("Номер сохранён")) OnlineGreen else MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -680,12 +681,12 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(18.dp))
 
-                SectionTitle("Безопасность", "Защита личных переписок")
+                SectionTitle(ochagText("Безопасность"), ochagText("Защита личных переписок"))
                 Spacer(Modifier.height(8.dp))
                 ProfileAction(
                     "🔒",
-                    "Блокировка приложения",
-                    if (AppLockController.enabled) "Включена" else "Не включена",
+                    ochagText("Блокировка приложения"),
+                    if (AppLockController.enabled) ochagText("Включена") else ochagText("Не включена"),
                     AvatarSand
                 ) { showSecurityDialog = true }
 
@@ -700,7 +701,7 @@ fun ProfileScreen(
                     border = BorderStroke(1.dp, BorderSoft),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = TerracottaDark)
                 ) {
-                    Text("Выйти из «Очага»", fontWeight = FontWeight.SemiBold)
+                    Text(ochagText("Выйти из «Очага»"), fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -730,7 +731,7 @@ private fun ProfileAvatarImage(
     if (bitmap != null) {
         Image(
             bitmap = bitmap!!,
-            contentDescription = "Аватар профиля",
+            contentDescription = ochagText("Аватар профиля"),
             modifier = modifier.clip(CircleShape),
             contentScale = ContentScale.Crop
         )
