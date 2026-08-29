@@ -181,7 +181,13 @@ private val en = mapOf(
     "Микрофон выключен" to "Microphone off",
     "Камера включена" to "Camera on",
     "Камера выключена" to "Camera off",
-    "Завершить звонок" to "End call"
+    "Завершить звонок" to "End call",
+    "Входящий видеозвонок" to "Incoming video call",
+    "Входящий аудиозвонок" to "Incoming audio call",
+    "Принять" to "Accept",
+    "Отклонить" to "Decline",
+    "Ожидание видео…" to "Waiting for video…",
+    "Соединено" to "Connected"
 )
 
 private val common = mapOf(
