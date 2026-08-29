@@ -348,9 +348,9 @@ fun NewChatScreen(
 
                 Text(
                     text = if (selectedSource == MemberSource.PHONE) {
-                        "${filteredPhoneContacts.size} контактов"
+                        ochagText("${filteredPhoneContacts.size} контактов")
                     } else {
-                        "${availableMembers.size} доступно"
+                        ochagText("${availableMembers.size} доступно")
                     },
                     style = MaterialTheme.typography.labelMedium,
                     color = BrownTextSecondary
