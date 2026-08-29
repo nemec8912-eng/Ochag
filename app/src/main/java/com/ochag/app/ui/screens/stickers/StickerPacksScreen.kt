@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.stickers
 
+import com.ochag.app.ui.localization.ochagText
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -73,14 +74,14 @@ fun StickerPacksScreen(
                     }
                     Spacer(Modifier.width(12.dp))
                     OchagSectionHeader(
-                        title = "Стикеры",
-                        subtitle = "Свои стикерпаки для семейных чатов"
+                        title = ochagText("Стикеры"),
+                        subtitle = ochagText("Свои стикерпаки для семейных чатов")
                     )
                 }
             }
 
             item {
-                OchagPrimaryButton(text = "＋ Новый стикерпак") {
+                OchagPrimaryButton(text = ochagText("＋ Новый стикерпак")) {
                     showCreateDialog = true
                 }
             }
@@ -137,9 +138,9 @@ private fun StickerPackCard(
                     )
                     Text(
                         text = if (pack.builtIn) {
-                            "Встроенный набор"
+                            ochagText("Встроенный набор")
                         } else {
-                            "${pack.imageUris.size} стикеров"
+                            ochagText("${pack.imageUris.size} стикеров")
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = BrownTextSecondary
@@ -148,10 +149,10 @@ private fun StickerPackCard(
 
                 if (!pack.builtIn) {
                     TextButton(onClick = onAddImages) {
-                        Text("Добавить", color = TerracottaPrimary)
+                        Text(ochagText("Добавить"), color = TerracottaPrimary)
                     }
                     TextButton(onClick = onDelete) {
-                        Text("Удалить", color = TerracottaDark)
+                        Text(ochagText("Удалить"), color = TerracottaDark)
                     }
                 }
             }
@@ -167,7 +168,7 @@ private fun StickerPackCard(
                     color = CardCream
                 ) {
                     Text(
-                        text = "Добавь PNG, JPG или WEBP — они появятся здесь и в чате.",
+                        text = ochagText("Добавь PNG, JPG или WEBP — они появятся здесь и в чате."),
                         modifier = Modifier.padding(16.dp),
                         color = BrownTextSecondary,
                         style = MaterialTheme.typography.bodyMedium
@@ -242,14 +243,14 @@ private fun CreateStickerPackDialog(
         containerColor = CardWhite,
         shape = RoundedCornerShape(28.dp),
         title = {
-            Text("Новый стикерпак", color = BrownTextPrimary)
+            Text(ochagText("Новый стикерпак"), color = BrownTextPrimary)
         },
         text = {
             OchagTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = "Название",
-                placeholder = "Например: Наш кот"
+                label = ochagText("Название"),
+                placeholder = ochagText("Например: Наш кот")
             )
         },
         confirmButton = {
@@ -257,12 +258,12 @@ private fun CreateStickerPackDialog(
                 enabled = title.isNotBlank(),
                 onClick = { onCreate(title) }
             ) {
-                Text("Создать", color = TerracottaPrimary)
+                Text(ochagText("Создать"), color = TerracottaPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = BrownTextSecondary)
+                Text(ochagText("Отмена"), color = BrownTextSecondary)
             }
         }
     )
