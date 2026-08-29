@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.ai
 
+import com.ochag.app.ui.localization.ochagText
 import android.content.Intent
 import android.net.Uri
 import android.webkit.WebChromeClient
@@ -28,31 +29,31 @@ private data class FreeAiService(
 private val freeAiServices = listOf(
     FreeAiService(
         name = "ChatGPT",
-        description = "Тексты, идеи, объяснения и помощь с задачами",
+        description = ochagText("Тексты, идеи, объяснения и помощь с задачами"),
         url = "https://chatgpt.com",
         symbol = "◎"
     ),
     FreeAiService(
         name = "Google Gemini",
-        description = "Поиск идей, работа с текстом и изображениями",
+        description = ochagText("Поиск идей, работа с текстом и изображениями"),
         url = "https://gemini.google.com",
         symbol = "✦"
     ),
     FreeAiService(
         name = "Microsoft Copilot",
-        description = "Ответы, поиск и создание изображений",
+        description = ochagText("Ответы, поиск и создание изображений"),
         url = "https://copilot.microsoft.com",
         symbol = "◈"
     ),
     FreeAiService(
         name = "Perplexity",
-        description = "Поиск ответов в интернете с источниками",
+        description = ochagText("Поиск ответов в интернете с источниками"),
         url = "https://www.perplexity.ai",
         symbol = "P"
     ),
     FreeAiService(
         name = "Claude",
-        description = "Работа с большими текстами и документами",
+        description = ochagText("Работа с большими текстами и документами"),
         url = "https://claude.ai",
         symbol = "C"
     )
@@ -111,11 +112,11 @@ private fun AiServiceChooser(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onBackClick) { Text("‹ Назад") }
+                TextButton(onClick = onBackClick) { Text(ochagText("‹ Назад")) }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Хранитель Очага", style = MaterialTheme.typography.titleLarge)
+                    Text(ochagText("Хранитель Очага"), style = MaterialTheme.typography.titleLarge)
                     Text(
-                        "Выберите бесплатную нейросеть",
+                        ochagText("Выберите бесплатную нейросеть"),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -124,7 +125,7 @@ private fun AiServiceChooser(
         }
 
         Text(
-            text = "Нейросеть можно открыть прямо в «Очаге» или отдельно в браузере/её приложении.",
+            text = ochagText("Нейросеть можно открыть прямо в «Очаге» или отдельно в браузере/её приложении."),
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
             style = MaterialTheme.typography.bodyMedium
         )
@@ -172,7 +173,7 @@ private fun AiServiceChooser(
                                 onClick = { onOpenInside(service) },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("В Очаге")
+                                Text(ochagText("В Очаге"))
                             }
                             OutlinedButton(
                                 onClick = {
@@ -182,7 +183,7 @@ private fun AiServiceChooser(
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Открыть отдельно")
+                                Text(ochagText("Открыть отдельно"))
                             }
                         }
                     }
@@ -210,10 +211,10 @@ private fun AiWebView(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onBackClick) { Text("‹ Выбор") }
+                TextButton(onClick = onBackClick) { Text(ochagText("‹ Выбор")) }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(service.name, style = MaterialTheme.typography.titleLarge)
-                    Text("Хранитель Очага", style = MaterialTheme.typography.bodySmall)
+                    Text(ochagText("Хранитель Очага"), style = MaterialTheme.typography.bodySmall)
                 }
                 TextButton(
                     onClick = {
@@ -222,7 +223,7 @@ private fun AiWebView(
                         )
                     }
                 ) {
-                    Text("Отдельно")
+                    Text(ochagText("Отдельно"))
                 }
             }
         }
