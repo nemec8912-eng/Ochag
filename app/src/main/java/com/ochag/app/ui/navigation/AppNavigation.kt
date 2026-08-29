@@ -26,6 +26,7 @@ import com.ochag.app.ui.screens.stickers.StickerPacksScreen
 import com.ochag.app.ui.screens.ai.KeeperOfTheHearthScreen
 import com.ochag.app.ui.screens.calls.CallsScreen
 import com.ochag.app.ui.screens.contacts.ContactsScreen
+import com.ochag.app.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -39,6 +40,7 @@ sealed class Screen(val route: String) {
     object Files : Screen("files")
     object Calls : Screen("calls")
     object Contacts : Screen("contacts")
+    object Settings : Screen("settings")
     object Stickers : Screen("stickers")
     object Login : Screen("login")
     object InviteRegistration : Screen("invite_registration")
@@ -86,6 +88,7 @@ fun AppNavigation() {
                 },
                 onInviteClick = { navController.navigate(Screen.InviteRegistration.route) },
                 onStickersClick = { navController.navigate(Screen.Stickers.route) },
+                onSettingsClick = { navController.navigate(Screen.Settings.route) },
                 onLogoutClick = {
                     OchagAppState.logout()
                     ServerRealtime.disconnect()
@@ -146,6 +149,13 @@ fun AppNavigation() {
                 onContactClick = { name ->
                     navController.navigate("profile/" + android.net.Uri.encode(name))
                 }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                onBackClick = { navController.popBackStack() },
+                onStickersClick = { navController.navigate(Screen.Stickers.route) }
             )
         }
 
