@@ -151,7 +151,16 @@ private val en = mapOf(
     "Выберите близкого человека для звонка" to "Choose a family member to call",
     "Список контактов пока пуст" to "Your contact list is empty",
     "Номер телефона не указан" to "Phone number not provided",
-    "Сначала добавьте номер телефона в профиле" to "Add a phone number in the profile first"
+    "Сначала добавьте номер телефона в профиле" to "Add a phone number in the profile first",
+    "Участники вашего семейного Очага" to "Members of your family Hearth",
+    "Поиск контакта" to "Search contacts",
+    "Контакты не найдены" to "No contacts found",
+    "Пока никого в сети" to "Nobody is online yet",
+    "Разрешите геолокацию и нажмите «Локация» ещё раз" to "Allow location access and tap Location again",
+    "Включите GPS и попробуйте ещё раз" to "Turn on GPS and try again",
+    "Нет разрешения на геолокацию" to "Location permission denied",
+    "Не удалось открыть контакт" to "Could not open contact",
+    "0 в сети" to "0 online"
 )
 
 private val common = mapOf(
@@ -162,10 +171,51 @@ private val common = mapOf(
     "ja" to mapOf("Чаты" to "チャット", "Контакты" to "連絡先", "Звонки" to "通話", "Файлы" to "ファイル", "Профиль" to "プロフィール", "Сохранить" to "保存", "Отмена" to "キャンセル", "Язык приложения" to "アプリの言語", "Хранитель Очага" to "炉の守護者")
 )
 
+private fun englishDynamic(source: String): String {
+    en[source]?.let { return it }
+
+    return when {
+        source.startsWith("Тёплое пространство") ->
+            source.replace("Тёплое пространство", "A warm space")
+                .replace("только для своих", "for your people")
+        source.startsWith("Новый участник может войти") ->
+            source.replace("Новый участник может войти", "A new member can join")
+                .replace("только по приглашению владельца", "only by the owner's invitation")
+        source.startsWith("Регистрация доступна только") ->
+            source.replace("Регистрация доступна только", "Registration is available only")
+                .replace("по приглашению владельца семьи", "by the family owner's invitation")
+        Regex("""Вариант \\d+""").matches(source) ->
+            source.replace("Вариант", "Option")
+        Regex("""\\d+ участников""").matches(source) ->
+            source.replace("участников", "members")
+        source.endsWith(" • вы") ->
+            source.removeSuffix(" • вы") + " • you"
+        Regex("""\\d+/\\d+ в сети""").matches(source) ->
+            source.replace("в сети", "online")
+        source.endsWith(" печатает…") ->
+            source.removeSuffix(" печатает…") + " is typing…"
+        source.endsWith(" печатают…") ->
+            source.removeSuffix(" печатают…") + " are typing…"
+        source.startsWith("Размер — ") ->
+            "Size — " + source.removePrefix("Размер — ")
+        source.startsWith("Закреплено сообщений: ") ->
+            "Pinned messages: " + source.removePrefix("Закреплено сообщений: ")
+        source.startsWith("Закреплённые сообщения (") ->
+            source.replace("Закреплённые сообщения", "Pinned messages")
+        source.startsWith("Сообщение от ") ->
+            "Message from " + source.removePrefix("Сообщение от ")
+        source.startsWith("Будет удалено сообщений: ") ->
+            "Messages to delete: " + source.removePrefix("Будет удалено сообщений: ")
+        source.startsWith("Выбрано: ") ->
+            "Selected: " + source.removePrefix("Выбрано: ")
+        else -> source
+    }
+}
+
 fun ochagText(source: String): String {
     return when (OchagLocaleController.language) {
-        "en" -> en[source] ?: source
+        "en" -> englishDynamic(source)
         "ru" -> source
-        else -> common[OchagLocaleController.language]?.get(source) ?: en[source] ?: source
+        else -> common[OchagLocaleController.language]?.get(source) ?: englishDynamic(source)
     }
 }
