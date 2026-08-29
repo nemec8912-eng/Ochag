@@ -38,7 +38,7 @@ fun MemberProfileScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = CreamBackground
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -55,14 +55,14 @@ fun MemberProfileScreen(
                         .size(44.dp)
                         .clickable(onClick = onBackClick),
                     shape = RoundedCornerShape(18.dp),
-                    color = CardWhite,
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 3.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
                             text = "←",
                             style = MaterialTheme.typography.titleLarge,
-                            color = BrownTextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -73,7 +73,7 @@ fun MemberProfileScreen(
                     text = ochagText("Профиль"),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrownTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -101,7 +101,7 @@ fun MemberProfileScreen(
                         text = name,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(Modifier.height(5.dp))
@@ -109,7 +109,7 @@ fun MemberProfileScreen(
                     Text(
                         text = if (isOnline) ochagText("В сети") else ochagText("Не в сети"),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isOnline) OnlineGreen else BrownTextSecondary
+                        color = if (isOnline) OnlineGreen else MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(Modifier.height(10.dp))
@@ -140,13 +140,13 @@ fun MemberProfileScreen(
                         text = ochagText("Участник семьи"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = BrownTextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(Modifier.height(7.dp))
                     Text(
                         text = ochagText("Личная переписка доступна только внутри вашего семейного «Очага»."),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = BrownTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
