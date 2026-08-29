@@ -8,7 +8,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 
+import org.json.JSONArray
 import org.json.JSONObject
+import android.os.Handler
+import android.os.Looper
+import java.net.URLEncoder
 
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -35,6 +39,19 @@ data class ServerAccountResult(
 
 data class ServerSimpleResult(
     val success: Boolean,
+    val error: String = ""
+)
+
+data class ServerJoinRequest(
+    val requestId: Long,
+    val login: String,
+    val name: String,
+    val inviteCode: String
+)
+
+data class ServerJoinRequestsResult(
+    val success: Boolean,
+    val requests: List<ServerJoinRequest> = emptyList(),
     val error: String = ""
 )
 
@@ -290,6 +307,146 @@ object ServerAccountApi {
                     }
                 }
             )
+    }
+
+
+
+    fun submitJoinRequest(
+        login: String,
+        name: String,
+        pin: String,
+        inviteCode: String,
+        onResult: (ServerSimpleResult) -> Unit
+    ) {
+        val json = JSONObject()
+            .put("login", login.trim())
+            .put("name", name.trim())
+            .put("pin", pin.trim())
+            .put("invite_code", inviteCode.trim())
+
+        simpleRequest(
+            path = "/family/join-requests",
+            method = "POST",
+            bodyJson = json,
+            onResult = onResult
+        )
+    }
+
+    fun loadJoinRequests(
+        ownerName: String,
+        onResult: (ServerJoinRequestsResult) -> Unit
+    ) {
+        val encoded = URLEncoder.encode(ownerName.trim(), "UTF-8")
+        val request = Request.Builder()
+            .url("http://$SERVER_IP:$SERVER_PORT/family/join-requests?owner_name=$encoded")
+            .get()
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                deliver {
+                    onResult(ServerJoinRequestsResult(false, error = e.message ?: "Нет соединения с сервером"))
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val raw = response.body?.string().orEmpty()
+                    if (!response.isSuccessful) {
+                        deliver { onResult(ServerJoinRequestsResult(false, error = responseError(raw, response.code))) }
+                        return
+                    }
+                    try {
+                        val array = JSONObject(raw).optJSONArray("requests") ?: JSONArray()
+                        val requests = buildList {
+                            for (index in 0 until array.length()) {
+                                val item = array.optJSONObject(index) ?: continue
+                                add(
+                                    ServerJoinRequest(
+                                        requestId = item.optLong("request_id"),
+                                        login = item.optString("login"),
+                                        name = item.optString("name"),
+                                        inviteCode = item.optString("invite_code")
+                                    )
+                                )
+                            }
+                        }
+                        deliver { onResult(ServerJoinRequestsResult(true, requests)) }
+                    } catch (error: Exception) {
+                        deliver { onResult(ServerJoinRequestsResult(false, error = error.message ?: "Ошибка ответа сервера")) }
+                    }
+                }
+            }
+        })
+    }
+
+    fun approveJoinRequest(
+        requestId: Long,
+        ownerName: String,
+        onResult: (ServerSimpleResult) -> Unit
+    ) = decideJoinRequest(requestId, ownerName, "approve", onResult)
+
+    fun declineJoinRequest(
+        requestId: Long,
+        ownerName: String,
+        onResult: (ServerSimpleResult) -> Unit
+    ) = decideJoinRequest(requestId, ownerName, "decline", onResult)
+
+    private fun decideJoinRequest(
+        requestId: Long,
+        ownerName: String,
+        action: String,
+        onResult: (ServerSimpleResult) -> Unit
+    ) {
+        simpleRequest(
+            path = "/family/join-requests/$requestId/$action",
+            method = "POST",
+            bodyJson = JSONObject().put("owner_name", ownerName.trim()),
+            onResult = onResult
+        )
+    }
+
+    private fun simpleRequest(
+        path: String,
+        method: String,
+        bodyJson: JSONObject,
+        onResult: (ServerSimpleResult) -> Unit
+    ) {
+        val body = bodyJson.toString().toRequestBody(jsonMediaType)
+        val request = Request.Builder()
+            .url("http://$SERVER_IP:$SERVER_PORT$path")
+            .method(method, body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                deliver { onResult(ServerSimpleResult(false, e.message ?: "Нет соединения с сервером")) }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val raw = response.body?.string().orEmpty()
+                    deliver {
+                        if (response.isSuccessful) {
+                            onResult(ServerSimpleResult(true))
+                        } else {
+                            onResult(ServerSimpleResult(false, responseError(raw, response.code)))
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private fun responseError(raw: String, code: Int): String =
+        try {
+            JSONObject(raw).optString("detail", "Ошибка сервера")
+        } catch (_: Exception) {
+            "Ошибка сервера: $code"
+        }
+
+    private fun deliver(block: () -> Unit) {
+        Handler(Looper.getMainLooper()).post(block)
     }
 
 
