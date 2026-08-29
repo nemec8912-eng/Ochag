@@ -34,11 +34,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.outline
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurface
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurfaceVariant
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surfaceVariant
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surface
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.TerracottaPrimary
 import com.ochag.app.ui.theme.TerracottaSoft
