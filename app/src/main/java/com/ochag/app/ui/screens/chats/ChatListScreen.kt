@@ -1,5 +1,6 @@
 package com.ochag.app.ui.screens.chats
 
+import com.ochag.app.ui.localization.ochagText
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
@@ -67,13 +68,13 @@ fun ChatListScreen(
                 .thenBy { it.id }
         )
 
-    val currentUserName = ServerRealtime.userName.ifBlank { "Очаг" }
+    val currentUserName = ServerRealtime.userName.ifBlank { ochagText("Очаг") }
 
     Scaffold(
         containerColor = CreamBackground,
         bottomBar = {
             OchagBottomBar(
-                items = listOf("Чаты", "Контакты", "Звонки", "Файлы", "Профиль"),
+                items = listOf(ochagText("Чаты"), ochagText("Контакты"), ochagText("Звонки"), ochagText("Файлы"), ochagText("Профиль")),
                 selectedIndex = 0,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
             ) { index ->
@@ -129,7 +130,7 @@ fun ChatListScreen(
                     Spacer(Modifier.width(10.dp))
 
                     Text(
-                        text = "Очаг",
+                        text = ochagText("Очаг"),
                         style = MaterialTheme.typography.titleMedium,
                         color = BrownTextPrimary,
                         fontWeight = FontWeight.SemiBold
@@ -146,7 +147,7 @@ fun ChatListScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О",
+                                text = currentUserName.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = BrownTextPrimary
@@ -158,7 +159,7 @@ fun ChatListScreen(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "Чаты",
+                    text = ochagText("Чаты"),
                     style = MaterialTheme.typography.displaySmall,
                     color = BrownTextPrimary
                 )
@@ -167,9 +168,9 @@ fun ChatListScreen(
 
                 Text(
                     text = when (connectionState) {
-                        ServerRealtime.ConnectionState.ONLINE -> "Только свои люди ♥"
-                        ServerRealtime.ConnectionState.CONNECTING -> "Собираем близких рядом…"
-                        ServerRealtime.ConnectionState.OFFLINE -> "Сообщения останутся рядом"
+                        ServerRealtime.ConnectionState.ONLINE -> ochagText("Только свои люди ♥")
+                        ServerRealtime.ConnectionState.CONNECTING -> ochagText("Собираем близких рядом…")
+                        ServerRealtime.ConnectionState.OFFLINE -> ochagText("Сообщения останутся рядом")
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = BrownTextSecondary
@@ -180,8 +181,8 @@ fun ChatListScreen(
                 OchagTextField(
                     value = searchText,
                     onValueChange = { searchText = it },
-                    label = "Поиск",
-                    placeholder = "Чат, человек или сообщение"
+                    label = ochagText("Поиск"),
+                    placeholder = ochagText("Чат, человек или сообщение")
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -197,7 +198,7 @@ fun ChatListScreen(
                         border = BorderStroke(1.dp, if (unreadOnly) TerracottaSoft else BorderSoft)
                     ) {
                         Text(
-                            text = if (unreadOnly) "● Непрочитанные" else "Непрочитанные",
+                            text = if (unreadOnly) ochagText("● Непрочитанные") else ochagText("Непрочитанные"),
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                             style = MaterialTheme.typography.labelLarge,
                             color = if (unreadOnly) TerracottaDark else BrownTextSecondary
@@ -213,7 +214,7 @@ fun ChatListScreen(
                                 unreadOnly = false
                             }
                         ) {
-                            Text("Сбросить", color = TerracottaPrimary)
+                            Text(ochagText("Сбросить"), color = TerracottaPrimary)
                         }
                     }
                 }
@@ -264,14 +265,14 @@ private fun EmptyChatsState(filtered: Boolean) {
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = if (filtered) "Ничего не нашли" else "Здесь будут ваши чаты",
+                text = if (filtered) ochagText("Ничего не нашли") else ochagText("Здесь будут ваши чаты"),
                 style = MaterialTheme.typography.titleLarge,
                 color = BrownTextPrimary,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(5.dp))
             Text(
-                text = if (filtered) "Попробуй изменить поиск" else "Начни разговор с близкими",
+                text = if (filtered) ochagText("Попробуй изменить поиск") else ochagText("Начни разговор с близкими"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = BrownTextSecondary
             )
@@ -366,10 +367,10 @@ private fun ChatCard(
                     Text(
                         text = chat.lastMessage.ifBlank {
                             when (chat.type) {
-                                ChatType.FAMILY -> "Семейный чат"
-                                ChatType.PRIVATE -> "Личный разговор"
-                                ChatType.GROUP -> "Групповой чат"
-                                ChatType.THEME -> "Тематический чат"
+                                ChatType.FAMILY -> ochagText("Семейный чат")
+                                ChatType.PRIVATE -> ochagText("Личный разговор")
+                                ChatType.GROUP -> ochagText("Групповой чат")
+                                ChatType.THEME -> ochagText("Тематический чат")
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -454,7 +455,7 @@ private fun GroupAvatarImage(
     if (bitmap != null) {
         Image(
             bitmap = bitmap!!,
-            contentDescription = "Аватар группы",
+            contentDescription = ochagText("Аватар группы"),
             modifier = modifier.clip(CircleShape),
             contentScale = ContentScale.Crop
         )
@@ -472,11 +473,11 @@ private fun avatarColor(id: Long): Color = when ((id % 4).toInt()) {
 
 private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
     if (chat.id == ChatRepository.FAVORITES_CHAT_ID) {
-        return "Только для вас"
+        return ochagText("Только для вас")
     }
 
     if (chat.type == ChatType.PRIVATE) {
-        return if (isPrivateChatOnline(chat, onlineUsers)) "● В сети" else "Не в сети"
+        return if (isPrivateChatOnline(chat, onlineUsers)) ochagText("● В сети") else ochagText("Не в сети")
     }
 
     val normalizedMembers = chat.members
@@ -487,7 +488,7 @@ private fun buildPresenceText(chat: Chat, onlineUsers: Set<String>): String {
     val onlineCount = normalizedMembers.count { onlineUsers.contains(it) }
     val totalCount = normalizedMembers.size
 
-    return if (totalCount > 0) "$onlineCount из $totalCount сейчас в сети" else "Пока никого в сети"
+    return if (totalCount > 0) "$onlineCount из $totalCount сейчас в сети" else ochagText("Пока никого в сети")
 }
 
 private fun isPrivateChatOnline(chat: Chat, onlineUsers: Set<String>): Boolean {
@@ -511,5 +512,5 @@ private fun avatarText(chat: Chat): String = when (chat.type) {
     ChatType.FAMILY -> "⌂"
     ChatType.THEME -> "✦"
     ChatType.GROUP -> "👥"
-    ChatType.PRIVATE -> chat.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: "О"
+    ChatType.PRIVATE -> chat.title.firstOrNull { it.isLetterOrDigit() }?.uppercase() ?: ochagText("О")
 }
