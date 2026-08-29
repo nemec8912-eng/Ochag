@@ -1826,7 +1826,7 @@ private fun MessageBubble(
 
             Surface(
                 modifier = Modifier
-                    .widthIn(min = 82.dp, max = 292.dp)
+                    .widthIn(min = 48.dp, max = 270.dp)
                     .combinedClickable(
                         onClick = {
                             if (MessageSelectionController.isSelecting) {
@@ -1861,7 +1861,7 @@ private fun MessageBubble(
                 shadowElevation = if (message.isMine) 0.dp else 4.dp,
                 tonalElevation = 0.dp
             ) {
-                Column(modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)) {
                     if (!message.isMine) {
                         Text(
                             message.sender,
@@ -1875,14 +1875,14 @@ private fun MessageBubble(
                     if (isEmojiSticker) {
                         Text(
                             text = message.text.removePrefix(STICKER_EMOJI_PREFIX),
-                            fontSize = 64.sp,
-                            lineHeight = 72.sp
+                            fontSize = 48.sp,
+                            lineHeight = 54.sp
                         )
                     } else if (isImage) {
                         UriImage(
                             uri = Uri.parse(message.attachmentUri),
                             modifier = if (isImageSticker) {
-                                Modifier.size(190.dp)
+                                Modifier.size(140.dp)
                             } else {
                                 Modifier.width(240.dp).height(180.dp)
                             }
