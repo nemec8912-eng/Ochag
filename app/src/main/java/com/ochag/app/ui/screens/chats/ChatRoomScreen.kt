@@ -70,12 +70,6 @@ import com.ochag.app.data.MessageStatus
 import com.ochag.app.data.MessageType
 import com.ochag.app.data.ServerRealtime
 import com.ochag.app.data.StickerStore
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.outline
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurface
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.onSurfaceVariant
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surfaceVariant
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.surface
-import com.ochag.app.ui.theme.MaterialTheme.colorScheme.background
 import com.ochag.app.ui.theme.OnlineGreen
 import com.ochag.app.ui.theme.SoftGreenLight
 import com.ochag.app.ui.theme.TerracottaDark
