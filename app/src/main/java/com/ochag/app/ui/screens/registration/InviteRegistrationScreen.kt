@@ -2,6 +2,7 @@ package com.ochag.app.ui.screens.registration
 
 import com.ochag.app.ui.localization.ochagText
 import com.ochag.app.data.OchagAppState
+import com.ochag.app.data.ServerAccountApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,6 +66,14 @@ fun InviteRegistrationScreen(
 
     var requestSent by remember {
         mutableStateOf(false)
+    }
+
+    var requestSending by remember {
+        mutableStateOf(false)
+    }
+
+    var requestError by remember {
+        mutableStateOf("")
     }
 
     val codeValid =
@@ -616,18 +625,25 @@ fun InviteRegistrationScreen(
                 Button(
                     onClick = {
 
-                        OchagAppState.submitJoinRequest(
+                        requestSending = true
+                        requestError = ""
+
+                        ServerAccountApi.submitJoinRequest(
                             name = name,
                             login = login,
                             inviteCode = inviteCode,
-                            password = password
-                        )
-
-                        requestSent = true
-
-                        onRequestSent()
+                            pin = password
+                        ) { result ->
+                            requestSending = false
+                            if (result.success) {
+                                requestSent = true
+                                onRequestSent()
+                            } else {
+                                requestError = result.error
+                            }
+                        }
                     },
-                    enabled = formValid,
+                    enabled = formValid && !requestSending,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(58.dp),
@@ -640,9 +656,20 @@ fun InviteRegistrationScreen(
                     )
                 ) {
                     Text(
-                        text = ochagText("Отправить заявку"),
+                        text = if (requestSending) ochagText("Отправляю…") else ochagText("Отправить заявку"),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                if (requestError.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = requestError,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
 
