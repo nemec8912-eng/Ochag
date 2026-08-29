@@ -788,35 +788,35 @@ fun ChatRoomScreen(
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(ochagText("📷  Фото"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Фото"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     imageLauncher.launch(arrayOf("image/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📎  Файл"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Файл"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     fileLauncher.launch(arrayOf("*/*"))
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📊  Опрос"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Опрос"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     showPollDialog = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📍  Локация"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Локация"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     sendCurrentLocation()
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("📇  Контакт"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Контакт"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     val intent = Intent(
@@ -827,14 +827,14 @@ fun ChatRoomScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("Аа  Шрифт"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Шрифт"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     showFontSettings = true
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(ochagText("✨  Хранитель Очага"), color = MaterialTheme.colorScheme.onSurface) },
+                                text = { Text(ochagText("Хранитель Очага"), color = MaterialTheme.colorScheme.onSurface) },
                                 onClick = {
                                     showAttachmentMenu = false
                                     onKeeperClick()
