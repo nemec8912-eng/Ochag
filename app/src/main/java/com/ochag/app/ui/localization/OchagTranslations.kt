@@ -167,7 +167,8 @@ private val en = mapOf(
     "Тема приложения" to "App theme",
     "Изменяет оформление всего приложения" to "Changes the appearance of the entire app",
     "Открыть и настроить стикерпаки" to "Open and manage sticker packs",
-    "Ввод проверяется автоматически" to "Your entry is checked automatically"
+    "Ввод проверяется автоматически" to "Your entry is checked automatically",
+    "Аа  Шрифт" to "Aa  Font"
 )
 
 private val common = mapOf(
