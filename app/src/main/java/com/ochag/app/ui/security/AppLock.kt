@@ -156,6 +156,11 @@ fun AppLockGate(content: @Composable () -> Unit) {
                 PatternPad(
                     value = secret,
                     isError = error,
+                    onComplete = { completedPattern ->
+                        val valid = AppLockController.verify(completedPattern)
+                        error = !valid
+                        if (!valid) vibrateWrongPattern(context)
+                    },
                     onValueChange = {
                         secret = it
                         error = false
@@ -165,10 +170,14 @@ fun AppLockGate(content: @Composable () -> Unit) {
                 OutlinedTextField(
                     value = secret,
                     onValueChange = {
-                        secret = if (AppLockController.mode == AppLockMode.PIN) {
+                        val entered = if (AppLockController.mode == AppLockMode.PIN) {
                             it.filter(Char::isDigit).take(12)
                         } else it
+                        secret = entered
                         error = false
+                        if (entered.isNotBlank()) {
+                            AppLockController.verify(entered)
+                        }
                     },
                     singleLine = true,
                     label = { Text(ochagText("Код доступа")) },
@@ -181,18 +190,11 @@ fun AppLockGate(content: @Composable () -> Unit) {
             if (error) {
                 Text(ochagText("Неверный код или пароль"), color = MaterialTheme.colorScheme.error)
             }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    val valid = AppLockController.verify(secret)
-                    error = !valid
-                    if (!valid && AppLockController.mode == AppLockMode.PATTERN) {
-                        vibrateWrongPattern(context)
-                    }
-                },
-                enabled = secret.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(ochagText("Открыть")) }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                ochagText("Ввод проверяется автоматически"),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -201,6 +203,7 @@ fun AppLockGate(content: @Composable () -> Unit) {
 fun PatternPad(
     value: String,
     isError: Boolean = false,
+    onComplete: (String) -> Unit = {},
     onValueChange: (String) -> Unit
 ) {
     var fingerPosition by remember { mutableStateOf<Offset?>(null) }
@@ -250,7 +253,10 @@ fun PatternPad(
                                 }
                             }
                         },
-                        onDragEnd = { fingerPosition = null },
+                        onDragEnd = {
+                            fingerPosition = null
+                            if (currentPattern.isNotBlank()) onComplete(currentPattern)
+                        },
                         onDragCancel = { fingerPosition = null }
                     )
                 }
